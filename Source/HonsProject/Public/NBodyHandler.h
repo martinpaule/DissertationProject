@@ -24,10 +24,14 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	void raiseSimulationSpeed();
 	void lowerSimulationSpeed();
+	void moveToSimulationCore(float keyDown);
 	long double bigG = 0.000000000066743f;
 	bool mergeGravBodies(); //returns true if no more bodies to merge
 	float timeMultiplier = 1.0f;
 
+	UPROPERTY(Category = "myCategorhhy", EditAnywhere, BlueprintReadWrite)
+	int bodiesToSpawn = 20;
 	// Called to bind functionality to input
 	//virtual void SetupPlayerInputComponent(class UInputComponent* InputComponent_) override;
+
 };

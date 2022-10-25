@@ -19,20 +19,11 @@ AGravBody::AGravBody()
 
 	StaticMeshComponent->SetStaticMesh(Asset);
 
-	UPrimitiveComponent * aa = this->FindComponentByClass<UPrimitiveComponent>();
-	aa->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
+	//UPrimitiveComponent * aa = this->FindComponentByClass<UPrimitiveComponent>();
+	//aa->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
 	
 	//speed = FVector(float(-1000 + rand()%2000)/10,float(-1000 + rand()%2000)/10,float(-1000 + rand()%2000)/10);
-	speed = FVector(-500,-500,-500);
-	speed.X += rand()%1000;
-	speed.Y += rand()%1000;
-	speed.Z += rand()%1000;
 	
-	mass = rand()%300;
-
-	float scale_ = cbrt(mass);
-
-	this->SetActorScale3D(FVector(scale_, scale_, scale_));
 	
 	////FString TheFloatStr = FString::SanitizeFloat(bigG*1000000000000000);
 	//std::ostringstream strs;
@@ -40,6 +31,8 @@ AGravBody::AGravBody()
 	//std::string str = strs.str();
 	////std::string bigG_str = boos
 	//GEngine->AddOnScreenDebugMessage(-1,  5.0f, FColor::Yellow, str.c_str());	
+
+	
 }
 
 // Called when the game starts or when spawned
@@ -61,7 +54,16 @@ void AGravBody::MoveBody(float dt, float timeMultiplier)
 	SceneComponent->AddWorldOffset(speed*dt*timeMultiplier);
 }
 
-void AGravBody::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	GEngine->AddOnScreenDebugMessage(-1,  5.0f, FColor::Yellow, "OVERLAPPED");	
+
+
+void AGravBody::spawnSetup(FVector initialSpeed, float bodyMass) {
+
+	
+
+	mass = bodyMass;
+	speed = initialSpeed;
+
+	float scale_ = cbrt(bodyMass);
+
+	this->SetActorScale3D(FVector(scale_, scale_, scale_));
 }

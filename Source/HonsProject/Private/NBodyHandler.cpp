@@ -51,18 +51,58 @@ void ANBodyHandler::BeginPlay()
 			&ANBodyHandler::lowerSimulationSpeed // The function that will fire when input is received
 		);
 		//EnableInput(GetWorld()->GetFirstPlayerController());
+
+		// Bind an action to it
+		inp_->BindAxis
+		(
+			"MoveToSimMid", // The input identifier (specified in DefaultInput.ini)
+			this, // The object instance that is going to react to the input
+			&ANBodyHandler::moveToSimulationCore // The function that will fire when input is received
+		);
+		//EnableInput(GetWorld()->GetFirstPlayerController());
 	}
 
-	for(int i = 0; i < 80; i++)
+	int spawnBounds = 10000;
+
+	for(int i = 0; i < bodiesToSpawn; i++)
 	{
 		FActorSpawnParameters SpawnInfo;
 		FRotator myRot(0, 0, 0);
-		FVector myLoc(-50000.0f,-5000.0f,-5000.0f);
-		myLoc.X += rand()%10000;
-		myLoc.Y += rand()%10000;
-		myLoc.Z += rand()%10000;
-		GetWorld()->SpawnActor<AGravBody>(myLoc, myRot, SpawnInfo);
+		FVector myLoc(-20000-spawnBounds / 2,-spawnBounds/2,-spawnBounds/2);
+		myLoc.X += rand()% spawnBounds;
+		myLoc.Y += rand()% spawnBounds;
+		myLoc.Z += rand()% spawnBounds;
+		
+
+		
+
+		AGravBody * newBody = GetWorld()->SpawnActor<AGravBody>(myLoc, myRot, SpawnInfo);
+
+		int speedBounds = 3000;
+
+		FVector speed_ = FVector(-speedBounds / 2, -speedBounds / 2, -speedBounds / 2);
+		speed_.X += rand() % speedBounds;
+		speed_.Y += rand() % speedBounds;
+		speed_.Z += rand() % speedBounds;
+
+		float mass_ = rand() % 300;
+
+		newBody->spawnSetup(speed_, mass_);
+
+
 	}
+
+	//FActorSpawnParameters SpawnInfo;
+	//FRotator myRot(0, 0, 0);
+	//FVector myLoc(-25000.0f, 0.0f, 0.0f);
+	//AGravBody* ref = GetWorld()->SpawnActor<AGravBody>(myLoc, myRot, SpawnInfo);
+	//
+	//FVector speed_ = FVector(0.0f, 0.0f, 0.0f);
+	//
+	//float mass_ = 50000;
+	//
+	//
+	//ref->spawnSetup(speed_, mass_);
 }
 bool ANBodyHandler::mergeGravBodies()
 {
@@ -80,11 +120,31 @@ bool ANBodyHandler::mergeGravBodies()
 				float combineThreshHold = (FoundActors_m[i]->GetActorScale3D().X + FoundActors_m[j]->GetActorScale3D().X)*45;
 				if(length_ < combineThreshHold)
 				{
-					Cast<AGravBody>(FoundActors_m[i])->mass += Cast<AGravBody>(FoundActors_m[j])->mass;
-					float scale_ = cbrt(Cast<AGravBody>(FoundActors_m[i])->mass);
+					AGravBody * bodyAref = Cast<AGravBody>(FoundActors_m[i]);
+					AGravBody * bodyBref = Cast<AGravBody>(FoundActors_m[j]);
+					//a = 200
+					//b = 10
+					float speedMultOnA = 0.0f;
+					float speedMultOnB = 0.0f;
+
+					if (bodyAref->mass > bodyBref->mass) {
+						speedMultOnA = 1.0f;
+						speedMultOnB = bodyBref->mass / bodyAref->mass;
+					}
+					else {
+						speedMultOnB = 1.0f;
+						speedMultOnA = bodyAref->mass / bodyBref->mass;
+						bodyAref->SetActorLocation(bodyBref->GetActorLocation());
+					}
+
+					bodyAref->speed = bodyAref->speed * speedMultOnA + bodyBref->speed * speedMultOnB;
+
+					bodyAref->mass += bodyBref->mass;
+					float scale_ = cbrt(bodyAref->mass);
 					FoundActors_m[i]->SetActorScale3D(FVector(scale_,scale_,scale_));
 
 					FoundActors_m[j]->Destroy();
+					GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, "MERGED 2 BODIES");
 					return false;
 				}
 			}
@@ -133,7 +193,19 @@ void ANBodyHandler::Tick(float DeltaTime)
 
 void ANBodyHandler::raiseSimulationSpeed()
 {
-	if(timeMultiplier > 100)
+	if (timeMultiplier > 1300)
+	{
+		timeMultiplier += 500;
+	}
+	else if (timeMultiplier > 800)
+	{
+		timeMultiplier += 200;
+	}
+	else if (timeMultiplier > 300)
+	{
+		timeMultiplier += 100;
+	}
+	else if(timeMultiplier > 100)
 	{
 		timeMultiplier+= 20;
 	}
@@ -158,7 +230,19 @@ void ANBodyHandler::raiseSimulationSpeed()
 }
 void ANBodyHandler::lowerSimulationSpeed()
 {
-	if(timeMultiplier > 100)
+	if (timeMultiplier > 1300)
+	{
+		timeMultiplier -= 500;
+	}
+	else if (timeMultiplier > 800)
+	{
+		timeMultiplier -= 200;
+	}
+	else if (timeMultiplier > 300)
+	{
+		timeMultiplier -= 100;
+	}
+	else if(timeMultiplier > 100)
 	{
 		timeMultiplier-= 20;
 	}
@@ -208,3 +292,33 @@ void ANBodyHandler::SetupPlayerInputComponent(class UInputComponent* InputCompon
 	}
 }
 */
+
+void ANBodyHandler::moveToSimulationCore(float keyDown) {
+	
+
+	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, resultMoveCect.ToString());
+	if (keyDown) {
+		FVector averageBodyPos = FVector(0, 0, 0);
+
+		TArray<AActor*> FoundActors;
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), AGravBody::StaticClass(), FoundActors);
+
+		for (int i = 0; i < FoundActors.Num(); i++)
+		{
+			averageBodyPos += FoundActors[i]->GetActorLocation();
+		}
+		averageBodyPos /= FoundActors.Num();
+
+
+		FVector MoveSpeed = averageBodyPos - UGameplayStatics::GetPlayerPawn(GetWorld(), 0)->GetActorLocation();
+
+		FVector resultMoveCect = -keyDown * MoveSpeed * GetWorld()->DeltaTimeSeconds;
+
+		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, resultMoveCect.ToString());
+
+		resultMoveCect.Z *= -1;
+
+		UGameplayStatics::GetPlayerPawn(GetWorld(), 0)->AddActorLocalOffset(resultMoveCect);
+
+	}
+}

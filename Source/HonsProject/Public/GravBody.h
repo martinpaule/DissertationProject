@@ -33,15 +33,15 @@ public:
 	//UPROPERTY(Category = "myCategory", VisibleAnywhere, BlueprintReadWrite)
 	//UBoxComponent * BoxCollider;
 	
-	
+	void spawnSetup(FVector initialSpeed, float bodyMass);
+
 	UFUNCTION(BlueprintCallable, Category="Move")
 		void MoveBody(float dt,float timeMultiplier);
 	
-	UPROPERTY(Category = "myCategorhhy", EditAnywhere, BlueprintReadWrite)
-	float mass;
 	UPROPERTY(Category = "myCategory", EditAnywhere, BlueprintReadWrite)
-	FVector speed;
+	float mass = 0;
+	UPROPERTY(Category = "myCategory", EditAnywhere, BlueprintReadWrite)
+	FVector speed = FVector(0,0,0);
 
-	UFUNCTION()
-		 void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	//UFUNCTION()void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 };
