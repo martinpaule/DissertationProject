@@ -7,6 +7,8 @@
 #include "GameFramework/Actor.h"
 #include "GravBody.generated.h"
 
+class UMaterialInstanceDynamic;
+
 UCLASS()
 class HONSPROJECT_API AGravBody : public AActor
 {
@@ -29,6 +31,9 @@ public:
 
 	UPROPERTY(Category = "myCategory", VisibleAnywhere, BlueprintReadWrite)
 	UStaticMeshComponent * StaticMeshComponent;
+
+	UPROPERTY(Category = "myCategory", VisibleAnywhere, BlueprintReadWrite)
+	UMaterialInstanceDynamic* myMat;
 
 	//UPROPERTY(Category = "myCategory", VisibleAnywhere, BlueprintReadWrite)
 	//UBoxComponent * BoxCollider;

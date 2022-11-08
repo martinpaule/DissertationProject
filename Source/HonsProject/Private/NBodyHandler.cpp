@@ -13,7 +13,6 @@ ANBodyHandler::ANBodyHandler()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	srand(NULL);
 
 	// Set this pawn to be controlled by the lowest-numbered player
 	//AutoPossessPlayer = EAutoReceiveInput::Player0;
@@ -64,28 +63,44 @@ void ANBodyHandler::BeginPlay()
 
 	int spawnBounds = 10000;
 
+	if (true) {
+		FActorSpawnParameters SpawnInfo;
+		FRotator myRot(0, 0, 0);
+		FVector myLoc(-20000, 0, 0);
+
+
+
+
+
+		AGravBody* newBody = GetWorld()->SpawnActor<AGravBody>(myLoc, myRot, SpawnInfo);
+		newBody->spawnSetup(FVector(0, 0, 0), 10000);
+
+	}
+
+
+
 	for(int i = 0; i < bodiesToSpawn; i++)
 	{
 		FActorSpawnParameters SpawnInfo;
 		FRotator myRot(0, 0, 0);
 		FVector myLoc(-20000-spawnBounds / 2,-spawnBounds/2,-spawnBounds/2);
-		myLoc.X += rand()% spawnBounds;
-		myLoc.Y += rand()% spawnBounds;
-		myLoc.Z += rand()% spawnBounds;
+		myLoc.X += FMath::RandRange(0, spawnBounds);
+		myLoc.Y += FMath::RandRange(0, spawnBounds);
+		myLoc.Z += FMath::RandRange(0, spawnBounds);
 		
 
 		
 
 		AGravBody * newBody = GetWorld()->SpawnActor<AGravBody>(myLoc, myRot, SpawnInfo);
 
-		int speedBounds = 3000;
+		int speedBounds = 200;
 
 		FVector speed_ = FVector(-speedBounds / 2, -speedBounds / 2, -speedBounds / 2);
-		speed_.X += rand() % speedBounds;
-		speed_.Y += rand() % speedBounds;
-		speed_.Z += rand() % speedBounds;
+		speed_.X += FMath::RandRange(0, speedBounds);
+		speed_.Y += FMath::RandRange(0, speedBounds);
+		speed_.Z += FMath::RandRange(0, speedBounds);
 
-		float mass_ = rand() % 300;
+		float mass_ = FMath::RandRange(0, 300);
 
 		newBody->spawnSetup(speed_, mass_);
 
