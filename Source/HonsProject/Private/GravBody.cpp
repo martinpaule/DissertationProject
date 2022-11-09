@@ -18,10 +18,6 @@ AGravBody::AGravBody()
 
 	StaticMeshComponent->SetStaticMesh(Asset);
 
-	
-	//myMat = CreateDefaultSubobject<UMaterialInstanceDynamic>(TEXT("MaterialInstanceDynamic"));
-
-
 
 	auto Mat_o = StaticMeshComponent->GetMaterial(0);
 
@@ -34,8 +30,20 @@ AGravBody::AGravBody()
 	randCol.Z = FMath::FRandRange(0.0f, 1.0f);
 
 	myMat->SetVectorParameterValue(TEXT("Colour"), randCol);
+	
 
 	
+}
+
+
+void AGravBody::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) {
+
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+
+
+	float scale_ = cbrt(mass);
+
+	this->SetActorScale3D(FVector(scale_, scale_, scale_));
 }
 
 // Called when the game starts or when spawned
@@ -43,7 +51,7 @@ void AGravBody::BeginPlay()
 {
 	Super::BeginPlay();
 
-
+	
 	
 }
 
@@ -54,9 +62,9 @@ void AGravBody::Tick(float DeltaTime)
 
 }
 
-void AGravBody::MoveBody(float dt, float timeMultiplier)
+void AGravBody::MoveBody(float editedDT)
 {
-	SceneComponent->AddWorldOffset(speed*dt*timeMultiplier);
+	SceneComponent->AddWorldOffset(speed *editedDT);
 }
 
 
@@ -72,3 +80,4 @@ void AGravBody::spawnSetup(FVector initialSpeed, float bodyMass) {
 
 	this->SetActorScale3D(FVector(scale_, scale_, scale_));
 }
+

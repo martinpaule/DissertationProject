@@ -26,26 +26,26 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	UPROPERTY(Category = "myCategory", VisibleAnywhere, BlueprintReadWrite)
+	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent);
+
+	UPROPERTY(Category = "BasicComponents", VisibleAnywhere, BlueprintReadWrite)
 	USceneComponent * SceneComponent;
 
-	UPROPERTY(Category = "myCategory", VisibleAnywhere, BlueprintReadWrite)
+	UPROPERTY(Category = "BasicComponents", VisibleAnywhere, BlueprintReadWrite)
 	UStaticMeshComponent * StaticMeshComponent;
 
-	UPROPERTY(Category = "myCategory", VisibleAnywhere, BlueprintReadWrite)
+	UPROPERTY(Category = "BasicComponents", VisibleAnywhere, BlueprintReadWrite)
 	UMaterialInstanceDynamic* myMat;
 
-	//UPROPERTY(Category = "myCategory", VisibleAnywhere, BlueprintReadWrite)
-	//UBoxComponent * BoxCollider;
 	
 	void spawnSetup(FVector initialSpeed, float bodyMass);
 
 	UFUNCTION(BlueprintCallable, Category="Move")
-		void MoveBody(float dt,float timeMultiplier);
+		void MoveBody(float editedDT);
 	
-	UPROPERTY(Category = "myCategory", EditAnywhere, BlueprintReadWrite)
-	float mass = 0;
-	UPROPERTY(Category = "myCategory", EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
+	float mass = 1;
+	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 	FVector speed = FVector(0,0,0);
 
 	//UFUNCTION()void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);

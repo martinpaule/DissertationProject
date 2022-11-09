@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
+#include "GravBody.h"
+
 #include "NBodyHandler.generated.h"
 
 UCLASS()
@@ -22,16 +24,34 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	UFUNCTION(BlueprintCallable, Category = "SimSpeed")
 	void raiseSimulationSpeed();
+	UFUNCTION(BlueprintCallable, Category = "SimSpeed")
 	void lowerSimulationSpeed();
+	UFUNCTION(BlueprintCallable, Category = "SimSpeed")
+	void pauseSimulation();
+
+	TArray<AGravBody*> myGravBodies;
+
 	void moveToSimulationCore(float keyDown);
-	long double bigG = 0.000000000066743f;
 	bool mergeGravBodies(); //returns true if no more bodies to merge
+	void spawnBodyAt(FVector position, FVector velocity, float mass);
+	void graduallySpawnBodies(int spawnsPerFrame = 1);
+
+	long double bigG = 0.000000000066743f;
+	bool notPaused = true;
+
+	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 	float timeMultiplier = 1.0f;
 
-	UPROPERTY(Category = "myCategorhhy", EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
+	float SimulationElapsedTime = 0.0f;
+
+	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 	int bodiesToSpawn = 20;
 	// Called to bind functionality to input
 	//virtual void SetupPlayerInputComponent(class UInputComponent* InputComponent_) override;
-
+	int gradualSpawnerIndex = 0;
+	bool spawningBodies = true;
 };
