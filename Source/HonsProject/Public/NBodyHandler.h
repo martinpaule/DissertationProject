@@ -31,10 +31,11 @@ public:
 	void lowerSimulationSpeed();
 	UFUNCTION(BlueprintCallable, Category = "SimSpeed")
 	void pauseSimulation();
+	UFUNCTION(BlueprintCallable, Category = "SimCentre")
+	void moveToSimulationCore();
 
 	TArray<AGravBody*> myGravBodies;
 
-	void moveToSimulationCore(float keyDown);
 	bool mergeGravBodies(); //returns true if no more bodies to merge
 	void spawnBodyAt(FVector position, FVector velocity, float mass);
 	void graduallySpawnBodies(int spawnsPerFrame = 1);
@@ -50,6 +51,9 @@ public:
 
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 	int bodiesToSpawn = 20;
+	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
+	int SpawnsPerFrame = 5;
+
 	// Called to bind functionality to input
 	//virtual void SetupPlayerInputComponent(class UInputComponent* InputComponent_) override;
 	int gradualSpawnerIndex = 0;

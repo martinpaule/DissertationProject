@@ -4,6 +4,7 @@
 #include "NBodyHandler.h"
 #include <Kismet/GameplayStatics.h>
 #include <string>
+#include "Misc/DateTime.h"
 #include "GameFramework/DefaultPawn.h"
 // Sets default values
 ANBodyHandler::ANBodyHandler()
@@ -25,18 +26,18 @@ void ANBodyHandler::BeginPlay()
 	{
 
 		// Bind an action to it
-		inp_->BindAxis
-		(
-			"MoveToSimMid", // The input identifier (specified in DefaultInput.ini)
-			this, // The object instance that is going to react to the input
-			&ANBodyHandler::moveToSimulationCore // The function that will fire when input is received
-		);
+		//inp_->BindAxis
+		//(
+		//	"MoveToSimMid", // The input identifier (specified in DefaultInput.ini)
+		//	this, // The object instance that is going to react to the input
+		//	&ANBodyHandler::moveToSimulationCore // The function that will fire when input is received
+		//);
 		//EnableInput(GetWorld()->GetFirstPlayerController());
 	}
 
 
 	//random initial spawn
-	spawnBodyAt(FVector(-20000, 0, 0), FVector(0, 0, 0), 2000);
+	//spawnBodyAt(FVector(-20000, 0, 0), FVector(0, 0, 0), 20000);
 	
 
 	if (bodiesToSpawn == 0) {
@@ -87,7 +88,10 @@ bool ANBodyHandler::mergeGravBodies()
 
 					myGravBodies.RemoveAt(j);
 					bodyBref->Destroy();
-					GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, "MERGED 2 BODIES");
+					FDateTime nowTime = FDateTime::Now();
+					std::string printStr = "(";
+					printStr += std::to_string(nowTime.GetHour()) + ":" + std::to_string(nowTime.GetMinute()) + ":" + std::to_string(nowTime.GetSecond()) + "." + std::to_string(nowTime.GetMillisecond())+ ") MERGED 2 BODIES";
+					GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow, printStr.c_str());
 					return false;
 				}
 			}
@@ -104,7 +108,7 @@ void ANBodyHandler::Tick(float DeltaTime)
 	if(spawningBodies)
 	{
 		
-		graduallySpawnBodies(1);
+		graduallySpawnBodies(SpawnsPerFrame);
 	}
 	else if(notPaused) {
 
@@ -169,41 +173,37 @@ void ANBodyHandler::lowerSimulationSpeed()
 }
 
 
-void ANBodyHandler::moveToSimulationCore(float keyDown) {
+void ANBodyHandler::moveToSimulationCore() {
 	
 
 	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, resultMoveCect.ToString());
-	if (keyDown) {
-		FVector dispVector = FVector(0, 0, 0);
-
-		//TArray<AActor*> myGravBodies;
-		//UGameplayStatics::GetAllActorsOfClass(GetWorld(), AGravBody::StaticClass(), myGravBodies);
-
-		for (int i = 0; i < myGravBodies.Num(); i++)
-		{
-			dispVector += myGravBodies[i]->GetActorLocation();
-		}
-		dispVector /= myGravBodies.Num();
-
-		dispVector *= -1;
+	FVector dispVector = FVector(0, 0, 0);
 
 
-		for (int i = 0; i < myGravBodies.Num(); i++)
-		{
-			myGravBodies[i]->AddActorWorldOffset(dispVector);
-		}
+	for (int i = 0; i < myGravBodies.Num(); i++)
+	{
+		dispVector += myGravBodies[i]->GetActorLocation();
+	}
+	dispVector /= myGravBodies.Num();
+
+	FVector camToSimVector = dispVector - UGameplayStatics::GetActorOfClass(GetWorld(), APlayerCameraManager::StaticClass())->GetActorLocation();
 
 
-		//FVector MoveSpeed = averageBodyPos - UGameplayStatics::GetPlayerPawn(GetWorld(), 0)->GetActorLocation();
-		//
-		//FVector resultMoveCect = -keyDown * MoveSpeed * GetWorld()->DeltaTimeSeconds;
-		//
-		//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, resultMoveCect.ToString());
-		//
-		//resultMoveCect.Z *= -1;
-		//
-		//UGameplayStatics::GetPlayerPawn(GetWorld(), 0)->AddActorLocalOffset(resultMoveCect);
+	APlayerCameraManager* CameraManagerRef = Cast<APlayerCameraManager>(UGameplayStatics::GetActorOfClass(GetWorld(), APlayerCameraManager::StaticClass()));
+	auto POV_ = CameraManagerRef->GetCameraCachePOV();
+	POV_.Rotation = camToSimVector.GetSafeNormal().Rotation();
+	CameraManagerRef->SetCameraCachePOV(POV_);
 
+
+
+	dispVector *= -1;
+
+	UGameplayStatics::GetActorOfClass(GetWorld(), ADefaultPawn::StaticClass())->AddActorWorldOffset(dispVector);
+
+
+	for (int i = 0; i < myGravBodies.Num(); i++)
+	{
+		myGravBodies[i]->AddActorWorldOffset(dispVector);
 	}
 }
 
@@ -225,7 +225,7 @@ void ANBodyHandler::spawnBodyAt(FVector position, FVector velocity, float mass)
 
 void ANBodyHandler::graduallySpawnBodies(int spawnsPerFrame) {
 
-	int spawnBounds = 10000;
+	int spawnBounds = 50000;
 
 	for (int s = 0; s < spawnsPerFrame; s++) {
 
