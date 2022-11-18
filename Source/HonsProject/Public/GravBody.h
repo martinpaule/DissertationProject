@@ -4,8 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "Components/PrimitiveComponent.h"
+#include "Components/SphereComponent.h"
 #include "GameFramework/Actor.h"
+#include <string>
 #include "GravBody.generated.h"
+
 
 class UMaterialInstanceDynamic;
 
@@ -26,27 +29,33 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	//engine runtime functions - important to avoid pointer erros
 	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent);
+	virtual void PostInitializeComponents();
 
+	//collision function
+	UFUNCTION(BlueprintCallable, Category = "collision")
+	void combineCollisionBody(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	//Gravitation body object necessary component
 	UPROPERTY(Category = "BasicComponents", VisibleAnywhere, BlueprintReadWrite)
 	USceneComponent * SceneComponent;
-
 	UPROPERTY(Category = "BasicComponents", VisibleAnywhere, BlueprintReadWrite)
 	UStaticMeshComponent * StaticMeshComponent;
-
 	UPROPERTY(Category = "BasicComponents", VisibleAnywhere, BlueprintReadWrite)
 	UMaterialInstanceDynamic* myMat;
-
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	USphereComponent* SphereCollider;
 	
-	void spawnSetup(FVector initialSpeed, float bodyMass);
-
+	//apply displacement to the body based on its velocity
 	UFUNCTION(BlueprintCallable, Category="Move")
 		void MoveBody(float editedDT);
-	
+
+	//simulation variables
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 	float mass = 1;
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-	FVector speed = FVector(0,0,0);
+	FVector velocity = FVector(0,0,0);
 
-	//UFUNCTION()void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	bool toBeDestroyed = false;
 };

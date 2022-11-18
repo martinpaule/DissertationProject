@@ -3,9 +3,9 @@
 
 #include "NBodyHandler.h"
 #include <Kismet/GameplayStatics.h>
-#include <string>
 #include "Misc/DateTime.h"
 #include "GameFramework/DefaultPawn.h"
+//#include "gra"
 // Sets default values
 ANBodyHandler::ANBodyHandler()
 {
@@ -20,131 +20,89 @@ ANBodyHandler::ANBodyHandler()
 void ANBodyHandler::BeginPlay()
 {
 	Super::BeginPlay();
-	ADefaultPawn * pawn_ = Cast<ADefaultPawn>(UGameplayStatics::GetActorOfClass(GetWorld(), ADefaultPawn::StaticClass()));
-	UInputComponent * inp_ = pawn_->InputComponent;
-	if (inp_)
-	{
 
-		// Bind an action to it
-		//inp_->BindAxis
-		//(
-		//	"MoveToSimMid", // The input identifier (specified in DefaultInput.ini)
-		//	this, // The object instance that is going to react to the input
-		//	&ANBodyHandler::moveToSimulationCore // The function that will fire when input is received
-		//);
-		//EnableInput(GetWorld()->GetFirstPlayerController());
+
+	//example how to bind functions in code, keep to avoid looking this up again
+	//ADefaultPawn * pawn_ = Cast<ADefaultPawn>(UGameplayStatics::GetActorOfClass(GetWorld(), ADefaultPawn::StaticClass()));
+	//UInputComponent * inp_ = pawn_->InputComponent;
+	//if (inp_)
+	//{
+	//	// Bind an action to it
+	//	inp_->BindAxis
+	//	(
+	//		"MoveToSimMid", // The input identifier (specified in DefaultInput.ini)
+	//		this, // The object instance that is going to react to the input
+	//		&ANBodyHandler::moveToSimulationCore // The function that will fire when input is received
+	//	);
+	//	EnableInput(GetWorld()->GetFirstPlayerController());
+	//}
+
+	//add manually placed bodies to the array
+	TArray<AActor*> FoundActors;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AGravBody::StaticClass(), FoundActors);
+
+	for (int n = 0; n < FoundActors.Num(); n++) {
+		myGravBodies.Add(Cast<AGravBody>(FoundActors[n]));
+		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow, "added manually placed body to array");
 	}
 
-
-	//random initial spawn
-	//spawnBodyAt(FVector(-20000, 0, 0), FVector(0, 0, 0), 20000);
-	
-
-	if (bodiesToSpawn == 0) {
-		spawningBodies = false;
-	}
 
 }
 
-//TODO ad actual collision
-bool ANBodyHandler::mergeGravBodies()
-{
-	//TArray<AActor*> myGravBodies;
-	//UGameplayStatics::GetAllActorsOfClass(GetWorld(), AGravBody::StaticClass(), myGravBodies);
-		
-	for(int i = 0; i < myGravBodies.Num();i++)
+//direct integration of gravitational dynamics using Newtonian formulae
+void ANBodyHandler::calculateAllVelocityChanges(float dt) {
+	for (int i = 0; i < myGravBodies.Num(); i++)
 	{
-		for(int j = 0; j < myGravBodies.Num();j++)
+		FVector sumOfForces = FVector(0.0f, 0.0f, 0.0f);
+		for (int j = 0; j < myGravBodies.Num(); j++)
 		{
-			if(i != j)
+			if (i != j) //ignore the body's own force on itself
 			{
 				FVector distance = myGravBodies[j]->GetActorLocation() - myGravBodies[i]->GetActorLocation();
 				float length_ = distance.Length();
-				float combineThreshHold = (myGravBodies[i]->GetActorScale3D().X + myGravBodies[j]->GetActorScale3D().X)*45;
-				if(length_ < combineThreshHold)
-				{
-					AGravBody * bodyAref = myGravBodies[i];
-					AGravBody * bodyBref = myGravBodies[j];
-					//a = 200
-					//b = 10
-					float speedMultOnA = 0.0f;
-					float speedMultOnB = 0.0f;
-
-					if (bodyAref->mass > bodyBref->mass) {
-						speedMultOnA = 1.0f;
-						speedMultOnB = bodyBref->mass / bodyAref->mass;
-					}
-					else {
-						speedMultOnB = 1.0f;
-						speedMultOnA = bodyAref->mass / bodyBref->mass;
-						bodyAref->SetActorLocation(bodyBref->GetActorLocation());
-					}
-
-					bodyAref->speed = bodyAref->speed * speedMultOnA + bodyBref->speed * speedMultOnB;
-
-					bodyAref->mass += bodyBref->mass;
-					float scale_ = cbrt(bodyAref->mass);
-					myGravBodies[i]->SetActorScale3D(FVector(scale_,scale_,scale_));
-
-					myGravBodies.RemoveAt(j);
-					bodyBref->Destroy();
-					FDateTime nowTime = FDateTime::Now();
-					std::string printStr = "(";
-					printStr += std::to_string(nowTime.GetHour()) + ":" + std::to_string(nowTime.GetMinute()) + ":" + std::to_string(nowTime.GetSecond()) + "." + std::to_string(nowTime.GetMillisecond())+ ") MERGED 2 BODIES";
-					GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow, printStr.c_str());
-					return false;
-				}
+				sumOfForces += bigG * myGravBodies[j]->mass * distance / length_ * length_ * length_;
 			}
 		}
+		myGravBodies[i]->velocity += dt * (sumOfForces) / myGravBodies[i]->mass;
 	}
-
-	return true;
 }
+
 // Called every frame
 void ANBodyHandler::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if(spawningBodies)
+	if(spawningBodies) //gradually spawn bodies to avoid a large lag spike at the start
 	{
-		
 		graduallySpawnBodies(SpawnsPerFrame);
 	}
-	else if(notPaused) {
+	else if(notPaused) { //tick
 
+		//dt influenced by simulation time scale
 		float updatedDT = DeltaTime * timeMultiplier;
-
 		SimulationElapsedTime += updatedDT;
 
-		//calculate acceleration
+
+		//step 0: destroy overlapping bodies from previous step - must be done before force calculation otherwise the current step will be inaccurate
 		for (int i = 0; i < myGravBodies.Num(); i++)
 		{
-			FVector sumOfForces = FVector(0.0f, 0.0f, 0.0f);
-			for (int j = 0; j < myGravBodies.Num(); j++)
-			{
-				if (i != j)
-				{
-					FVector distance = myGravBodies[j]->GetActorLocation() - myGravBodies[i]->GetActorLocation();
-					float length_ = distance.Length();
-					sumOfForces += myGravBodies[j]->mass * distance / length_ * length_ * length_;
-				}
+			if (myGravBodies[i]->toBeDestroyed) {
+				myGravBodies[i]->Destroy();
+				myGravBodies.RemoveAt(i);
+				BodiesInSimulation = myGravBodies.Num();
+				i--;
 			}
-			myGravBodies[i]->speed += bigG * (sumOfForces) / myGravBodies[i]->mass;
 		}
 
-		//apply updated velocity
+		//step 1: direct integration of gravitational calculations
+		//first dt pass
+		calculateAllVelocityChanges(updatedDT);
+
+		//step 2: move bodies using their updated velocity, also destroy ones that 
 		for (int i = 0; i < myGravBodies.Num(); i++)
 		{
+			//second dt pass
 			myGravBodies[i]->MoveBody(updatedDT);
-		}
-
-
-		//handle merging -- TODO: move into tick of gravbody
-		bool FinishedMerging = false;
-
-		while (!FinishedMerging)
-		{
-			FinishedMerging = mergeGravBodies();
 		}
 	}
 }
@@ -172,21 +130,21 @@ void ANBodyHandler::lowerSimulationSpeed()
 	notPaused = true;
 }
 
-
-void ANBodyHandler::moveToSimulationCore() {
+//Work in progress
+void ANBodyHandler::RecentreSimulation() {
 	
 
 	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, resultMoveCect.ToString());
-	FVector dispVector = FVector(0, 0, 0);
+	FVector AvgBodyPos = FVector(0, 0, 0);
 
 
 	for (int i = 0; i < myGravBodies.Num(); i++)
 	{
-		dispVector += myGravBodies[i]->GetActorLocation();
+		AvgBodyPos += myGravBodies[i]->GetActorLocation();
 	}
-	dispVector /= myGravBodies.Num();
+	AvgBodyPos /= myGravBodies.Num();
 
-	FVector camToSimVector = dispVector - UGameplayStatics::GetActorOfClass(GetWorld(), APlayerCameraManager::StaticClass())->GetActorLocation();
+	FVector camToSimVector = AvgBodyPos - UGameplayStatics::GetActorOfClass(GetWorld(), APlayerCameraManager::StaticClass())->GetActorLocation();
 
 
 	APlayerCameraManager* CameraManagerRef = Cast<APlayerCameraManager>(UGameplayStatics::GetActorOfClass(GetWorld(), APlayerCameraManager::StaticClass()));
@@ -194,11 +152,11 @@ void ANBodyHandler::moveToSimulationCore() {
 	POV_.Rotation = camToSimVector.GetSafeNormal().Rotation();
 	CameraManagerRef->SetCameraCachePOV(POV_);
 
+	//displacement vector to move it back is an inverted position vector
+	FVector dispVector = -1 * AvgBodyPos;
 
-
-	dispVector *= -1;
-
-	UGameplayStatics::GetActorOfClass(GetWorld(), ADefaultPawn::StaticClass())->AddActorWorldOffset(dispVector);
+	camToSimVector.Normalize();
+	UGameplayStatics::GetActorOfClass(GetWorld(), ADefaultPawn::StaticClass())->SetActorLocation(-camToSimVector * 2000);
 
 
 	for (int i = 0; i < myGravBodies.Num(); i++)
@@ -207,52 +165,58 @@ void ANBodyHandler::moveToSimulationCore() {
 	}
 }
 
-// Called when the game starts or when spawned
-void ANBodyHandler::spawnBodyAt(FVector position, FVector velocity, float mass)
+// setup function for spawning bodies - creates a new body with specified parameters
+void ANBodyHandler::spawnBodyAt(FVector position_, FVector velocity_, float mass_)
 {
 
 	FActorSpawnParameters SpawnInfo;
 	FRotator myRot(0, 0, 0);
-	//FVector myLoc(0, 0, 0);
 
-
-	AGravBody* newBody = GetWorld()->SpawnActor<AGravBody>(position, myRot, SpawnInfo);
-	newBody->spawnSetup(velocity, mass);
-
+	AGravBody * newBody = GetWorld()->SpawnActor<AGravBody>(position_, myRot, SpawnInfo);
+	newBody->velocity = velocity_;
+	newBody->mass = mass_;
+	float scale_ = cbrt(mass_);
+	newBody->SetActorScale3D(FVector(scale_, scale_, scale_));
+	newBody->toBeDestroyed = false;
 	myGravBodies.Add(newBody);
 
 }
 
+//function that allows gradual spawn of initial bodies rather than all at once, avoiding a big lag spike when handlingodies
 void ANBodyHandler::graduallySpawnBodies(int spawnsPerFrame) {
 
-	int spawnBounds = 50000;
 
-	for (int s = 0; s < spawnsPerFrame; s++) {
+	for (int s = 0; s < spawnsPerFrame; s++) { // spawn all the bodies for this frame
 
-		FVector myLoc(-20000 - spawnBounds / 2, -spawnBounds / 2, -spawnBounds / 2);
-		myLoc.X += FMath::RandRange(0, spawnBounds);
-		myLoc.Y += FMath::RandRange(0, spawnBounds);
-		myLoc.Z += FMath::RandRange(0, spawnBounds);
-
-
-		int speedBounds = 200;
-
-		FVector speed_ = FVector(-speedBounds / 2, -speedBounds / 2, -speedBounds / 2);
-		speed_.X += FMath::RandRange(0, speedBounds);
-		speed_.Y += FMath::RandRange(0, speedBounds);
-		speed_.Z += FMath::RandRange(0, speedBounds);
-
-		float mass_ = FMath::FRandRange(0.0f, 300.0f);
-
-		spawnBodyAt(myLoc, speed_, mass_);
-
-		gradualSpawnerIndex++;
 		if (gradualSpawnerIndex >= bodiesToSpawn) {
 			spawningBodies = false;
 			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, "Spawned all desired bodies");
+			BodiesInSimulation = myGravBodies.Num();
 			return;
 		}
+
+		//random location
+		FVector myLoc( -SpawnLocationBounds / 2, -SpawnLocationBounds / 2, -SpawnLocationBounds / 2);
+		myLoc.X += FMath::RandRange(0, SpawnLocationBounds);
+		myLoc.Y += FMath::RandRange(0, SpawnLocationBounds);
+		myLoc.Z += FMath::RandRange(0, SpawnLocationBounds);
+		myLoc += InitialSpawnCentre; //translate it to desired spawn centre
+
+		//random speed
+		FVector speed_ = FVector(-SpawnInitialMaxSpeed / 2, -SpawnInitialMaxSpeed / 2, -SpawnInitialMaxSpeed / 2);
+		speed_.X += FMath::RandRange(0, SpawnInitialMaxSpeed);
+		speed_.Y += FMath::RandRange(0, SpawnInitialMaxSpeed);
+		speed_.Z += FMath::RandRange(0, SpawnInitialMaxSpeed);
+
+		//random mass
+		float mass_ = 0.01f;
+		mass_ += FMath::FRandRange(0.0f, SpawnInitialMaxMass);
+
+		spawnBodyAt(myLoc, speed_, mass_);
+		BodiesInSimulation = myGravBodies.Num();
+		gradualSpawnerIndex++;
+		
 	}
 
-	
+	return;
 }
