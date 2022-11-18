@@ -46,6 +46,8 @@ public:
 	UMaterialInstanceDynamic* myMat;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	USphereComponent* SphereCollider;
+	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
+	FVector SpawnLocation = FVector(0, 0, 0);
 	
 	//apply displacement to the body based on its velocity
 	UFUNCTION(BlueprintCallable, Category="Move")

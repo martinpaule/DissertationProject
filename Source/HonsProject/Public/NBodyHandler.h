@@ -42,12 +42,13 @@ public:
 	TArray<AGravBody*> myGravBodies;
 
 	//spawning
-	void spawnBodyAt(FVector position_, FVector velocity_, float mass_);
+	void spawnBodyAt(FVector position_, FVector velocity_, float mass_, bool solarSystem = false);
 	void graduallySpawnBodies(int spawnsPerFrame = 1);
 
 	//direct integration of gravitational calculations
 	void calculateAllVelocityChanges(float dt);
 
+	void spawnSolarSystem();
 
 	//UI variables
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
@@ -70,6 +71,8 @@ public:
 	int SpawnInitialMaxSpeed = 200;
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 	float SpawnInitialMaxMass = 300;
+	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
+	bool shouldSpawnSolarSystem = false;
 
 	long double bigG = 0.000000000066743f;
 	bool notPaused = true;
