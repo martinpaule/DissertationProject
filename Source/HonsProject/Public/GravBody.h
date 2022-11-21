@@ -46,8 +46,7 @@ public:
 	UMaterialInstanceDynamic* myMat;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	USphereComponent* SphereCollider;
-	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-	FVector SpawnLocation = FVector(0, 0, 0);
+
 	
 	//apply displacement to the body based on its velocity
 	UFUNCTION(BlueprintCallable, Category="Move")
@@ -55,9 +54,13 @@ public:
 
 	//simulation variables
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-	float mass = 1;
+	double mass = 1; //kg
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-	FVector velocity = FVector(0,0,0);
+	FVector velocity = FVector(0.0f,0.0f,0.0f); //km/s
+	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
+	double radius = 1; //km
+	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
+	bool universalDensity = true;
 
 	bool toBeDestroyed = false;
 };

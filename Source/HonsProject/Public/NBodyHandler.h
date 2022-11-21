@@ -37,12 +37,15 @@ public:
 	void pauseSimulation();
 	UFUNCTION(BlueprintCallable, Category = "SimCentre")
 	void RecentreSimulation();
+	UFUNCTION(BlueprintCallable, Category = "SimCentre")
+	void doubleAllScales();
+
 
 	//array holding a reference to all bodies
 	TArray<AGravBody*> myGravBodies;
 
 	//spawning
-	void spawnBodyAt(FVector position_, FVector velocity_, float mass_, bool solarSystem = false);
+	void spawnBodyAt(FVector position_, FVector velocity_, float mass_, float radius_ = 0.0f, char * name_ = "GravBody");
 	void graduallySpawnBodies(int spawnsPerFrame = 1);
 
 	//direct integration of gravitational calculations

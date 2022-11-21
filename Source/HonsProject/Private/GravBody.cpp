@@ -54,55 +54,25 @@ void AGravBody::PostInitializeComponents()
 }
 
 
-//perfectly inelastic
-// p = momentum. p = m*v.
-// p_ = resulting momentum, v_ = resulting velocity
-//p1+p2=p_1+p_2			        
-//m1*v1 + m2*v2 =m1*v_1 + m2*v_2
-//v_ = (m1*v1 + m2*v2)/(m1 + m2)
-void AGravBody::combineCollisionBody(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) {
-	
-	if (Cast<AGravBody>(OtherActor))
-	{
-
-		//print message with timestamp, development feature, remove at the end
-		FDateTime nowTime = FDateTime::Now();
-		std::string printStr = "(";
-		printStr += std::to_string(nowTime.GetHour()) + ":" + std::to_string(nowTime.GetMinute()) + ":" + std::to_string(nowTime.GetSecond()) + "." + std::to_string(nowTime.GetMillisecond()) + ") MERGED 2 BODIES";
-		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow, printStr.c_str());
-
-		//perfectly inelastic collision
-		AGravBody * otherBody = Cast<AGravBody>(OtherActor);
-
-		float massA = mass;
-		float massB = otherBody->mass;
-		FVector velocityA = velocity;
-		FVector velocityB = otherBody->velocity;
-		FVector finalVelocity = (massA * velocityA + massB * velocityB) / (massA + massB);
-		
-		//add the smaller body's mass and speed to the larger one
-		if (otherBody->mass >= mass) {
-			otherBody->velocity = finalVelocity;
-			otherBody->mass += mass;
-			float scale_ = cbrt(otherBody->mass);
-			otherBody->SetActorScale3D(FVector(scale_, scale_, scale_));
-		
-			toBeDestroyed = true;
-		}
-
-		 
-	}
-}
-
 //real-time in engine resize scale based on mass
 void AGravBody::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) {
 
+	// !! Scale 1 means diameter is 100 km  !!
+	//means scale = radius*2/100
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 
+	if (universalDensity) {
+		float scale_ = cbrt(mass);
+		this->SetActorScale3D(FVector(scale_, scale_, scale_));
+	}
 
-	float scale_ = cbrt(mass);
+	if (PropertyChangedEvent.Property->GetName() == "radius") {
+		//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, "editedrad");
+		float scale_ = radius * 2.0f / 100.0f;
+		this->SetActorScale3D(FVector(scale_, scale_, scale_));
+		universalDensity = false;
+	}
 
-	this->SetActorScale3D(FVector(scale_, scale_, scale_));
 }
 
 // Called when the game starts or when spawned
@@ -124,3 +94,43 @@ void AGravBody::MoveBody(float editedDT)
 	SceneComponent->AddWorldOffset(velocity * editedDT);
 }
 
+
+//perfectly inelastic
+// p = momentum. p = m*v.
+// p_ = resulting momentum, v_ = resulting velocity
+//p1+p2=p_1+p_2			        
+//m1*v1 + m2*v2 =m1*v_1 + m2*v_2
+//v_ = (m1*v1 + m2*v2)/(m1 + m2)
+void AGravBody::combineCollisionBody(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) {
+
+	if (Cast<AGravBody>(OtherActor))
+	{
+
+		//print message with timestamp, development feature, remove at the end
+		FDateTime nowTime = FDateTime::Now();
+		std::string printStr = "(";
+		printStr += std::to_string(nowTime.GetHour()) + ":" + std::to_string(nowTime.GetMinute()) + ":" + std::to_string(nowTime.GetSecond()) + "." + std::to_string(nowTime.GetMillisecond()) + ") MERGED 2 BODIES";
+		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow, printStr.c_str());
+
+		//perfectly inelastic collision
+		AGravBody* otherBody = Cast<AGravBody>(OtherActor);
+
+		float massA = mass;
+		float massB = otherBody->mass;
+		FVector velocityA = velocity;
+		FVector velocityB = otherBody->velocity;
+		FVector finalVelocity = (massA * velocityA + massB * velocityB) / (massA + massB);
+
+		//add the smaller body's mass and speed to the larger one
+		if (otherBody->mass >= mass) {
+			otherBody->velocity = finalVelocity;
+			otherBody->mass += mass;
+			float scale_ = cbrt(otherBody->mass);
+			otherBody->SetActorScale3D(FVector(scale_, scale_, scale_));
+
+			toBeDestroyed = true;
+		}
+
+
+	}
+}

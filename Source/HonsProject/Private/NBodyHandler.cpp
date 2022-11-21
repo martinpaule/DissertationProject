@@ -106,7 +106,7 @@ void ANBodyHandler::Tick(float DeltaTime)
 		for (int i = 0; i < myGravBodies.Num(); i++)
 		{
 			//second dt pass
-			//myGravBodies[i]->MoveBody(updatedDT);
+			myGravBodies[i]->MoveBody(updatedDT);
 		}
 	}
 }
@@ -170,7 +170,7 @@ void ANBodyHandler::RecentreSimulation() {
 }
 
 // setup function for spawning bodies - creates a new body with specified parameters
-void ANBodyHandler::spawnBodyAt(FVector position_, FVector velocity_, float mass_, bool solarSystem)
+void ANBodyHandler::spawnBodyAt(FVector position_, FVector velocity_, float mass_, float radius_, char * name_)
 {
 
 	FActorSpawnParameters SpawnInfo;
@@ -179,13 +179,21 @@ void ANBodyHandler::spawnBodyAt(FVector position_, FVector velocity_, float mass
 	AGravBody * newBody = GetWorld()->SpawnActor<AGravBody>(position_, myRot, SpawnInfo);
 	newBody->velocity = velocity_;
 	newBody->mass = mass_;
-	float scale_ = cbrt(mass_);
+	float scale_;
 
-	if (solarSystem) {
-		scale_ *= 100;
+	if (radius_ == 0.0f) { //universal scale for a fast, intuitive N-Body simulation
+		scale_ = cbrt(mass_);
+	}
+	else {
+		scale_ = radius_ * 2.0f / 100.0f; //specified scale
+		newBody->universalDensity = false;
+
 	}
 	newBody->SetActorScale3D(FVector(scale_, scale_, scale_));
+	newBody->radius = radius_;
 	newBody->toBeDestroyed = false;
+	//std::string a = "banana";
+	newBody->SetActorLabel(name_);
 	myGravBodies.Add(newBody);
 
 }
@@ -199,10 +207,10 @@ void ANBodyHandler::graduallySpawnBodies(int spawnsPerFrame) {
 		if (gradualSpawnerIndex >= bodiesToSpawn) {
 			spawningBodies = false;
 			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, "Spawned all desired bodies");
-			BodiesInSimulation = myGravBodies.Num();
 			if (shouldSpawnSolarSystem) {
 				spawnSolarSystem();
 			}
+			BodiesInSimulation = myGravBodies.Num();
 			return;
 		}
 
@@ -234,31 +242,41 @@ void ANBodyHandler::graduallySpawnBodies(int spawnsPerFrame) {
 
 void ANBodyHandler::spawnSolarSystem() {
 
-	//earth
-	spawnBodyAt(FVector(82837730.0f, 121670670.0f, 23933.0f), FVector(-24.9709f,16.8404f,-0.000056f), 597.359985f,true);
-
-	//Jupiter
-	spawnBodyAt(FVector(731791029.0f, 105173544.0f, -16808438.0f), FVector(-2.0095f, 13.5464f,-0.01125f), 189860.0f, true);
-
-	//Mars
-	spawnBodyAt(FVector(93289713.0f, 204846068.0f, 2001012.0f), FVector(-21.0741f, 12.2132f, 0.77367f), 64.184998f, true);
-
-	//Mercury
-	spawnBodyAt(FVector(-22649033.0f, -66251514.0f, -3436169.0f), FVector(36.5988f, -12.4803f, -4.3754f), 33.021999f, true);
-
-	//Saturn
-	spawnBodyAt(FVector(1198593042.0f, -853635147.0f, -32878852.0f), FVector(5.0632f, 7.8505f, -0.3386f), 56846.0f, true);
-
-	//Neptune
-	spawnBodyAt(FVector(4448862383.0f, -460904489.0f, -93037153.0f), FVector(0.5245f, 5.4382f, -0.1247f), 10243.0f, true);
+	//values obtained from Nasa's Horizons for the date of 18/11/2022
 
 	//Sun
-	spawnBodyAt(FVector(-1358962.0f, 73663.0f, 31047.0f), FVector(0.000658f, - 0.01567f, 0.0001157f), 198900000.0f, true);
+	spawnBodyAt(FVector(-1.35896f * pow(10, 6), 7.36638f * pow(10, 4), 3.10470f * pow(10, 4)), FVector(6.57942f * pow(10, -4), -1.56718f * pow(10, -2), 1.15770f * pow(10, -4)), 1988500.0f * pow(10, 24), 695700.0f, "Sun");
 
-	//Uranus
-	spawnBodyAt(FVector(2017839750.0f, 2141806543.0f, -18186720.0f), FVector(-5.0065f, 4.3525f, 0.08107f), 8681.0f, true);
-
+	//Mercury
+	spawnBodyAt(FVector(-2.2649f * pow(10, 7), -6.62515f * pow(10, 7), -3.43616f * pow(10, 6)), FVector(36.59884f, -12.48037f, -4.37549f), 3.302f * pow(10, 23), 2440.0f,"Mercury");
+	
 	//Venus
-	spawnBodyAt(FVector(-36938474.0f, -102494451.0f, 675944.0f), FVector(32.8488f, -11.6413f, -2.0549), 486.850006f, true);
+	spawnBodyAt(FVector(-3.69384f * pow(10, 7), -1.02494f * pow(10, 8), 6.75944f * pow(10, 5)), FVector(32.84882f, -11.64133f, -2.0549f), 48.685f * pow(10, 23), 6051.84f,"Venus");
+	
+	//Earth
+	spawnBodyAt(FVector(8.28377f * pow(10, 7), 1.21670f * pow(10, 8), 2.39333f * pow(10, 4)), FVector(-24.97096f, 16.8404f, -5.61289f * pow(10, -5)), 5.97219f * pow(10, 24), 6371.01f,"Earth");
+	
+	//Mars
+	spawnBodyAt(FVector(9.32897f * pow(10, 7), 2.04846f * pow(10, 8), 2.00101f * pow(10, 6)), FVector(-21.07414f, 12.21325f, 0.77336f), 6.4171f * pow(10, 23), 3389.92f,"Mars");
+	
+	//Jupiter
+	spawnBodyAt(FVector(7.31791f * pow(10, 8), 1.05173f * pow(10, 8), -1.68084f * pow(10, 7)), FVector(-2.00956f, 13.54647f, -0.01125f), 1898.18722f * pow(10, 24), 69911.0f,"Jupiter");
+	
+	//Saturn 
+	spawnBodyAt(FVector(1.19859f * pow(10, 9), -8.53635f * pow(10, 8), -3.28788f * pow(10, 7)), FVector(5.06329f, 7.8505f, -0.33867f), 5.6834f * pow(10, 26), 58232.0f,"Saturn");
+	
+	//Uranus
+	spawnBodyAt(FVector(2.01783f * pow(10, 9), 2.14180f * pow(10, 9), -1.81867f * pow(10, 7)), FVector(-5.00658f, 4.35256f, 0.08107f), 86.813f * pow(10, 24), 25362.0f,"Uranus");
+	
+	//Neptune
+	spawnBodyAt(FVector(4.44886f * pow(10, 9), -4.60904f * pow(10, 8), -9.30371f * pow(10, 7)), FVector(0.52454f, 5.43826f, -0.12470), 102.409f * pow(10, 24), 24624.0f,"Neptune");
+	
+}
 
+void ANBodyHandler::doubleAllScales() {
+	for (int i = 0; i < myGravBodies.Num(); i++)
+	{
+		float scale_ = myGravBodies[i]->GetActorScale().X;
+		myGravBodies[i]->SetActorScale3D(FVector(scale_*2, scale_*2, scale_*2));
+	}
 }
