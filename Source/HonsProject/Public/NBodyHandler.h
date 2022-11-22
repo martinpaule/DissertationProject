@@ -39,17 +39,20 @@ public:
 	void RecentreSimulation();
 	UFUNCTION(BlueprintCallable, Category = "SimCentre")
 	void doubleAllScales();
-
+	UFUNCTION(BlueprintCallable, Category = "SimCentre")
+	void flipDispCalc() { enambleDispCalc = !enambleDispCalc; }
 
 	//array holding a reference to all bodies
 	TArray<AGravBody*> myGravBodies;
 
+	bool enambleDispCalc = false;
+
 	//spawning
-	void spawnBodyAt(FVector position_, FVector velocity_, float mass_, float radius_ = 0.0f, char * name_ = "GravBody");
+	void spawnBodyAt(FVector position_, FVector velocity_, double mass_, std::string name_ = "GravBody", float radius_ = 0.0f);
 	void graduallySpawnBodies(int spawnsPerFrame = 1);
 
 	//direct integration of gravitational calculations
-	void calculateAllVelocityChanges(float dt);
+	void calculateAllVelocityChanges(double dt);
 
 	void spawnSolarSystem();
 

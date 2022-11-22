@@ -89,7 +89,7 @@ void AGravBody::Tick(float DeltaTime)
 
 }
 
-void AGravBody::MoveBody(float editedDT)
+void AGravBody::MoveBody(double editedDT)
 {
 	SceneComponent->AddWorldOffset(velocity * editedDT);
 }

@@ -50,7 +50,7 @@ public:
 	
 	//apply displacement to the body based on its velocity
 	UFUNCTION(BlueprintCallable, Category="Move")
-		void MoveBody(float editedDT);
+		void MoveBody(double editedDT);
 
 	//simulation variables
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)

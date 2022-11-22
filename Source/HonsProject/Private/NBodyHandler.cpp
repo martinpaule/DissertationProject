@@ -22,7 +22,7 @@ void ANBodyHandler::BeginPlay()
 	Super::BeginPlay();
 
 
-	//example how to bind functions in code, keep to avoid looking this up again
+	//example how to bind functions to input in code, keep to avoid looking this up again
 	//ADefaultPawn * pawn_ = Cast<ADefaultPawn>(UGameplayStatics::GetActorOfClass(GetWorld(), ADefaultPawn::StaticClass()));
 	//UInputComponent * inp_ = pawn_->InputComponent;
 	//if (inp_)
@@ -54,7 +54,7 @@ void ANBodyHandler::BeginPlay()
 }
 
 //direct integration of gravitational dynamics using Newtonian formulae
-void ANBodyHandler::calculateAllVelocityChanges(float dt) {
+void ANBodyHandler::calculateAllVelocityChanges(double dt) {
 	for (int i = 0; i < myGravBodies.Num(); i++)
 	{
 		FVector sumOfForces = FVector(0.0f, 0.0f, 0.0f);
@@ -63,11 +63,34 @@ void ANBodyHandler::calculateAllVelocityChanges(float dt) {
 			if (i != j) //ignore the body's own force on itself
 			{
 				FVector distance = myGravBodies[j]->GetActorLocation() - myGravBodies[i]->GetActorLocation();
-				float length_ = distance.Length();
-				sumOfForces += bigG * myGravBodies[j]->mass * distance / length_ * length_ * length_;
+				double length_ = distance.Length();
+				double cubicLength = length_ * length_ * length_;
+				double disEditor = bigG * myGravBodies[j]->mass / cubicLength;
+				FVector deltaForce = distance * disEditor;
+				//FVector deltaForce = bigG * myGravBodies[j]->mass * distance / cubicLength; //PROBLEM
+				sumOfForces += deltaForce;
+				if (i == 1) {
+					GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::White, deltaForce.ToString().Append(" is delta Force to body").Append(myGravBodies[i]->GetActorLabel()));
+				}
 			}
 		}
-		myGravBodies[i]->velocity += dt * (sumOfForces) / myGravBodies[i]->mass;
+		FVector deltaVelocity = dt* (sumOfForces) / myGravBodies[i]->mass;
+
+		myGravBodies[i]->velocity += deltaVelocity;
+
+		//PRINT
+		if (i == 1) {
+			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::White, deltaVelocity.ToString().Append(" is deltaVelocity to body ").Append(myGravBodies[i]->GetActorLabel()));
+			if (deltaVelocity.Length() == 0.0f) {
+				GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Red, "length is 0!!!");
+			}
+			else {
+				GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Green, std::to_string(deltaVelocity.Length()).c_str());
+			}
+
+			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::White, myGravBodies[i]->velocity.ToString().Append(" is current velocity of body").Append(myGravBodies[i]->GetActorLabel()));
+		}
+		//myGravBodies[i]->velocity += FVector(1.0f, 1.0f, 1.0f) * dt;
 	}
 }
 
@@ -83,7 +106,7 @@ void ANBodyHandler::Tick(float DeltaTime)
 	else if(notPaused) { //tick
 
 		//dt influenced by simulation time scale
-		float updatedDT = DeltaTime * timeMultiplier;
+		double updatedDT = DeltaTime * timeMultiplier;
 		SimulationElapsedTime += updatedDT;
 
 
@@ -100,7 +123,9 @@ void ANBodyHandler::Tick(float DeltaTime)
 
 		//step 1: direct integration of gravitational calculations
 		//first dt pass
-		calculateAllVelocityChanges(updatedDT);
+		if (enambleDispCalc) {
+			calculateAllVelocityChanges(updatedDT);
+		}
 
 		//step 2: move bodies using their updated velocity, also destroy ones that 
 		for (int i = 0; i < myGravBodies.Num(); i++)
@@ -170,7 +195,7 @@ void ANBodyHandler::RecentreSimulation() {
 }
 
 // setup function for spawning bodies - creates a new body with specified parameters
-void ANBodyHandler::spawnBodyAt(FVector position_, FVector velocity_, float mass_, float radius_, char * name_)
+void ANBodyHandler::spawnBodyAt(FVector position_, FVector velocity_, double mass_, std::string name_, float radius_)
 {
 
 	FActorSpawnParameters SpawnInfo;
@@ -193,7 +218,7 @@ void ANBodyHandler::spawnBodyAt(FVector position_, FVector velocity_, float mass
 	newBody->radius = radius_;
 	newBody->toBeDestroyed = false;
 	//std::string a = "banana";
-	newBody->SetActorLabel(name_);
+	newBody->SetActorLabel(name_.c_str());
 	myGravBodies.Add(newBody);
 
 }
@@ -231,7 +256,9 @@ void ANBodyHandler::graduallySpawnBodies(int spawnsPerFrame) {
 		float mass_ = 0.01f;
 		mass_ += FMath::FRandRange(0.0f, SpawnInitialMaxMass);
 
-		spawnBodyAt(myLoc, speed_, mass_);
+		std::string bodName = "Body ";
+		bodName += std::to_string(gradualSpawnerIndex);
+		spawnBodyAt(myLoc, speed_, mass_, bodName);
 		BodiesInSimulation = myGravBodies.Num();
 		gradualSpawnerIndex++;
 		
@@ -245,32 +272,32 @@ void ANBodyHandler::spawnSolarSystem() {
 	//values obtained from Nasa's Horizons for the date of 18/11/2022
 
 	//Sun
-	spawnBodyAt(FVector(-1.35896f * pow(10, 6), 7.36638f * pow(10, 4), 3.10470f * pow(10, 4)), FVector(6.57942f * pow(10, -4), -1.56718f * pow(10, -2), 1.15770f * pow(10, -4)), 1988500.0f * pow(10, 24), 695700.0f, "Sun");
+	spawnBodyAt(FVector(-1.35896f * pow(10, 6), 7.36638f * pow(10, 4), 3.10470f * pow(10, 4)), FVector(6.57942f * pow(10, -4), -1.56718f * pow(10, -2), 1.15770f * pow(10, -4)), 1988500.0f * pow(10, 24), "Sun", 695700.0f);
 
 	//Mercury
-	spawnBodyAt(FVector(-2.2649f * pow(10, 7), -6.62515f * pow(10, 7), -3.43616f * pow(10, 6)), FVector(36.59884f, -12.48037f, -4.37549f), 3.302f * pow(10, 23), 2440.0f,"Mercury");
+	spawnBodyAt(FVector(-2.2649f * pow(10, 7), -6.62515f * pow(10, 7), -3.43616f * pow(10, 6)), FVector(36.59884f, -12.48037f, -4.37549f), 3.302f * pow(10, 23),"Mercury", 2440.0f);
 	
 	//Venus
-	spawnBodyAt(FVector(-3.69384f * pow(10, 7), -1.02494f * pow(10, 8), 6.75944f * pow(10, 5)), FVector(32.84882f, -11.64133f, -2.0549f), 48.685f * pow(10, 23), 6051.84f,"Venus");
+	spawnBodyAt(FVector(-3.69384f * pow(10, 7), -1.02494f * pow(10, 8), 6.75944f * pow(10, 5)), FVector(32.84882f, -11.64133f, -2.0549f), 48.685f * pow(10, 23),"Venus", 6051.84f);
 	
 	//Earth
-	spawnBodyAt(FVector(8.28377f * pow(10, 7), 1.21670f * pow(10, 8), 2.39333f * pow(10, 4)), FVector(-24.97096f, 16.8404f, -5.61289f * pow(10, -5)), 5.97219f * pow(10, 24), 6371.01f,"Earth");
+	spawnBodyAt(FVector(8.28377f * pow(10, 7), 1.21670f * pow(10, 8), 2.39333f * pow(10, 4)), FVector(-24.97096f, 16.8404f, -5.61289f * pow(10, -5)), 5.97219f * pow(10, 24),"Earth", 6371.01f);
 	
 	//Mars
-	spawnBodyAt(FVector(9.32897f * pow(10, 7), 2.04846f * pow(10, 8), 2.00101f * pow(10, 6)), FVector(-21.07414f, 12.21325f, 0.77336f), 6.4171f * pow(10, 23), 3389.92f,"Mars");
+	spawnBodyAt(FVector(9.32897f * pow(10, 7), 2.04846f * pow(10, 8), 2.00101f * pow(10, 6)), FVector(-21.07414f, 12.21325f, 0.77336f), 6.4171f * pow(10, 23),"Mars", 3389.92f);
 	
 	//Jupiter
-	spawnBodyAt(FVector(7.31791f * pow(10, 8), 1.05173f * pow(10, 8), -1.68084f * pow(10, 7)), FVector(-2.00956f, 13.54647f, -0.01125f), 1898.18722f * pow(10, 24), 69911.0f,"Jupiter");
+	spawnBodyAt(FVector(7.31791f * pow(10, 8), 1.05173f * pow(10, 8), -1.68084f * pow(10, 7)), FVector(-2.00956f, 13.54647f, -0.01125f), 1898.18722f * pow(10, 24),"Jupiter", 69911.0f);
 	
 	//Saturn 
-	spawnBodyAt(FVector(1.19859f * pow(10, 9), -8.53635f * pow(10, 8), -3.28788f * pow(10, 7)), FVector(5.06329f, 7.8505f, -0.33867f), 5.6834f * pow(10, 26), 58232.0f,"Saturn");
+	spawnBodyAt(FVector(1.19859f * pow(10, 9), -8.53635f * pow(10, 8), -3.28788f * pow(10, 7)), FVector(5.06329f, 7.8505f, -0.33867f), 5.6834f * pow(10, 26),"Saturn", 58232.0f);
 	
 	//Uranus
-	spawnBodyAt(FVector(2.01783f * pow(10, 9), 2.14180f * pow(10, 9), -1.81867f * pow(10, 7)), FVector(-5.00658f, 4.35256f, 0.08107f), 86.813f * pow(10, 24), 25362.0f,"Uranus");
+	spawnBodyAt(FVector(2.01783f * pow(10, 9), 2.14180f * pow(10, 9), -1.81867f * pow(10, 7)), FVector(-5.00658f, 4.35256f, 0.08107f), 86.813f * pow(10, 24),"Uranus", 25362.0f);
 	
 	//Neptune
-	spawnBodyAt(FVector(4.44886f * pow(10, 9), -4.60904f * pow(10, 8), -9.30371f * pow(10, 7)), FVector(0.52454f, 5.43826f, -0.12470), 102.409f * pow(10, 24), 24624.0f,"Neptune");
-	
+	spawnBodyAt(FVector(4.44886f * pow(10, 9), -4.60904f * pow(10, 8), -9.30371f * pow(10, 7)), FVector(0.52454f, 5.43826f, -0.12470), 102.409f * pow(10, 24), "Neptune", 24624.0f);
+	//905
 }
 
 void ANBodyHandler::doubleAllScales() {
