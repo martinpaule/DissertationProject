@@ -39,8 +39,7 @@ public:
 	void RecentreSimulation();
 	UFUNCTION(BlueprintCallable, Category = "SimCentre")
 	void doubleAllScales();
-	UFUNCTION(BlueprintCallable, Category = "SimCentre")
-	void flipDispCalc() { enambleDispCalc = !enambleDispCalc; }
+
 
 	//array holding a reference to all bodies
 	TArray<AGravBody*> myGravBodies;
@@ -80,7 +79,8 @@ public:
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 	bool shouldSpawnSolarSystem = false;
 
-	long double bigG = 0.000000000066743f;
+	//long double bigG = 0.000000000066743f;
+	double bigG = 39.4784f; //when using AU and Years
 	bool notPaused = true;
 	int gradualSpawnerIndex = 0;
 	bool spawningBodies = true;

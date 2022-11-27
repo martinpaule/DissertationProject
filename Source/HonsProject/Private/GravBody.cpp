@@ -61,17 +61,17 @@ void AGravBody::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyCha
 	//means scale = radius*2/100
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 
-	if (universalDensity) {
-		float scale_ = cbrt(mass);
-		this->SetActorScale3D(FVector(scale_, scale_, scale_));
-	}
-
-	if (PropertyChangedEvent.Property->GetName() == "radius") {
-		//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, "editedrad");
-		float scale_ = radius * 2.0f / 100.0f;
-		this->SetActorScale3D(FVector(scale_, scale_, scale_));
-		universalDensity = false;
-	}
+	//if (universalDensity) {
+	//	float scale_ = cbrt(mass);
+	//	this->SetActorScale3D(FVector(scale_, scale_, scale_));
+	//}
+	//
+	//if (PropertyChangedEvent.Property->GetName() == "radius") {
+	//	//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, "editedrad");
+	//	float scale_ = radius * 2.0f / 100.0f;
+	//	this->SetActorScale3D(FVector(scale_, scale_, scale_));
+	//	universalDensity = false;
+	//}
 
 }
 
@@ -91,7 +91,9 @@ void AGravBody::Tick(float DeltaTime)
 
 void AGravBody::MoveBody(double editedDT)
 {
-	SceneComponent->AddWorldOffset(velocity * editedDT);
+	//SceneComponent->AddWorldOffset(velocity * editedDT);
+	position += velocity * editedDT;
+	this->SetActorLocation(position * 100.0f);
 }
 
 
