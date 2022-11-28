@@ -53,16 +53,18 @@ public:
 		void MoveBody(double editedDT);
 
 	//simulation variables
+	
+	
+	FVector position = FVector(0.0f,0.0f,0.0f); //km/s
+	
+	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
+	FVector velocity = FVector(0.0f, 0.0f, 0.0f); //km/s
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 	double mass = 1; //kg
-	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-	FVector velocity = FVector(0.0f,0.0f,0.0f); //km/s
-	FVector position = FVector(0.0f,0.0f,0.0f); //km/s
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 	double radius = 1; //km
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 	bool universalDensity = true;
-
 	bool toBeDestroyed = false;
 
 

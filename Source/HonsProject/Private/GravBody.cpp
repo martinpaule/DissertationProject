@@ -14,7 +14,7 @@ AGravBody::AGravBody()
 	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshCompopnent"));
 	StaticMeshComponent->SetupAttachment(SceneComponent);
 
-	ConstructorHelpers::FObjectFinder<UStaticMesh>MeshAsset(TEXT("StaticMesh'/Game/MyHonsContent/PlanetMesh.PlanetMesh'"));
+	ConstructorHelpers::FObjectFinder<UStaticMesh>MeshAsset(TEXT("StaticMesh'/Game/MyHonsContent/PlanetRelated/PlanetMesh.PlanetMesh'"));
 	UStaticMesh* Asset = MeshAsset.Object;
 	
 
@@ -93,7 +93,8 @@ void AGravBody::MoveBody(double editedDT)
 {
 	//SceneComponent->AddWorldOffset(velocity * editedDT);
 	position += velocity * editedDT;
-	this->SetActorLocation(position * 100.0f);
+	//this->SetActorLocation(position * 100.0f);
+	this->SetActorLocation(position* 1000.0f);
 }
 
 

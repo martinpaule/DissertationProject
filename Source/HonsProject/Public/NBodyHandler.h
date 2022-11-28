@@ -39,12 +39,14 @@ public:
 	void RecentreSimulation();
 	UFUNCTION(BlueprintCallable, Category = "SimCentre")
 	void doubleAllScales();
-
+	UFUNCTION(BlueprintCallable, Category = "ClearSim")
+	void ClearSimulation();
+	UFUNCTION(BlueprintCallable, Category = "ClearSim")
+	void flipPlanetNames();
 
 	//array holding a reference to all bodies
 	TArray<AGravBody*> myGravBodies;
 
-	bool enambleDispCalc = false;
 
 	//spawning
 	void spawnBodyAt(FVector position_, FVector velocity_, double mass_, std::string name_ = "GravBody", float radius_ = 0.0f);
@@ -56,11 +58,11 @@ public:
 	void spawnSolarSystem();
 
 	//UI variables
-	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite)
 	float timeMultiplier = 1.0f;
-	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite)
 	float SimulationElapsedTime = 0.0f;
-	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite)
 	int BodiesInSimulation = 0;
 
 	//simulation dependant variables
@@ -78,11 +80,17 @@ public:
 	float SpawnInitialMaxMass = 300;
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 	bool shouldSpawnSolarSystem = false;
+	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
+	bool showPlanetNames = false;
+	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
+	int SolarPlanetToSpawn = 0;//0-7 to spawn a specific planet,- 1 for all
+
+
 
 	//long double bigG = 0.000000000066743f;
 	double bigG = 39.4784f; //when using AU and Years
-	bool notPaused = true;
-	int gradualSpawnerIndex = 0;
+	bool notPaused = false;
+	int gradualSpawnerIndex = 7;
 	bool spawningBodies = true;
 	
 };
