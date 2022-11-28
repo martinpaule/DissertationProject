@@ -61,17 +61,16 @@ void AGravBody::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyCha
 	//means scale = radius*2/100
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 
-	//if (universalDensity) {
-	//	float scale_ = cbrt(mass);
-	//	this->SetActorScale3D(FVector(scale_, scale_, scale_));
-	//}
-	//
-	//if (PropertyChangedEvent.Property->GetName() == "radius") {
-	//	//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, "editedrad");
-	//	float scale_ = radius * 2.0f / 100.0f;
-	//	this->SetActorScale3D(FVector(scale_, scale_, scale_));
-	//	universalDensity = false;
-	//}
+	if (universalDensity) {
+		float scale_ = cbrt(mass);
+		this->SetActorScale3D(FVector(scale_, scale_, scale_));
+	}
+	
+	if (PropertyChangedEvent.Property->GetName() == "radius") {
+		float scale_ = radius * 2.0f / 100.0f;
+		this->SetActorScale3D(FVector(scale_, scale_, scale_));
+		universalDensity = false;
+	}
 
 }
 
@@ -91,9 +90,7 @@ void AGravBody::Tick(float DeltaTime)
 
 void AGravBody::MoveBody(double editedDT)
 {
-	//SceneComponent->AddWorldOffset(velocity * editedDT);
 	position += velocity * editedDT;
-	//this->SetActorLocation(position * 100.0f);
 	this->SetActorLocation(position* 1000.0f);
 }
 
@@ -109,11 +106,6 @@ void AGravBody::combineCollisionBody(UPrimitiveComponent* OverlappedComponent, A
 	if (Cast<AGravBody>(OtherActor))
 	{
 
-		//print message with timestamp, development feature, remove at the end
-		FDateTime nowTime = FDateTime::Now();
-		std::string printStr = "(";
-		printStr += std::to_string(nowTime.GetHour()) + ":" + std::to_string(nowTime.GetMinute()) + ":" + std::to_string(nowTime.GetSecond()) + "." + std::to_string(nowTime.GetMillisecond()) + ") MERGED 2 BODIES";
-		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow, printStr.c_str());
 
 		//perfectly inelastic collision
 		AGravBody* otherBody = Cast<AGravBody>(OtherActor);
@@ -128,10 +120,21 @@ void AGravBody::combineCollisionBody(UPrimitiveComponent* OverlappedComponent, A
 		if (otherBody->mass >= mass) {
 			otherBody->velocity = finalVelocity;
 			otherBody->mass += mass;
-			float scale_ = cbrt(otherBody->mass);
+			float scale_ = otherBody->GetActorScale3D().X;
+			scale_ += this->GetActorScale3D().X / 15.0f;
 			otherBody->SetActorScale3D(FVector(scale_, scale_, scale_));
-
 			toBeDestroyed = true;
+
+			//print message with timestamp, development feature, remove at the end
+			FDateTime nowTime = FDateTime::Now();
+			std::string printStr = "(";
+			FString myName = this->GetActorLabel();
+			FString otherName = otherBody->GetActorLabel();
+			std::string names = std::string(TCHAR_TO_UTF8(*myName));
+			names += " and ";
+			names += std::string(TCHAR_TO_UTF8(*otherName));
+			printStr += std::to_string(nowTime.GetHour()) + ":" + std::to_string(nowTime.GetMinute()) + ":" + std::to_string(nowTime.GetSecond()) + "." + std::to_string(nowTime.GetMillisecond()) + "Merged Bodies "+ names;
+			GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, printStr.c_str());
 		}
 
 

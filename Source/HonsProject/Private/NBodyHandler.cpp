@@ -94,8 +94,8 @@ void ANBodyHandler::calculateAllVelocityChanges(double dt) {
 		deltaVelocity = dt* sumOfForces;
 		myGravBodies[i]->velocity += deltaVelocity;
 
-		//PRINT
-		if (i == 1) {
+		//PRINT for debug
+		if (false) {
 			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::White, deltaVelocity.ToString().Append(" is deltaVelocity to body ").Append(myGravBodies[i]->GetActorLabel()));
 			if (deltaVelocity.Length() == 0.0f) {
 				GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Red, "length is 0!!!");
@@ -113,7 +113,6 @@ void ANBodyHandler::calculateAllVelocityChanges(double dt) {
 void ANBodyHandler::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	//gradually spawn bodies to avoid a large lag spike at the start
 
 	
 	if (showPlanetNames) {
@@ -123,6 +122,7 @@ void ANBodyHandler::Tick(float DeltaTime)
 		}
 	}
 
+	//gradually spawn bodies to avoid a large lag spike at the start
 	if(spawningBodies)
 	{
 		graduallySpawnBodies(SpawnsPerFrame);
@@ -130,7 +130,8 @@ void ANBodyHandler::Tick(float DeltaTime)
 	else if(notPaused) { //tick
 
 		//dt influenced by simulation time scale
-		double updatedDT = DeltaTime * timeMultiplier;
+		double updatedDT = DeltaTime * timeMultiplier * 0.027f; //0.027 makes the time as 10 days/s		
+		
 		SimulationElapsedTime += updatedDT;
 
 
@@ -142,10 +143,6 @@ void ANBodyHandler::Tick(float DeltaTime)
 				myGravBodies.RemoveAt(i);
 				BodiesInSimulation = myGravBodies.Num();
 				i--;
-			}
-			if (showPlanetNames) {
-
-				DrawDebugString(GetWorld(), myGravBodies[i]->GetActorLocation()+= FVector(0.0f,0.0f,myGravBodies[i]->GetActorScale3D().X *50.0f + 50.0f), myGravBodies[i]->GetActorLabel(), this, FColor::White, 0.0f, false, 2.0f);
 			}
 		}
 
@@ -165,7 +162,7 @@ void ANBodyHandler::Tick(float DeltaTime)
 
 
 // setup function for spawning bodies - creates a new body with specified parameters
-void ANBodyHandler::spawnBodyAt(FVector position_, FVector velocity_, double mass_, std::string name_, float radius_)
+void ANBodyHandler::spawnBodyAt(FVector position_, FVector velocity_, double mass_, std::string name_, float radius_, FVector4 colour_)
 {
 
 	FActorSpawnParameters SpawnInfo;
@@ -177,57 +174,44 @@ void ANBodyHandler::spawnBodyAt(FVector position_, FVector velocity_, double mas
 	newBody->mass = mass_;
 	newBody->position = position_;
 	newBody->radius = radius_;
+	newBody->toBeDestroyed = false;
+	newBody->SetActorLabel(name_.c_str());
 
+	if (radius_ == 0.0f) {
+		radius_ = cbrt(mass_);
+	}
 	//currently more for display purposes
 	newBody->SetActorScale3D(FVector(radius_, radius_, radius_));
 
+	//option to set colour too
+	if (colour_ != FVector4(0.0f, 0.0f, 0.0f, 0.0f)) {
+		newBody->myMat->SetVectorParameterValue(TEXT("Colour"), colour_);
+	}
 
-	newBody->toBeDestroyed = false;
-	newBody->SetActorLabel(name_.c_str());
+
 	myGravBodies.Add(newBody);
 
 }
 
 void ANBodyHandler::spawnSolarSystem() {
 
-	//values obtained from Nasa's Horizons for the date of 18/11/2022
 
-	//Sun
-
-	////specify revelavant values
-	//FVector bodyONE_pos = FVector(0.0f, 0.0f, 0.0f);
-	//FVector bodyTWO_pos = FVector(1000.0f, 0.0f, 0.0f);
-	//float massOne = 1000.0f;
-	//float distance = (bodyONE_pos - bodyTWO_pos).Length();
-	//
-	//float YVel = bigG * massOne;
-	//YVel /= distance;
-	//YVel = sqrt(YVel);
-	//
-	//FVector dir = bodyONE_pos - bodyTWO_pos;
-	//dir.Normalize();
-	//FVector RightVel = UKismetMathLibrary::GetRightVector(dir.Rotation()) * YVel;
-	//
-	//spawnBodyAt(bodyONE_pos, FVector(0.0f, 0.0f, 0.0f), massOne, "HIDEME", 3.0f);
-	////spawnBodyAt(bodyTWO_pos, FVector(0.0f, YVel, 0.0f), 5.0f, "smallBody", 1.0f);
-	//spawnBodyAt(bodyTWO_pos, RightVel, 5.0f, "smallBody", 1.0f);
-
-	timeMultiplier = 0.125f;
-	float sizeScaler = 1000.0f;
-
+	//define and spawn the sun
 	FVector bodyONE_pos = FVector(-9.0841f * pow(10, -3), 4.9241f * pow(10, -4), 2.0754f * pow(10, -4));
 	float massOne = 1.0f;
+	spawnBodyAt(bodyONE_pos + InitialSpawnCentre/2, FVector(0.0f, 0.0f, 0.0f), 1.0f, "Sun", 5.0f,FVector4(1.0f,1.0f,0.0f,1.0f));
 
-	spawnBodyAt(bodyONE_pos, FVector(0.0f, 0.0f, 0.0f), 1.0f, "Sun", 5.0f);
 
 	std::string bodyTwoName_;
-	float massTwo;
-	float bodyTwoScale;
+	float massTwo = 0.0f;
+	float bodyTwoScale = 0.0f;
 	FVector bodyTWO_pos;
+	FVector4 planetColor;
 
+
+	//define which body (or if all) to spawn
 	int it_begin;
 	int it_end;
-
 	if (SolarPlanetToSpawn < 0 || SolarPlanetToSpawn > 7) {
 		it_begin = 0;
 		it_end = 7;
@@ -237,6 +221,7 @@ void ANBodyHandler::spawnSolarSystem() {
 		it_end = SolarPlanetToSpawn;
 	}
 
+	//define values
 	for (it_begin; it_begin <= it_end; it_begin++) {
 		//which planet to simulate orbiting around the sun
 		switch (it_begin) {
@@ -246,52 +231,60 @@ void ANBodyHandler::spawnSolarSystem() {
 			massTwo = 0.9545f * pow(10, -3);
 			bodyTwoScale = 2.2f;
 			bodyTWO_pos = FVector(4.8917f, 7.0304f * pow(10, -1), -1.1236f * pow(10, -1));
+			planetColor = FVector4(0.8f, 0.8f, 0.7f, 1.0f);
 			break;
 		case 1: //
 			bodyTwoName_ = "Saturn";
 			massTwo = 2.859 * pow(10, -4);
 			bodyTwoScale = 1.9f;
 			bodyTWO_pos = FVector(8.0121f, -5.7062f, -2.1978f * pow(10, -1));
+			planetColor = FVector4(0.82f, 0.72f, 0.55f, 1.0f);
 			break;
 		case 2: //
 			bodyTwoName_ = "Neptune";
 			massTwo = 5.15f * pow(10, -5);
 			bodyTwoScale = 1.4f;
 			bodyTWO_pos = FVector(2.9739f * pow(10, 1), -3.081f, -6.2191f * pow(10, -1));
+			planetColor = FVector4(0.4f, 0.4f, 1.0f, 1.0f);
 			break;
 		case 3: //
 			bodyTwoName_ = "Uranus";
 			massTwo = 4.364f * pow(10, -5);
 			bodyTwoScale = 1.5f;
 			bodyTWO_pos = FVector(1.3488f * pow(10, 1), 1.4317f * pow(10, 1), -1.2157f * pow(10, -1));
+			planetColor = FVector4(0.6f, 0.6f, 0.95f, 1.0f);
 			break;
 		case 4: //
 			bodyTwoName_ = "Earth";
 			massTwo = 3.003f * pow(10, -6);
 			bodyTwoScale = 1.1f;
 			bodyTWO_pos = FVector(5.5374f * pow(10, -1), 8.1332f * pow(10, -1), 1.5998f * pow(10, -4));
+			planetColor = FVector4(0.1f, 0.1f, 0.95f, 1.0f);
 			break;
 		case 5: //
 			bodyTwoName_ = "Venus";
 			massTwo = 2.447f * pow(10, -6);
 			bodyTwoScale = 0.9f;
 			bodyTWO_pos = FVector(-2.4692f * pow(10, -1), -6.8513f * pow(10, -1), 4.5184f * pow(10, -3));
+			planetColor = FVector4(0.95f, 0.2f, 0.95f, 1.0f);
 			break;
 		case 6: //
 			bodyTwoName_ = "Mars";
 			massTwo = 3.226f * pow(10, -7);
 			bodyTwoScale = 0.6f;
 			bodyTWO_pos = FVector(6.2360f * pow(10, -1), 1.3693f, 1.3376f * pow(10, -2));
+			planetColor = FVector4(0.8f, 0.3f, 0.05f, 1.0f);
 			break;
 		case 7:
 			bodyTwoName_ = "Mercury";
 			massTwo = 1.66f * pow(10, -7);
 			bodyTwoScale = 0.5f;
 			bodyTWO_pos = FVector(-1.514f * pow(10, -1), -4.4286f * pow(10, -1), -2.2969f * pow(10, -2));
+			planetColor = FVector4(0.95f, 0.6f, 0.0f, 1.0f);
 			break;
 		}
 
-
+		//calculate the values into a tangential velocity.
 		//v^2 = m1 * G / distance
 
 		FVector dir = bodyONE_pos - bodyTWO_pos;
@@ -303,11 +296,10 @@ void ANBodyHandler::spawnSolarSystem() {
 
 		dir.Normalize();
 		FVector RightVel = UKismetMathLibrary::GetRightVector(dir.Rotation()) * YVel;
-		spawnBodyAt(bodyTWO_pos, RightVel, massTwo, bodyTwoName_, bodyTwoScale);
+		spawnBodyAt(bodyTWO_pos + InitialSpawnCentre/2, RightVel, massTwo, bodyTwoName_, bodyTwoScale,planetColor);
 	}
 
 }
-
 
 
 //function that allows gradual spawn of initial bodies rather than all at once, avoiding a big lag spike when handlingodies
@@ -329,19 +321,19 @@ void ANBodyHandler::graduallySpawnBodies(int spawnsPerFrame) {
 
 		//random location
 		FVector myLoc(-SpawnLocationBounds / 2, -SpawnLocationBounds / 2, -SpawnLocationBounds / 2);
-		myLoc.X += FMath::RandRange(0, SpawnLocationBounds);
-		myLoc.Y += FMath::RandRange(0, SpawnLocationBounds);
-		myLoc.Z += FMath::RandRange(0, SpawnLocationBounds);
+		myLoc.X += FMath::FRandRange(0, SpawnLocationBounds);
+		myLoc.Y += FMath::FRandRange(0, SpawnLocationBounds);
+		myLoc.Z += FMath::FRandRange(0, SpawnLocationBounds);
 		myLoc += InitialSpawnCentre; //translate it to desired spawn centre
 
 		//random speed
 		FVector speed_ = FVector(-SpawnInitialMaxSpeed / 2, -SpawnInitialMaxSpeed / 2, -SpawnInitialMaxSpeed / 2);
-		speed_.X += FMath::RandRange(0, SpawnInitialMaxSpeed);
-		speed_.Y += FMath::RandRange(0, SpawnInitialMaxSpeed);
-		speed_.Z += FMath::RandRange(0, SpawnInitialMaxSpeed);
+		speed_.X += FMath::FRandRange(0, SpawnInitialMaxSpeed);
+		speed_.Y += FMath::FRandRange(0, SpawnInitialMaxSpeed);
+		speed_.Z += FMath::FRandRange(0, SpawnInitialMaxSpeed);
 
 		//random mass
-		float mass_ = 0.01f;
+		float mass_ = 0.001f;
 		mass_ += FMath::FRandRange(0.0f, SpawnInitialMaxMass);
 
 		std::string bodName = "Body ";
@@ -361,6 +353,7 @@ void ANBodyHandler::doubleAllScales() {
 	{
 		float scale_ = myGravBodies[i]->GetActorScale().X;
 		myGravBodies[i]->SetActorScale3D(FVector(scale_*2, scale_*2, scale_*2));
+
 	}
 }
 

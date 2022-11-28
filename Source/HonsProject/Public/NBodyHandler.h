@@ -49,21 +49,23 @@ public:
 
 
 	//spawning
-	void spawnBodyAt(FVector position_, FVector velocity_, double mass_, std::string name_ = "GravBody", float radius_ = 0.0f);
+	void spawnBodyAt(FVector position_, FVector velocity_, double mass_, std::string name_ = "GravBody", float radius_ = 0.0f, FVector4 colour_ = FVector4(0.0f,0.0f,0.0f,0.0f));
+	void spawnSolarSystem();
 	void graduallySpawnBodies(int spawnsPerFrame = 1);
+
 
 	//direct integration of gravitational calculations
 	void calculateAllVelocityChanges(double dt);
 
-	void spawnSolarSystem();
 
 	//UI variables
-	UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite)
+	UPROPERTY(Category = "forUI", BlueprintReadWrite)
 	float timeMultiplier = 1.0f;
-	UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite)
+	UPROPERTY(Category = "forUI", BlueprintReadWrite)
 	float SimulationElapsedTime = 0.0f;
-	UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite)
+	UPROPERTY(Category = "forUI", BlueprintReadWrite)
 	int BodiesInSimulation = 0;
+
 
 	//simulation dependant variables
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
@@ -73,24 +75,23 @@ public:
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 	FVector InitialSpawnCentre = FVector(0,0,0);
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-	int SpawnLocationBounds = 50000;
+	float SpawnLocationBounds = 10;
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-	int SpawnInitialMaxSpeed = 200;
+	float SpawnInitialMaxSpeed = 3;
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-	float SpawnInitialMaxMass = 300;
+	float SpawnInitialMaxMass = 5;
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 	bool shouldSpawnSolarSystem = false;
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 	bool showPlanetNames = false;
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-	int SolarPlanetToSpawn = 0;//0-7 to spawn a specific planet,- 1 for all
+	int SolarPlanetToSpawn = 0;//0-7 to spawn a specific planet+ sun,anything else for all of them
 
 
-
-	//long double bigG = 0.000000000066743f;
-	double bigG = 39.4784f; //when using AU and Years
+	//double bigG = 0.000000000066743f; //when using kg,m and s
+	double bigG = 39.4784f; //when using SolarMass, AU and Years
 	bool notPaused = false;
-	int gradualSpawnerIndex = 7;
+	int gradualSpawnerIndex = 0;
 	bool spawningBodies = true;
 	
 };
