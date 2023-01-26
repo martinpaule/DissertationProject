@@ -40,7 +40,7 @@ AGravBody::AGravBody()
 
 	myMat->SetVectorParameterValue(TEXT("Colour"), randCol);
 	
-	
+	myCol = FColor(randCol.X*255, randCol.Y * 255, randCol.Z * 255);
 
 }
 
@@ -126,15 +126,18 @@ void AGravBody::combineCollisionBody(UPrimitiveComponent* OverlappedComponent, A
 			toBeDestroyed = true;
 
 			//print message with timestamp, development feature, remove at the end
-			FDateTime nowTime = FDateTime::Now();
-			std::string printStr = "(";
-			FString myName = this->GetActorLabel();
-			FString otherName = otherBody->GetActorLabel();
-			std::string names = std::string(TCHAR_TO_UTF8(*myName));
-			names += " and ";
-			names += std::string(TCHAR_TO_UTF8(*otherName));
-			printStr += std::to_string(nowTime.GetHour()) + ":" + std::to_string(nowTime.GetMinute()) + ":" + std::to_string(nowTime.GetSecond()) + "." + std::to_string(nowTime.GetMillisecond()) + "Merged Bodies "+ names;
-			GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, printStr.c_str());
+			if (false) {
+				FDateTime nowTime = FDateTime::Now();
+				std::string printStr = "(";
+				FString myName = this->GetActorLabel();
+				FString otherName = otherBody->GetActorLabel();
+				std::string names = std::string(TCHAR_TO_UTF8(*myName));
+				names += " and ";
+				names += std::string(TCHAR_TO_UTF8(*otherName));
+				printStr += std::to_string(nowTime.GetHour()) + ":" + std::to_string(nowTime.GetMinute()) + ":" + std::to_string(nowTime.GetSecond()) + "." + std::to_string(nowTime.GetMillisecond()) + "Merged Bodies " + names;
+				GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, printStr.c_str());
+			}
+			
 		}
 
 

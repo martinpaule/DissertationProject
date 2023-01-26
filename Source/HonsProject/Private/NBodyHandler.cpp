@@ -19,10 +19,12 @@ ANBodyHandler::ANBodyHandler()
 	
 }
 
+
 // Called when the game starts or when spawned
 void ANBodyHandler::BeginPlay()
 {
 	Super::BeginPlay();
+
 
 
 	//example how to bind functions to input in code, keep to avoid looking this up again
@@ -40,12 +42,11 @@ void ANBodyHandler::BeginPlay()
 	//	EnableInput(GetWorld()->GetFirstPlayerController());
 	//}
 
+	//UWorld::LineTraceSingleByChannel()
+
 	//add manually placed bodies to the array
 	TArray<AActor*> FoundActors;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AGravBody::StaticClass(), FoundActors);
-	
-	//UGameplayStatics::GetAllActorsOfClass()
-	
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AGravBody::StaticClass(), FoundActors);	
 	
 	for (int n = 0; n < FoundActors.Num(); n++) {
 		AGravBody* ref = Cast<AGravBody>(FoundActors[n]);
@@ -53,7 +54,9 @@ void ANBodyHandler::BeginPlay()
 		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow, std::to_string(n).c_str());
 	}
 
-
+	FActorSpawnParameters SpawnInfo;
+	treeHandlerRef = GetWorld()->SpawnActor<ATreeHandler>(SpawnInfo);
+	treeHandlerRef->bodyHandlerBodies = &myGravBodies;
 }
 
 //direct integration of gravitational dynamics using Newtonian formulae
@@ -114,6 +117,23 @@ void ANBodyHandler::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+
+
+	//FPS calculations
+	fpsINC++;
+	fpsDTcomb += DeltaTime;
+	if (fpsINC >= 19) {
+
+		lastDebugFPS = 1.0f / (fpsDTcomb / 20.0f);
+
+		fpsINC = 0;
+		fpsDTcomb = 0.0f;
+	}
+	GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, ("FPS: " + std::to_string(lastDebugFPS)).c_str());
+
+	if (showTrails) {
+		LineResetTime -= DeltaTime;
+	}
 	
 	if (showPlanetNames) {
 		for (int i = 0; i < myGravBodies.Num(); i++)
@@ -150,12 +170,21 @@ void ANBodyHandler::Tick(float DeltaTime)
 		//first dt pass
 		calculateAllVelocityChanges(updatedDT);
 
-
 		//step 2: move bodies using their updated velocity, also destroy ones that 
 		for (int i = 0; i < myGravBodies.Num(); i++)
 		{
 			//second dt pass
 			myGravBodies[i]->MoveBody(updatedDT);
+
+			if (LineResetTime <= 0) {
+				DrawDebugLine(GetWorld(), myGravBodies[i]->lastTrailPos * 1000.0f, myGravBodies[i]->position * 1000.0f, myGravBodies[i]->myCol, false, 2.0f, 0, 5.0f);
+				myGravBodies[i]->lastTrailPos = myGravBodies[i]->position;
+			}
+		}
+
+
+		if (LineResetTime <= 0) {
+			LineResetTime = 0.05f;
 		}
 	}
 }
@@ -176,6 +205,7 @@ void ANBodyHandler::spawnBodyAt(FVector position_, FVector velocity_, double mas
 	newBody->radius = radius_;
 	newBody->toBeDestroyed = false;
 	newBody->SetActorLabel(name_.c_str());
+	newBody->lastTrailPos = position_;
 
 	if (radius_ == 0.0f) {
 		radius_ = cbrt(mass_);

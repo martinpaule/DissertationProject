@@ -52,6 +52,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Move")
 	void MoveBody(double editedDT);
 
+	FColor myCol;
 	
 	//simulation variables
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
@@ -64,5 +65,8 @@ public:
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 	bool universalDensity = true;
 	bool toBeDestroyed = false;
+
+	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
+	FVector lastTrailPos;
 
 };

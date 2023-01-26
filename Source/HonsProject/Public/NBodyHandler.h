@@ -4,9 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
-#include "GravBody.h"
 #include "UObject/ConstructorHelpers.h"
 #include <string>
+#include "TreeHandler.h"
 #include "NBodyHandler.generated.h"
 
 
@@ -47,6 +47,8 @@ public:
 	//array holding a reference to all bodies
 	TArray<AGravBody*> myGravBodies;
 
+	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
+	ATreeHandler* treeHandlerRef;
 
 	//spawning
 	void spawnBodyAt(FVector position_, FVector velocity_, double mass_, std::string name_ = "GravBody", float radius_ = 0.0f, FVector4 colour_ = FVector4(0.0f,0.0f,0.0f,0.0f));
@@ -87,11 +89,24 @@ public:
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 	int SolarPlanetToSpawn = 0;//0-7 to spawn a specific planet+ sun,anything else for all of them
 
+	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
+	bool notPaused = false;
+	UPROPERTY(Category = "VisualisationRelevant", EditAnywhere, BlueprintReadWrite)
+	bool showTrails = false;
+	
+
 
 	//double bigG = 0.000000000066743f; //when using kg,m and s
 	double bigG = 39.4784f; //when using SolarMass, AU and Years
-	bool notPaused = false;
+
 	int gradualSpawnerIndex = 0;
 	bool spawningBodies = true;
 	
+
+	float LineResetTime = 0.2f;
+
+
+	int fpsINC = 0;
+	float fpsDTcomb = 0.0f;
+	int lastDebugFPS = 17;
 };
