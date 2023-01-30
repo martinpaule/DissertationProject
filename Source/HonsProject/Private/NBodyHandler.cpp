@@ -62,6 +62,7 @@ void ANBodyHandler::BeginPlay()
 //direct integration of gravitational dynamics using Newtonian formulae
 void ANBodyHandler::calculateAllVelocityChanges(double dt) {
 
+	gravCalculations = 0;
 
 	//declarations
 	double distance = 0.0f;
@@ -90,6 +91,7 @@ void ANBodyHandler::calculateAllVelocityChanges(double dt) {
 
 				//add this to the sum of forces acting on body I
 				sumOfForces += iteratedBodyForce;
+				gravCalculations++;
 			}
 		}
 
@@ -112,6 +114,38 @@ void ANBodyHandler::calculateAllVelocityChanges(double dt) {
 	}
 }
 
+
+//direct integration of gravitational dynamics using Newtonian formulae
+void ANBodyHandler::calculateWithTree(double dt) {
+
+	gravCalculations = 0;
+
+	FVector deltaVelocity = FVector(0.0f, 0.0f, 0.0f);
+
+	for (int i = 0; i < myGravBodies.Num(); i++)
+	{
+		
+
+		//apply change in velocity to body I
+		deltaVelocity = dt * treeHandlerRef->getApproxForce(myGravBodies[i],treeHandlerRef->treeNodeRoot);
+		myGravBodies[i]->velocity += deltaVelocity;
+
+		//PRINT for debug
+		if (false) {
+			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::White, deltaVelocity.ToString().Append(" is deltaVelocity to body ").Append(myGravBodies[i]->GetActorLabel()));
+			if (deltaVelocity.Length() == 0.0f) {
+				GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Red, "length is 0!!!");
+			}
+			else {
+				GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Green, std::to_string(deltaVelocity.Length()).c_str());
+			}
+
+			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::White, myGravBodies[i]->velocity.ToString().Append(" is current velocity of body").Append(myGravBodies[i]->GetActorLabel()));
+		}
+	}
+}
+
+
 // Called every frame
 void ANBodyHandler::Tick(float DeltaTime)
 {
@@ -130,10 +164,14 @@ void ANBodyHandler::Tick(float DeltaTime)
 		fpsDTcomb = 0.0f;
 	}
 	GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, ("FPS: " + std::to_string(lastDebugFPS)).c_str());
+	GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, ("Calculaions: " + std::to_string(treeHandlerRef->gravCalcs)).c_str());
+	//GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, ("Calculaions: " + std::to_string(gravCalculations)).c_str());
 
 	if (showTrails) {
 		LineResetTime -= DeltaTime;
 	}
+	treeHandlerRef->gravCalcs = 0;
+
 	
 	if (showPlanetNames) {
 		for (int i = 0; i < myGravBodies.Num(); i++)
@@ -168,7 +206,10 @@ void ANBodyHandler::Tick(float DeltaTime)
 
 		//step 1: direct integration of gravitational calculations, find delta velocity of all bodies
 		//first dt pass
-		calculateAllVelocityChanges(updatedDT);
+		//calculateAllVelocityChanges(updatedDT);
+		calculateWithTree(updatedDT);
+
+
 
 		//step 2: move bodies using their updated velocity, also destroy ones that 
 		for (int i = 0; i < myGravBodies.Num(); i++)

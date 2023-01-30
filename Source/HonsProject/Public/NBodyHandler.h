@@ -59,6 +59,8 @@ public:
 	//direct integration of gravitational calculations
 	void calculateAllVelocityChanges(double dt);
 
+	//direct integration of gravitational calculations
+	void calculateWithTree(double dt);
 
 	//UI variables
 	UPROPERTY(Category = "forUI", BlueprintReadWrite)
@@ -109,4 +111,5 @@ public:
 	int fpsINC = 0;
 	float fpsDTcomb = 0.0f;
 	int lastDebugFPS = 17;
+	int gravCalculations = 0;
 };

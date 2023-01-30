@@ -23,9 +23,9 @@ void ATreeHandler::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	RecalculatePartitioning();
 	if (showTreeBoxes) {
-		RecalculatePartitioning();
-		DisplaySectors();
+		DisplaySectors(treeNodeRoot);
 	}
 }
 
@@ -82,13 +82,119 @@ void ATreeHandler::RecalculatePartitioning() {
 	treeNodeRoot->position = (XYZ_min + XYZ_max) / 2.0f;
 	treeNodeRoot->extent = extent;
 	treeNodeRoot->bodies = *bodyHandlerBodies;
-	treeNodeRoot->partition();
+	
+	partitionTree(treeNodeRoot);
+
 
 
 }
 
-void ATreeHandler::DisplaySectors() {
+void ATreeHandler::DisplaySectors(TreeNode* rootNode) {
 
-	treeNodeRoot->displayBoxes(GetWorld());
+	if (rootNode->isLeaf) {
+		if (rootNode->bodies.Num() == 1) {
+			DrawDebugBox(GetWorld(), rootNode->position * 1000.0f, FVector(rootNode->extent, rootNode->extent, rootNode->extent) * 1000.0f, rootNode->bodies[0]->myCol, false, 0.0f, 0, 7.0f);
+		}
+		else {
+			//DrawDebugBox(worldRef, position * 1000.0f, FVector(extent, extent, extent) * 1000.0f, FColor::Red, false, -1.0f, 0, 2.0f);
+		}
+	}
+	else {
+		for (int j = 0; j < 8; j++) {
 
+			DisplaySectors(rootNode->branch_nodes[j]);
+		}
+	}
+}
+
+void ATreeHandler::partitionTree(TreeNode* rootNode)
+{
+	//exit if there is 1 or 0 children
+	if (rootNode->bodies.Num() < 2) {
+		return;
+	}
+
+	rootNode->isLeaf = false;
+
+	//setup 8 children nodes
+	for (int i = 0; i < 8; i++) {
+		rootNode->branch_nodes.Add(new TreeNode);
+		rootNode->branch_nodes.Last()->extent = rootNode->extent / 2.0f;
+		rootNode->branch_nodes.Last()->root_node = rootNode;
+	}
+
+	float childOffs = rootNode->extent / 2.0f;
+
+	//create oct-tree children with their offsets
+	rootNode->branch_nodes[0]->position = rootNode->position + FVector(childOffs, childOffs, childOffs);
+	rootNode->branch_nodes[1]->position = rootNode->position + FVector(childOffs, childOffs, -childOffs);
+	rootNode->branch_nodes[2]->position = rootNode->position + FVector(-childOffs, childOffs, childOffs);
+	rootNode->branch_nodes[3]->position = rootNode->position + FVector(-childOffs, childOffs, -childOffs);
+	rootNode->branch_nodes[4]->position = rootNode->position + FVector(childOffs, -childOffs, childOffs);
+	rootNode->branch_nodes[5]->position = rootNode->position + FVector(childOffs, -childOffs, -childOffs);
+	rootNode->branch_nodes[6]->position = rootNode->position + FVector(-childOffs, -childOffs, childOffs);
+	rootNode->branch_nodes[7]->position = rootNode->position + FVector(-childOffs, -childOffs, -childOffs);
+
+	//decide which child node to attach it to, also calclate centre of- and combined mass of the node
+	for (int j = 0; j < 8; j++) {
+
+		float combinedMass = 0.0f;
+		FVector centreOfMass = FVector(0.0f, 0.0f, 0.0f);
+
+		for (int k = 0; k < rootNode->bodies.Num(); k++) {
+			if (rootNode->branch_nodes[j]->isInExtent(rootNode->bodies[k]->position)) {
+				rootNode->branch_nodes[j]->bodies.Add(rootNode->bodies[k]);
+
+				combinedMass += rootNode->bodies[k]->mass;
+				centreOfMass += rootNode->bodies[k]->position * rootNode->bodies[k]->mass;
+			}
+		}
+
+		centreOfMass /= combinedMass;
+		rootNode->branch_nodes[j]->Node_CentreOMass = centreOfMass;
+		rootNode->branch_nodes[j]->Node_CombinedMass = combinedMass;
+	}
+
+	//RECURSIVE CALL
+	//decide which child node to attach it to
+	for (int j = 0; j < 8; j++) {
+		partitionTree(rootNode->branch_nodes[j]);
+	}
+}
+
+FVector ATreeHandler::getApproxForce(AGravBody* body, TreeNode * rootNode)
+{
+	float distance_body_to_centreOfMass = (body->position - rootNode->Node_CentreOMass).Length();
+	float accuracy_Param = 1.0f;
+
+
+	FVector combinedForces = FVector(0, 0, 0);
+
+	if (rootNode->bodies.Num() == 0) {
+		return combinedForces;
+	}
+
+
+	if ((rootNode->extent*2.0f) / distance_body_to_centreOfMass < accuracy_Param) {
+	
+		double bigG = 39.4784f; //when using SolarMass, AU and Years
+	
+		FVector direction = rootNode->Node_CentreOMass - body->position;
+		float distanceCubed = distance_body_to_centreOfMass * distance_body_to_centreOfMass * distance_body_to_centreOfMass;
+		FVector returnForce = direction * bigG * rootNode->Node_CombinedMass;
+		returnForce /= distanceCubed;
+	
+		gravCalcs++;
+	
+		return returnForce;
+	}
+	else {
+		if (!rootNode->isLeaf) {
+			for (int j = 0; j < 8; j++) {
+				combinedForces += getApproxForce(body, rootNode->branch_nodes[j]);
+			}
+		}
+	}
+
+	return combinedForces;
 }
