@@ -21,16 +21,17 @@ ANBodyHandler::ANBodyHandler()
 
 void ANBodyHandler::recordFinalPositions() {
 
+	//for better read write:
+	//https://sbcomputerentertainment.com/other-2/editor/how-to-create-a-read-write-system-for-txt-files-c-tutorial/
 	//first record all text already in the file
 	TArray<std::string> textInFile;
-	std::ifstream myfile("D:\\LocalWorkDir\\1903300\\DissertationProject\\testOutputs.txt");
+	//std::ifstream myfile("D:\\LocalWorkDir\\1903300\\DissertationProject\\testOutputs.txt");
+	std::ifstream myfile("D:\\Users\\User\\Documents\\GitHub\\DissertationProject\\testOutputs.txt");
 	if (myfile.is_open())
 	{
-		//myfile << "This is a line.\n";
-		//myfile << "This is another line.\n";
-
+	
 		std::string line;
-
+	
 		while (getline(myfile, line)) //store already existing text in a array
 		{
 			textInFile.Push(line);
@@ -42,7 +43,8 @@ void ANBodyHandler::recordFinalPositions() {
 	}
 
 	//write into the file
-	std::ofstream myfile_w("D:\\LocalWorkDir\\1903300\\DissertationProject\\testOutputs.txt");
+	//std::ofstream myfile_w("D:\\LocalWorkDir\\1903300\\DissertationProject\\testOutputs.txt");
+	std::ofstream myfile_w("D:\\Users\\User\\Documents\\GitHub\\DissertationProject\\testOutputs.txt");
 	if (myfile_w.is_open())
 	{
 		//write back into the file what was there already
@@ -216,7 +218,7 @@ void ANBodyHandler::Tick(float DeltaTime)
 		}
 
 		//optional recording of locations 
-		if (SimulationElapsedTime >= 1.0f && ShouldReset) {
+		if (SimulationElapsedTime >= resetTime && ShouldReset) {
 			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, "StoppedSim");
 
 			recordFinalPositions();
