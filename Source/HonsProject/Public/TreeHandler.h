@@ -60,11 +60,14 @@ public:
 	void DisplaySectors(TreeNode* rootNode);
 	void partitionTree(TreeNode* rootNode);
 
+	//recursive function to get force acting on a given 1 body
 	FVector getApproxForce(AGravBody* body, TreeNode* rootNode);
 
-
+	//visualise oct trees
 	UPROPERTY(Category = "VisualisationRelevant", EditAnywhere, BlueprintReadWrite)
 		bool showTreeBoxes = false;
 
+	//total gravitational calculations done
+	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 	int gravCalcs = 0;
 };

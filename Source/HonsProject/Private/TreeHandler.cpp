@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include <string>
 #include "TreeHandler.h"
+#include <string>
 
 // Sets default values
 ATreeHandler::ATreeHandler()
@@ -34,7 +34,6 @@ void ATreeHandler::RecalculatePartitioning() {
 	
 	//reset root
 	delete treeNodeRoot;
-	treeNodeRoot = new TreeNode;
 
 	//find max and min on XYZ axis
 	FVector XYZ_min;
@@ -69,7 +68,7 @@ void ATreeHandler::RecalculatePartitioning() {
 		}
 	}
 
-	//use these max mins to setup first root node
+	//find a CUBE that is JUST enveloping the planets
 	float extent = XYZ_max.X - XYZ_min.X;
 	if (XYZ_max.Y - XYZ_min.Y > extent) {
 		extent = XYZ_max.Y - XYZ_min.Y;
@@ -77,14 +76,17 @@ void ATreeHandler::RecalculatePartitioning() {
 	if (XYZ_max.Z - XYZ_min.Z > extent) {
 		extent = XYZ_max.Z - XYZ_min.Z;
 	}
-
 	extent /= 2.0f;
 
+
+	//create new root and set its variables
+	treeNodeRoot = new TreeNode;
 	treeNodeRoot->position = (XYZ_min + XYZ_max) / 2.0f;
 	treeNodeRoot->level = 1;
 	treeNodeRoot->extent = extent;
 	treeNodeRoot->bodies = *bodyHandlerBodies;
 	
+	//also assign its combined mass and centre of mass
 	float combinedMass = 0.0f;
 	FVector centreOfMass = FVector(0.0f, 0.0f, 0.0f);
 	for (int k = 0; k < treeNodeRoot->bodies.Num(); k++) {
@@ -97,10 +99,8 @@ void ATreeHandler::RecalculatePartitioning() {
 	treeNodeRoot->Node_CentreOMass = centreOfMass;
 	treeNodeRoot->Node_CombinedMass = combinedMass;
 
+	//recursively partition the tree
 	partitionTree(treeNodeRoot);
-
-
-
 }
 
 void ATreeHandler::DisplaySectors(TreeNode* rootNode) {
@@ -114,15 +114,6 @@ void ATreeHandler::DisplaySectors(TreeNode* rootNode) {
 		}
 	}
 	else {
-
-		if (rootNode->level == 3) {
-			//DrawDebugBox(GetWorld(), rootNode->position * 1000.0f, FVector(rootNode->extent, rootNode->extent, rootNode->extent) * 1000.0f, FColor::White, false, 0.0f, 0, 7.0f);
-
-			//DrawDebugString(GetWorld(), rootNode->position * 1000.0f, FString("Average position: ").Append(rootNode->Node_CentreOMass.ToString()), this, FColor::White, 0.0f, false, 0.7f);
-			//DrawDebugString(GetWorld(), rootNode->position * 1000.0f - FVector(0,0,500.0f), FString("Combined Mass: ").Append(FString::SanitizeFloat(rootNode->Node_CombinedMass)), this, FColor::White, 0.0f, false, 0.7f);
-
-		}
-
 
 		for (int j = 0; j < 8; j++) {
 
@@ -161,12 +152,14 @@ void ATreeHandler::partitionTree(TreeNode* rootNode)
 	rootNode->branch_nodes[6]->position = rootNode->position + FVector(-childOffs, -childOffs, childOffs);
 	rootNode->branch_nodes[7]->position = rootNode->position + FVector(-childOffs, -childOffs, -childOffs);
 
-	//decide which child node to attach it to, also calclate centre of- and combined mass of the node
+	//loop through the children nodes
 	for (int j = 0; j < 8; j++) {
 
+		//declare
 		float combinedMass = 0.0f;
 		FVector centreOfMass = FVector(0.0f, 0.0f, 0.0f);
 
+		//assign all relevant bodies into this child node, handling their mass and position to calculate their avg pos and comb mass
 		for (int k = 0; k < rootNode->bodies.Num(); k++) {
 			if (rootNode->branch_nodes[j]->isInExtent(rootNode->bodies[k]->position)) {
 				rootNode->branch_nodes[j]->bodies.Add(rootNode->bodies[k]);
@@ -176,6 +169,7 @@ void ATreeHandler::partitionTree(TreeNode* rootNode)
 			}
 		}
 
+		//calculate the node's centre of mass and combined mass
 		centreOfMass /= combinedMass;
 		rootNode->branch_nodes[j]->Node_CentreOMass = centreOfMass;
 		rootNode->branch_nodes[j]->Node_CombinedMass = combinedMass;
@@ -189,19 +183,23 @@ void ATreeHandler::partitionTree(TreeNode* rootNode)
 	}
 }
 
+//recursive function calculating force on a body
 FVector ATreeHandler::getApproxForce(AGravBody* body, TreeNode * rootNode)
 {
+
+	//return from an empty leaf
+	if (rootNode->bodies.Num() == 0) {
+		return FVector(0.0f, 0.0f, 0.0f);
+	}
+
+	//necessary variables
 	float distance_body_to_centreOfMass = (body->position - rootNode->Node_CentreOMass).Length();
 	float accuracy_Param = 1.0f;
 
-
+	//return of the function
 	FVector combinedForces = FVector(0.0f, 0.0f, 0.0f);
 
-	if (rootNode->bodies.Num() == 0) {
-		return combinedForces;
-	}
-
-
+	//if the length of the cell is smaller than the distabce of the planet to the cell's centre of mass
 	if ((rootNode->extent*2.0f) / distance_body_to_centreOfMass < accuracy_Param) {
 	
 		double bigG = 39.4784f; //when using SolarMass, AU and Years

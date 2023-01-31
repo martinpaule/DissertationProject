@@ -28,7 +28,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 
-	//UI functions
+	//UI called functions
 	UFUNCTION(BlueprintCallable, Category = "SimSpeed")
 	void raiseSimulationSpeed();
 	UFUNCTION(BlueprintCallable, Category = "SimSpeed")
@@ -41,13 +41,13 @@ public:
 	void doubleAllScales();
 	UFUNCTION(BlueprintCallable, Category = "ClearSim")
 	void ClearSimulation();
-	UFUNCTION(BlueprintCallable, Category = "ClearSim")
-	void flipPlanetNames();
 
 	//array holding a reference to all bodies
+	UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite)
 	TArray<AGravBody*> myGravBodies;
 
-	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
+	//tree code handler reference
+	UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite)
 	ATreeHandler* treeHandlerRef;
 
 	//spawning
@@ -56,14 +56,13 @@ public:
 	void spawnTestPlanets();
 	void graduallySpawnBodies(int spawnsPerFrame = 1);
 
-	void displayDebugInfo(float dt);
-	void recordFinalPositions();
-
 	//direct integration of gravitational calculations
 	void calculateAllVelocityChanges(double dt);
-
-	//direct integration of gravitational calculations
+	//tree codes calculaton
 	void calculateWithTree(double dt);
+
+	//record current posisition, masses and directions to a txt file
+	void recordFinalPositions();
 
 	//UI variables
 	UPROPERTY(Category = "forUI", BlueprintReadWrite, EditAnywhere)
@@ -72,6 +71,12 @@ public:
 	float SimulationElapsedTime = 0.0f;
 	UPROPERTY(Category = "forUI", BlueprintReadWrite)
 	int BodiesInSimulation = 0;
+
+	UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite, EditAnywhere)
+	bool ShouldReset = false;
+	UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite, EditAnywhere)
+	float resetTime = 1.0f;
+
 
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 	bool useTreeCodes = false;
@@ -94,14 +99,11 @@ public:
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 	bool ShouldSpawnTestPlanets = false;
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-	bool showPlanetNames = false;
-	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 	int SolarPlanetToSpawn = 0;//0-7 to spawn a specific planet+ sun,anything else for all of them
 
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 	bool notPaused = true;
-	UPROPERTY(Category = "VisualisationRelevant", EditAnywhere, BlueprintReadWrite)
-	bool showTrails = false;
+
 	
 
 
@@ -110,13 +112,7 @@ public:
 
 	int gradualSpawnerIndex = 0;
 	bool spawningBodies = true;
-	
 
-	float LineResetTime = 0.2f;
-
-
-	int fpsINC = 0;
-	float fpsDTcomb = 0.0f;
-	int lastDebugFPS = 17;
+	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 	int gravCalculations = 0;
 };
