@@ -6,9 +6,9 @@
 #include "Misc/DateTime.h"
 #include "GameFramework/DefaultPawn.h"
 #include <Kismet/KismetMathLibrary.h>
+#include <fstream>
 #include "DrawDebugHelpers.h"
 
-//#include "gra"
 // Sets default values
 ANBodyHandler::ANBodyHandler()
 {
@@ -20,11 +20,62 @@ ANBodyHandler::ANBodyHandler()
 }
 
 
+void ANBodyHandler::recordFinalPositions() {
+
+	//first record all text already in the file
+	TArray<std::string> textInFile;
+	std::ifstream myfile("D:\\LocalWorkDir\\1903300\\DissertationProject\\testOutputs.txt");
+	if (myfile.is_open())
+	{
+		//myfile << "This is a line.\n";
+		//myfile << "This is another line.\n";
+
+		std::string line;
+
+		while (getline(myfile, line)) //store already existing text in a array
+		{
+			textInFile.Push(line);
+		}
+		myfile.close();
+	}
+	else {
+		GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Red, "couldnt openfile");
+	}
+
+	//write into the file
+	std::ofstream myfile_w("D:\\LocalWorkDir\\1903300\\DissertationProject\\testOutputs.txt");
+	if (myfile_w.is_open())
+	{
+		//write back into the file what was there already
+		for (int j = 0; j < textInFile.Num(); j++) {
+			myfile_w << textInFile[j] << "\n";
+
+		}
+
+		myfile_w << "NAME POSITION DIRECTION MASS" << "\n";
+		for (int i = 0; i < myGravBodies.Num(); i++)
+		{
+			std::string name_ = std::string(TCHAR_TO_UTF8(*myGravBodies[i]->GetActorLabel()));
+			myfile_w << name_ << " (" << myGravBodies[i]->position.X << " " << myGravBodies[i]->position.Y << " " << myGravBodies[i]->position.Z << ") " << " (" << myGravBodies[i]->velocity.X << " " << myGravBodies[i]->velocity.Y << " " << myGravBodies[i]->velocity.Z << ") " << myGravBodies[i]->mass << "\n";
+
+		}
+		myfile_w << " " << "\n";
+
+
+		myfile_w.close();
+	}
+	else {
+		GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Red, "couldnt openfile");
+	}
+
+}
+
 // Called when the game starts or when spawned
 void ANBodyHandler::BeginPlay()
 {
 	Super::BeginPlay();
 
+	
 
 
 	//example how to bind functions to input in code, keep to avoid looking this up again
@@ -162,6 +213,7 @@ void ANBodyHandler::displayDebugInfo(float dt) {
 		for (int i = 0; i < myGravBodies.Num(); i++)
 		{
 			DrawDebugString(GetWorld(), myGravBodies[i]->GetActorLocation() += FVector(0.0f, 0.0f, myGravBodies[i]->GetActorScale3D().X * 50.0f + 50.0f), myGravBodies[i]->GetActorLabel(), this, FColor::White, 0.0f, false, 2.0f);
+
 		}
 	}
 
@@ -219,16 +271,13 @@ void ANBodyHandler::Tick(float DeltaTime)
 		}
 
 
-		if (SimulationElapsedTime >= 1.0f && false) {
+		if (SimulationElapsedTime >= 1.0f && true) {
 			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, "StoppedSim");
-			notPaused = false;
+			//notPaused = false;
 
-			for (int i = 0; i < myGravBodies.Num(); i++)
-			{
-				//second dt pass
-				GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Orange, FString(myGravBodies[i]->GetActorLabel()).Append(myGravBodies[i]->position.ToString()));
+			recordFinalPositions();
+			ClearSimulation();
 
-			}
 
 		}
 	}
@@ -377,6 +426,21 @@ void ANBodyHandler::spawnSolarSystem() {
 
 }
 
+void ANBodyHandler::spawnTestPlanets()
+{
+	//20,20,2
+	FVector positions[15] = {FVector(20.0f, 0.0f, 0.0f),FVector(0.0f, 5.0f,20.0f), FVector(-5.0f,20.0f,10.0f), FVector(17.0f,-10.0f,4.0f), FVector(5.0f,0.0f, 5.0f), FVector(3.0f, -17.0f, 6.0f),FVector(11.0f,11.0f,11.0f), FVector(-6.0f,12.0f,-18.0f), FVector(-17.0f,1.0f,7.0f), FVector(8.0f,-16.0f,16.0f), FVector(9.0f,3.0f,20.0f),FVector(5.0f,-10.0f,15.0f), FVector(11.0f, -19.0f,7.0f), FVector(-7.0f,17.0f,19.0f), FVector(4.0f,-10.0f,16.0f) };
+	FVector directions[15] = { FVector(-5.0f,20.0f,10.0f),FVector(5.0f,-10.0f,15.0f), FVector(11.0f, -19.0f,7.0f), FVector(-7.0f,17.0f,19.0f),  FVector(-17.0f,1.0f,7.0f), FVector(8.0f,-16.0f,16.0f),FVector(17.0f,-10.0f,4.0f), FVector(5.0f,0.0f, 5.0f), FVector(20.0f, 0.0f, 0.0f),FVector(0.0f, 5.0f,20.0f), FVector(3.0f, -17.0f, 6.0f),FVector(11.0f,11.0f,11.0f), FVector(-6.0f,12.0f,-18.0f), FVector(9.0f,3.0f,20.0f), FVector(4.0f,-10.0f,16.0f) };
+	float masses[15] = { 1.0f,0.3f, 0.4f, 0.5f, 0.6f, 0.2f,0.3f, 1.2f, 1.4f, 2.0f, 1.8f,0.2f, 0.5f, 0.7f, 0.4f };
+
+	for (int i = 0; i < 15; i++) {
+		std::string bodName = "Body ";
+		bodName += std::to_string(i);
+		spawnBodyAt(positions[i]*0.8f, directions[i]*0.5f, masses[i]*2.0f, bodName);
+	}
+
+}
+
 
 //function that allows gradual spawn of initial bodies rather than all at once, avoiding a big lag spike when handlingodies
 void ANBodyHandler::graduallySpawnBodies(int spawnsPerFrame) {
@@ -390,6 +454,9 @@ void ANBodyHandler::graduallySpawnBodies(int spawnsPerFrame) {
 			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, "Spawned all desired bodies");
 			if (shouldSpawnSolarSystem) {
 				spawnSolarSystem();
+			}
+			if (ShouldSpawnTestPlanets) {
+				spawnTestPlanets();
 			}
 			BodiesInSimulation = myGravBodies.Num();
 			return;
@@ -492,10 +559,10 @@ void ANBodyHandler::RecentreSimulation() {
 }
 
 void ANBodyHandler::ClearSimulation() {
-	timeMultiplier = 1.0f;
+	//timeMultiplier = 1.0f;
 	SimulationElapsedTime = 0.0f;
 	BodiesInSimulation = 0;
-	notPaused = false;
+	//notPaused = false;
 	gradualSpawnerIndex = 0;
 	spawningBodies = true;
 

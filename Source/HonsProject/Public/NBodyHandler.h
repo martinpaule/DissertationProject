@@ -53,9 +53,11 @@ public:
 	//spawning
 	void spawnBodyAt(FVector position_, FVector velocity_, double mass_, std::string name_ = "GravBody", float radius_ = 0.0f, FVector4 colour_ = FVector4(0.0f,0.0f,0.0f,0.0f));
 	void spawnSolarSystem();
+	void spawnTestPlanets();
 	void graduallySpawnBodies(int spawnsPerFrame = 1);
 
 	void displayDebugInfo(float dt);
+	void recordFinalPositions();
 
 	//direct integration of gravitational calculations
 	void calculateAllVelocityChanges(double dt);
@@ -89,6 +91,8 @@ public:
 	float SpawnInitialMaxMass = 5;
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 	bool shouldSpawnSolarSystem = false;
+	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
+	bool ShouldSpawnTestPlanets = false;
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 	bool showPlanetNames = false;
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
