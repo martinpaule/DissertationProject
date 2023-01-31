@@ -55,6 +55,7 @@ public:
 	void spawnSolarSystem();
 	void graduallySpawnBodies(int spawnsPerFrame = 1);
 
+	void displayDebugInfo(float dt);
 
 	//direct integration of gravitational calculations
 	void calculateAllVelocityChanges(double dt);
@@ -63,13 +64,15 @@ public:
 	void calculateWithTree(double dt);
 
 	//UI variables
-	UPROPERTY(Category = "forUI", BlueprintReadWrite)
+	UPROPERTY(Category = "forUI", BlueprintReadWrite, EditAnywhere)
 	float timeMultiplier = 1.0f;
 	UPROPERTY(Category = "forUI", BlueprintReadWrite)
 	float SimulationElapsedTime = 0.0f;
 	UPROPERTY(Category = "forUI", BlueprintReadWrite)
 	int BodiesInSimulation = 0;
 
+	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
+	bool useTreeCodes = false;
 
 	//simulation dependant variables
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
@@ -92,7 +95,7 @@ public:
 	int SolarPlanetToSpawn = 0;//0-7 to spawn a specific planet+ sun,anything else for all of them
 
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-	bool notPaused = false;
+	bool notPaused = true;
 	UPROPERTY(Category = "VisualisationRelevant", EditAnywhere, BlueprintReadWrite)
 	bool showTrails = false;
 	

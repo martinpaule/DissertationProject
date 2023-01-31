@@ -16,6 +16,7 @@ void ATreeHandler::BeginPlay()
 {
 	Super::BeginPlay();
 	
+
 }
 
 // Called every frame
@@ -80,9 +81,22 @@ void ATreeHandler::RecalculatePartitioning() {
 	extent /= 2.0f;
 
 	treeNodeRoot->position = (XYZ_min + XYZ_max) / 2.0f;
+	treeNodeRoot->level = 1;
 	treeNodeRoot->extent = extent;
 	treeNodeRoot->bodies = *bodyHandlerBodies;
 	
+	float combinedMass = 0.0f;
+	FVector centreOfMass = FVector(0.0f, 0.0f, 0.0f);
+	for (int k = 0; k < treeNodeRoot->bodies.Num(); k++) {
+
+			combinedMass += treeNodeRoot->bodies[k]->mass;
+			centreOfMass += treeNodeRoot->bodies[k]->position * treeNodeRoot->bodies[k]->mass;
+	}
+
+	centreOfMass /= combinedMass;
+	treeNodeRoot->Node_CentreOMass = centreOfMass;
+	treeNodeRoot->Node_CombinedMass = combinedMass;
+
 	partitionTree(treeNodeRoot);
 
 
@@ -100,7 +114,19 @@ void ATreeHandler::DisplaySectors(TreeNode* rootNode) {
 		}
 	}
 	else {
+
+		if (rootNode->level == 3) {
+			//DrawDebugBox(GetWorld(), rootNode->position * 1000.0f, FVector(rootNode->extent, rootNode->extent, rootNode->extent) * 1000.0f, FColor::White, false, 0.0f, 0, 7.0f);
+
+			//DrawDebugString(GetWorld(), rootNode->position * 1000.0f, FString("Average position: ").Append(rootNode->Node_CentreOMass.ToString()), this, FColor::White, 0.0f, false, 0.7f);
+			//DrawDebugString(GetWorld(), rootNode->position * 1000.0f - FVector(0,0,500.0f), FString("Combined Mass: ").Append(FString::SanitizeFloat(rootNode->Node_CombinedMass)), this, FColor::White, 0.0f, false, 0.7f);
+
+		}
+
+
 		for (int j = 0; j < 8; j++) {
+
+
 
 			DisplaySectors(rootNode->branch_nodes[j]);
 		}
@@ -153,6 +179,7 @@ void ATreeHandler::partitionTree(TreeNode* rootNode)
 		centreOfMass /= combinedMass;
 		rootNode->branch_nodes[j]->Node_CentreOMass = centreOfMass;
 		rootNode->branch_nodes[j]->Node_CombinedMass = combinedMass;
+		rootNode->branch_nodes[j]->level = rootNode->level + 1;
 	}
 
 	//RECURSIVE CALL
@@ -168,7 +195,7 @@ FVector ATreeHandler::getApproxForce(AGravBody* body, TreeNode * rootNode)
 	float accuracy_Param = 1.0f;
 
 
-	FVector combinedForces = FVector(0, 0, 0);
+	FVector combinedForces = FVector(0.0f, 0.0f, 0.0f);
 
 	if (rootNode->bodies.Num() == 0) {
 		return combinedForces;

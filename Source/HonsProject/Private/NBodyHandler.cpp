@@ -130,32 +130,16 @@ void ANBodyHandler::calculateWithTree(double dt) {
 		deltaVelocity = dt * treeHandlerRef->getApproxForce(myGravBodies[i],treeHandlerRef->treeNodeRoot);
 		myGravBodies[i]->velocity += deltaVelocity;
 
-		//PRINT for debug
-		if (false) {
-			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::White, deltaVelocity.ToString().Append(" is deltaVelocity to body ").Append(myGravBodies[i]->GetActorLabel()));
-			if (deltaVelocity.Length() == 0.0f) {
-				GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Red, "length is 0!!!");
-			}
-			else {
-				GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Green, std::to_string(deltaVelocity.Length()).c_str());
-			}
-
-			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::White, myGravBodies[i]->velocity.ToString().Append(" is current velocity of body").Append(myGravBodies[i]->GetActorLabel()));
-		}
 	}
 }
 
-
-// Called every frame
-void ANBodyHandler::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
+void ANBodyHandler::displayDebugInfo(float dt) {
 
 
 
 	//FPS calculations
 	fpsINC++;
-	fpsDTcomb += DeltaTime;
+	fpsDTcomb += dt;
 	if (fpsINC >= 19) {
 
 		lastDebugFPS = 1.0f / (fpsDTcomb / 20.0f);
@@ -163,22 +147,32 @@ void ANBodyHandler::Tick(float DeltaTime)
 		fpsINC = 0;
 		fpsDTcomb = 0.0f;
 	}
+
 	GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, ("FPS: " + std::to_string(lastDebugFPS)).c_str());
-	GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, ("Calculaions: " + std::to_string(treeHandlerRef->gravCalcs)).c_str());
-	//GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, ("Calculaions: " + std::to_string(gravCalculations)).c_str());
+	if (useTreeCodes) {
+		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, ("TC Calculaions: " + std::to_string(treeHandlerRef->gravCalcs)).c_str());
+		treeHandlerRef->gravCalcs = 0;
 
-	if (showTrails) {
-		LineResetTime -= DeltaTime;
 	}
-	treeHandlerRef->gravCalcs = 0;
+	else {
+		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, ("DI Calculaions: " + std::to_string(gravCalculations)).c_str());
+	}
 
-	
 	if (showPlanetNames) {
 		for (int i = 0; i < myGravBodies.Num(); i++)
 		{
 			DrawDebugString(GetWorld(), myGravBodies[i]->GetActorLocation() += FVector(0.0f, 0.0f, myGravBodies[i]->GetActorScale3D().X * 50.0f + 50.0f), myGravBodies[i]->GetActorLabel(), this, FColor::White, 0.0f, false, 2.0f);
 		}
 	}
+
+}
+
+// Called every frame
+void ANBodyHandler::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	displayDebugInfo(DeltaTime);
 
 	//gradually spawn bodies to avoid a large lag spike at the start
 	if(spawningBodies)
@@ -206,8 +200,13 @@ void ANBodyHandler::Tick(float DeltaTime)
 
 		//step 1: direct integration of gravitational calculations, find delta velocity of all bodies
 		//first dt pass
-		//calculateAllVelocityChanges(updatedDT);
-		calculateWithTree(updatedDT);
+		if (useTreeCodes) {
+			calculateWithTree(updatedDT);
+
+		}
+		else {
+			calculateAllVelocityChanges(updatedDT);
+		}
 
 
 
@@ -217,15 +216,20 @@ void ANBodyHandler::Tick(float DeltaTime)
 			//second dt pass
 			myGravBodies[i]->MoveBody(updatedDT);
 
-			if (LineResetTime <= 0) {
-				DrawDebugLine(GetWorld(), myGravBodies[i]->lastTrailPos * 1000.0f, myGravBodies[i]->position * 1000.0f, myGravBodies[i]->myCol, false, 2.0f, 0, 5.0f);
-				myGravBodies[i]->lastTrailPos = myGravBodies[i]->position;
-			}
 		}
 
 
-		if (LineResetTime <= 0) {
-			LineResetTime = 0.05f;
+		if (SimulationElapsedTime >= 1.0f && false) {
+			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, "StoppedSim");
+			notPaused = false;
+
+			for (int i = 0; i < myGravBodies.Num(); i++)
+			{
+				//second dt pass
+				GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Orange, FString(myGravBodies[i]->GetActorLabel()).Append(myGravBodies[i]->position.ToString()));
+
+			}
+
 		}
 	}
 }
@@ -246,7 +250,7 @@ void ANBodyHandler::spawnBodyAt(FVector position_, FVector velocity_, double mas
 	newBody->radius = radius_;
 	newBody->toBeDestroyed = false;
 	newBody->SetActorLabel(name_.c_str());
-	newBody->lastTrailPos = position_;
+	//newBody->lastTrailPos = position_;
 
 	if (radius_ == 0.0f) {
 		radius_ = cbrt(mass_);
@@ -257,6 +261,7 @@ void ANBodyHandler::spawnBodyAt(FVector position_, FVector velocity_, double mas
 	//option to set colour too
 	if (colour_ != FVector4(0.0f, 0.0f, 0.0f, 0.0f)) {
 		newBody->myMat->SetVectorParameterValue(TEXT("Colour"), colour_);
+		//newBody.
 	}
 
 

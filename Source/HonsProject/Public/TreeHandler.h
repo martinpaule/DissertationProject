@@ -14,6 +14,8 @@ public:
 	TArray<AGravBody*> bodies;
 	bool isLeaf = true;
 
+	int level;
+
 	//half size of the cube
 	float extent;
 	FVector position;
