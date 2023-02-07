@@ -25,8 +25,8 @@ void ANBodyHandler::recordFinalPositions() {
 	//https://sbcomputerentertainment.com/other-2/editor/how-to-create-a-read-write-system-for-txt-files-c-tutorial/
 	//first record all text already in the file
 	TArray<std::string> textInFile;
-	//std::ifstream myfile("D:\\LocalWorkDir\\1903300\\DissertationProject\\testOutputs.txt");
-	std::ifstream myfile("D:\\Users\\User\\Documents\\GitHub\\DissertationProject\\testOutputs.txt");
+	std::ifstream myfile("D:\\LocalWorkDir\\1903300\\DissertationProject\\testOutputs.txt");
+	//std::ifstream myfile("D:\\Users\\User\\Documents\\GitHub\\DissertationProject\\testOutputs.txt");
 	if (myfile.is_open())
 	{
 	
@@ -43,8 +43,14 @@ void ANBodyHandler::recordFinalPositions() {
 	}
 
 	//write into the file
-	//std::ofstream myfile_w("D:\\LocalWorkDir\\1903300\\DissertationProject\\testOutputs.txt");
-	std::ofstream myfile_w("D:\\Users\\User\\Documents\\GitHub\\DissertationProject\\testOutputs.txt");
+	std::ofstream myfile_w("D:\\LocalWorkDir\\1903300\\DissertationProject\\testOutputs.txt");
+	//std::ofstream myfile_w("D:\\Users\\User\\Documents\\GitHub\\DissertationProject\\testOutputs.txt");
+
+	//get rid of accuracy testing
+	if (textInFile.Num() > 0) {
+		textInFile.RemoveAt(textInFile.Num() - 1);
+	}
+
 	if (myfile_w.is_open())
 	{
 		//write back into the file what was there already
@@ -53,7 +59,7 @@ void ANBodyHandler::recordFinalPositions() {
 
 		}
 
-		myfile_w << "NAME POSITION DIRECTION MASS" << "\n";
+		myfile_w << "NAME POSITION DIRECTION MASS. calculations: " <<gravCalculations<< "\n";
 		for (int i = 0; i < myGravBodies.Num(); i++)
 		{
 			std::string name_ = std::string(TCHAR_TO_UTF8(*myGravBodies[i]->GetActorLabel()));
@@ -64,6 +70,63 @@ void ANBodyHandler::recordFinalPositions() {
 
 
 		myfile_w.close();
+	}
+	else {
+		GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Red, "couldnt openfile");
+	}
+
+	//for better read write:
+	//https://sbcomputerentertainment.com/other-2/editor/how-to-create-a-read-write-system-for-txt-files-c-tutorial/
+	//first record all text already in the file
+	TArray<std::string> countAccStrings;
+	std::ifstream myfile_c("D:\\LocalWorkDir\\1903300\\DissertationProject\\testOutputs.txt");
+	//std::ifstream myfile("D:\\Users\\User\\Documents\\GitHub\\DissertationProject\\testOutputs.txt");
+	if (myfile_c.is_open())
+	{
+
+		std::string line_c;
+
+		while (getline(myfile_c, line_c)) //store already existing text in a array
+		{
+			countAccStrings.Push(line_c);
+		}
+		myfile_c.close();
+	}
+	else {
+		GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Red, "couldnt openfile");
+	}
+
+	int correctOnes = 0;
+	int wrongOnes = 0;
+	for (int i = 0; i < countAccStrings.Num(); i++) {
+		for (int j = i + 1; j < countAccStrings.Num(); j++) {
+
+			if (i % (myGravBodies.Num() + 2) == j % (myGravBodies.Num() + 2)) {
+				if (countAccStrings[i] == countAccStrings[j]) {
+					correctOnes++;
+				}
+				else {
+					wrongOnes++;
+				}
+			}
+		}
+	}
+
+	//write into the file
+	std::ofstream myfile_w_tw("D:\\LocalWorkDir\\1903300\\DissertationProject\\testOutputs.txt");
+	//std::ofstream myfile_w("D:\\Users\\User\\Documents\\GitHub\\DissertationProject\\testOutputs.txt");
+
+	if (myfile_w_tw.is_open())
+	{
+		//write back into the file what was there already
+		for (int j = 0; j < countAccStrings.Num(); j++) {
+			myfile_w_tw << countAccStrings[j] << "\n";
+
+		}
+		myfile_w_tw << "correct: " << correctOnes << "   wrong: " << wrongOnes;
+
+
+		myfile_w_tw.close();
 	}
 	else {
 		GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Red, "couldnt openfile");
@@ -107,6 +170,7 @@ void ANBodyHandler::BeginPlay()
 	FActorSpawnParameters SpawnInfo;
 	treeHandlerRef = GetWorld()->SpawnActor<ATreeHandler>(SpawnInfo);
 	treeHandlerRef->bodyHandlerBodies = &myGravBodies;
+	treeHandlerRef->shouldCalculateTC = useTreeCodes;
 }
 
 //direct integration of gravitational dynamics using Newtonian formulae
@@ -156,6 +220,10 @@ void ANBodyHandler::calculateAllVelocityChanges(double dt) {
 //tree code calculations of gravitational dynamics
 void ANBodyHandler::calculateWithTree(double dt) {
 
+
+
+	treeHandlerRef->RecalculatePartitioning();
+
 	treeHandlerRef->gravCalcs = 0;
 
 	FVector deltaVelocity = FVector(0.0f, 0.0f, 0.0f);
@@ -173,9 +241,11 @@ void ANBodyHandler::calculateWithTree(double dt) {
 }
 
 // Called every frame
-void ANBodyHandler::Tick(float DeltaTime)
+void ANBodyHandler::Tick(float DeltaTime)              
 {
 	Super::Tick(DeltaTime);
+
+	
 
 	//gradually spawn bodies to avoid a large lag spike at the start
 	if(spawningBodies)
@@ -184,9 +254,9 @@ void ANBodyHandler::Tick(float DeltaTime)
 	}
 	else if(notPaused) { //tick
 
-		//dt influenced by simulation time scale
-		double updatedDT = DeltaTime * timeMultiplier * 0.027f; //0.027 makes the time as 10 days/s		
-		SimulationElapsedTime += updatedDT;
+		
+		elapsedFrameTime += DeltaTime;
+
 
 		//step 0: destroy overlapping bodies from previous step - must be done before force calculation otherwise the current step will be inaccurate
 		for (int i = 0; i < myGravBodies.Num(); i++)
@@ -194,32 +264,47 @@ void ANBodyHandler::Tick(float DeltaTime)
 			if (myGravBodies[i]->toBeDestroyed) {
 				myGravBodies[i]->Destroy();
 				myGravBodies.RemoveAt(i);
-				BodiesInSimulation = myGravBodies.Num();
+				bodiesInSimulation = myGravBodies.Num();
 				i--;
 			}
 		}
 
 		//step 1: Gravitational calculations using desired method
 		//first dt pass
-		if (useTreeCodes) {
-			calculateWithTree(updatedDT);
+		if (elapsedFrameTime >= fixedFrameTime) {
 
-		}
-		else {
-			calculateAllVelocityChanges(updatedDT);
+			//dt influenced by simulation time scale 0.45 0.2 
+			double updatedDT = fixedFrameTime * timeMultiplier * 0.027f; //0.027 makes the time as 10 days/s		
+
+
+			simulationElapsedTime += updatedDT * int(elapsedFrameTime / fixedFrameTime);
+			for (int j = 0; j < int(elapsedFrameTime / fixedFrameTime);j++) {
+				
+				if (useTreeCodes) {
+					calculateWithTree(updatedDT);
+
+				}
+				else {
+					calculateAllVelocityChanges(updatedDT);
+				}
+
+				//step 2: move bodies using their updated velocity, also destroy ones that 
+				for (int i = 0; i < myGravBodies.Num(); i++)
+				{
+					//second dt pass
+					myGravBodies[i]->MoveBody(updatedDT);
+
+				}
+			}
+
+
+			elapsedFrameTime -= int(elapsedFrameTime / fixedFrameTime) * fixedFrameTime;
 		}
 
-		//step 2: move bodies using their updated velocity, also destroy ones that 
-		for (int i = 0; i < myGravBodies.Num(); i++)
-		{
-			//second dt pass
-			myGravBodies[i]->MoveBody(updatedDT);
-
-		}
 
 		//optional recording of locations 
-		if (SimulationElapsedTime >= resetTime && ShouldReset) {
-			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, "StoppedSim");
+		if (simulationElapsedTime >= resetTime && ShouldReset) {
+			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, "recorded positions");
 
 			recordFinalPositions();
 			ClearSimulation();
@@ -227,6 +312,16 @@ void ANBodyHandler::Tick(float DeltaTime)
 
 		}
 	}
+
+	if (treeHandlerRef->showTreeBoxes) {
+
+		if (!useTreeCodes) {
+			treeHandlerRef->RecalculatePartitioning();
+		}
+
+		treeHandlerRef->DisplaySectors(treeHandlerRef->treeNodeRoot);
+	}
+
 }
 
 
@@ -404,7 +499,7 @@ void ANBodyHandler::graduallySpawnBodies(int spawnsPerFrame) {
 			if (ShouldSpawnTestPlanets) {
 				spawnTestPlanets();
 			}
-			BodiesInSimulation = myGravBodies.Num();
+			bodiesInSimulation = myGravBodies.Num();
 			return;
 		}
 
@@ -428,7 +523,7 @@ void ANBodyHandler::graduallySpawnBodies(int spawnsPerFrame) {
 		std::string bodName = "Body ";
 		bodName += std::to_string(gradualSpawnerIndex);
 		spawnBodyAt(myLoc, speed_, mass_, bodName);
-		BodiesInSimulation = myGravBodies.Num();
+		bodiesInSimulation = myGravBodies.Num();
 		gradualSpawnerIndex++;
 
 	}
@@ -506,11 +601,13 @@ void ANBodyHandler::RecentreSimulation() {
 
 void ANBodyHandler::ClearSimulation() {
 	//timeMultiplier = 1.0f;
-	SimulationElapsedTime = 0.0f;
-	BodiesInSimulation = 0;
+	simulationElapsedTime = 0.0f;
+	bodiesInSimulation = 0;
 	//notPaused = false;
 	gradualSpawnerIndex = 0;
 	spawningBodies = true;
+	elapsedFrameTime = 0.0f;
+
 
 	while(!myGravBodies.IsEmpty())
 	{

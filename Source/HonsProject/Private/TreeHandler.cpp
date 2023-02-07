@@ -24,10 +24,7 @@ void ATreeHandler::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	RecalculatePartitioning();
-	if (showTreeBoxes) {
-		DisplaySectors(treeNodeRoot);
-	}
+
 }
 
 void ATreeHandler::RecalculatePartitioning() {
@@ -116,8 +113,6 @@ void ATreeHandler::DisplaySectors(TreeNode* rootNode) {
 	else {
 
 		for (int j = 0; j < 8; j++) {
-
-
 
 			DisplaySectors(rootNode->branch_nodes[j]);
 		}

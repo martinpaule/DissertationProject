@@ -64,24 +64,39 @@ public:
 	//record current posisition, masses and directions to a txt file
 	void recordFinalPositions();
 
-	//UI variables
-	UPROPERTY(Category = "forUI", BlueprintReadWrite, EditAnywhere)
+
+	//general things
+	UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite, EditAnywhere)
 	float timeMultiplier = 1.0f;
-	UPROPERTY(Category = "forUI", BlueprintReadWrite)
-	float SimulationElapsedTime = 0.0f;
-	UPROPERTY(Category = "forUI", BlueprintReadWrite)
-	int BodiesInSimulation = 0;
-
-	UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite, EditAnywhere)
-	bool ShouldReset = false;
-	UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite, EditAnywhere)
-	float resetTime = 1.0f;
-
-
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-	bool useTreeCodes = false;
+	bool notPaused = true;
+
+	//UI variables
+	UPROPERTY(Category = "forUI", BlueprintReadWrite)
+	float simulationElapsedTime = 0.0f;
+	UPROPERTY(Category = "forUI", BlueprintReadWrite)
+	int bodiesInSimulation = 0;
+	UPROPERTY(Category = "forUI", BlueprintReadWrite)
+	int gravCalculations = 0;
+
+	//testing
+	UPROPERTY(Category = "Testing", BlueprintReadWrite, EditAnywhere)
+	bool ShouldReset = false;
+	UPROPERTY(Category = "Testing", BlueprintReadWrite, EditAnywhere)
+	float resetTime = 1.0f;
+	UPROPERTY(Category = "Testing", BlueprintReadWrite, EditAnywhere)
+	float fixedFrameTime = 0.1f;
+	float elapsedFrameTime = 0.0f;
 
 	//simulation dependant variables
+	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
+	bool useTreeCodes = false;
+	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
+		bool shouldSpawnSolarSystem = false;
+	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
+		bool ShouldSpawnTestPlanets = false;
+
+	
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 	int bodiesToSpawn = 20;
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
@@ -94,25 +109,15 @@ public:
 	float SpawnInitialMaxSpeed = 3;
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 	float SpawnInitialMaxMass = 5;
-	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-	bool shouldSpawnSolarSystem = false;
-	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-	bool ShouldSpawnTestPlanets = false;
+
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 	int SolarPlanetToSpawn = 0;//0-7 to spawn a specific planet+ sun,anything else for all of them
-
-	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-	bool notPaused = true;
-
-	
 
 
 	//double bigG = 0.000000000066743f; //when using kg,m and s
 	double bigG = 39.4784f; //when using SolarMass, AU and Years
-
 	int gradualSpawnerIndex = 0;
 	bool spawningBodies = true;
+	
 
-	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-	int gravCalculations = 0;
 };
