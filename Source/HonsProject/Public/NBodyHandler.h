@@ -7,6 +7,7 @@
 #include "UObject/ConstructorHelpers.h"
 #include <string>
 #include "TreeHandler.h"
+#include "AccuracyModule.h"
 #include "NBodyHandler.generated.h"
 
 
@@ -49,6 +50,9 @@ public:
 	//tree code handler reference
 	UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite)
 	ATreeHandler* treeHandlerRef;
+	AAccuracyModule* accuracyCompRef;
+
+
 
 	//spawning
 	void spawnBodyAt(FVector position_, FVector velocity_, double mass_, std::string name_ = "GravBody", float radius_ = 0.0f, FVector4 colour_ = FVector4(0.0f,0.0f,0.0f,0.0f));

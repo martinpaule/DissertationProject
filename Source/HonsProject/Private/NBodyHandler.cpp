@@ -21,117 +21,17 @@ ANBodyHandler::ANBodyHandler()
 
 void ANBodyHandler::recordFinalPositions() {
 
-	//for better read write:
-	//https://sbcomputerentertainment.com/other-2/editor/how-to-create-a-read-write-system-for-txt-files-c-tutorial/
-	//first record all text already in the file
-	TArray<std::string> textInFile;
-	std::ifstream myfile("D:\\LocalWorkDir\\1903300\\DissertationProject\\testOutputs.txt");
-	//std::ifstream myfile("D:\\Users\\User\\Documents\\GitHub\\DissertationProject\\testOutputs.txt");
-	if (myfile.is_open())
-	{
-	
-		std::string line;
-	
-		while (getline(myfile, line)) //store already existing text in a array
-		{
-			textInFile.Push(line);
-		}
-		myfile.close();
-	}
-	else {
-		GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Red, "couldnt openfile");
+	TArray<planet> a;
+	accuracyCompRef->planets.Add(a);
+
+	for (int i = 0; i < myGravBodies.Num(); i++) {
+		std::string name_ = std::string(TCHAR_TO_UTF8(*myGravBodies[i]->GetActorLabel()));
+		accuracyCompRef->notePlanet(name_, myGravBodies[i]->position, myGravBodies[i]->velocity, myGravBodies[i]->mass);
 	}
 
-	//write into the file
-	std::ofstream myfile_w("D:\\LocalWorkDir\\1903300\\DissertationProject\\testOutputs.txt");
-	//std::ofstream myfile_w("D:\\Users\\User\\Documents\\GitHub\\DissertationProject\\testOutputs.txt");
-
-	//get rid of accuracy testing
-	if (textInFile.Num() > 0) {
-		textInFile.RemoveAt(textInFile.Num() - 1);
+	if (accuracyCompRef->planets.Num() >= 5) {
+		accuracyCompRef->printResultToTXT();
 	}
-
-	if (myfile_w.is_open())
-	{
-		//write back into the file what was there already
-		for (int j = 0; j < textInFile.Num(); j++) {
-			myfile_w << textInFile[j] << "\n";
-
-		}
-
-		myfile_w << "NAME POSITION DIRECTION MASS. calculations: " <<gravCalculations<< "\n";
-		for (int i = 0; i < myGravBodies.Num(); i++)
-		{
-			std::string name_ = std::string(TCHAR_TO_UTF8(*myGravBodies[i]->GetActorLabel()));
-			myfile_w << name_ << " (" << myGravBodies[i]->position.X << " " << myGravBodies[i]->position.Y << " " << myGravBodies[i]->position.Z << ") " << " (" << myGravBodies[i]->velocity.X << " " << myGravBodies[i]->velocity.Y << " " << myGravBodies[i]->velocity.Z << ") " << myGravBodies[i]->mass << "\n";
-
-		}
-		myfile_w << " " << "\n";
-
-
-		myfile_w.close();
-	}
-	else {
-		GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Red, "couldnt openfile");
-	}
-
-	//for better read write:
-	//https://sbcomputerentertainment.com/other-2/editor/how-to-create-a-read-write-system-for-txt-files-c-tutorial/
-	//first record all text already in the file
-	TArray<std::string> countAccStrings;
-	std::ifstream myfile_c("D:\\LocalWorkDir\\1903300\\DissertationProject\\testOutputs.txt");
-	//std::ifstream myfile("D:\\Users\\User\\Documents\\GitHub\\DissertationProject\\testOutputs.txt");
-	if (myfile_c.is_open())
-	{
-
-		std::string line_c;
-
-		while (getline(myfile_c, line_c)) //store already existing text in a array
-		{
-			countAccStrings.Push(line_c);
-		}
-		myfile_c.close();
-	}
-	else {
-		GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Red, "couldnt openfile");
-	}
-
-	int correctOnes = 0;
-	int wrongOnes = 0;
-	for (int i = 0; i < countAccStrings.Num(); i++) {
-		for (int j = i + 1; j < countAccStrings.Num(); j++) {
-
-			if (i % (myGravBodies.Num() + 2) == j % (myGravBodies.Num() + 2)) {
-				if (countAccStrings[i] == countAccStrings[j]) {
-					correctOnes++;
-				}
-				else {
-					wrongOnes++;
-				}
-			}
-		}
-	}
-
-	//write into the file
-	std::ofstream myfile_w_tw("D:\\LocalWorkDir\\1903300\\DissertationProject\\testOutputs.txt");
-	//std::ofstream myfile_w("D:\\Users\\User\\Documents\\GitHub\\DissertationProject\\testOutputs.txt");
-
-	if (myfile_w_tw.is_open())
-	{
-		//write back into the file what was there already
-		for (int j = 0; j < countAccStrings.Num(); j++) {
-			myfile_w_tw << countAccStrings[j] << "\n";
-
-		}
-		myfile_w_tw << "correct: " << correctOnes << "   wrong: " << wrongOnes;
-
-
-		myfile_w_tw.close();
-	}
-	else {
-		GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Red, "couldnt openfile");
-	}
-
 }
 
 // Called when the game starts or when spawned
@@ -171,6 +71,9 @@ void ANBodyHandler::BeginPlay()
 	treeHandlerRef = GetWorld()->SpawnActor<ATreeHandler>(SpawnInfo);
 	treeHandlerRef->bodyHandlerBodies = &myGravBodies;
 	treeHandlerRef->shouldCalculateTC = useTreeCodes;
+
+	FActorSpawnParameters SpawnInfoAH;
+	accuracyCompRef = GetWorld()->SpawnActor<AAccuracyModule>(SpawnInfoAH);
 }
 
 //direct integration of gravitational dynamics using Newtonian formulae
