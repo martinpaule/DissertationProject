@@ -124,12 +124,24 @@ void ANBodyHandler::calculateAllVelocityChanges(double dt) {
 void ANBodyHandler::calculateWithTree(double dt) {
 
 
+	auto RecalcStart = std::chrono::high_resolution_clock::now();
 
 	treeHandlerRef->RecalculatePartitioning();
+
+	auto RecalcEnd = std::chrono::high_resolution_clock::now();
+
+
+	float msTakenRecalc = std::chrono::duration_cast<std::chrono::microseconds>(RecalcEnd - RecalcStart).count();
+
+	timeTakenRecalc += msTakenRecalc;
+
 
 	treeHandlerRef->gravCalcs = 0;
 
 	FVector deltaVelocity = FVector(0.0f, 0.0f, 0.0f);
+
+
+	auto TCstart = std::chrono::high_resolution_clock::now();
 
 	for (int i = 0; i < myGravBodies.Num(); i++)
 	{
@@ -141,6 +153,14 @@ void ANBodyHandler::calculateWithTree(double dt) {
 
 	}
 
+	auto TCend = std::chrono::high_resolution_clock::now();
+
+
+	float msTakenTC = std::chrono::duration_cast<std::chrono::microseconds>(TCend - TCstart).count();
+
+	timeTakenTC += msTakenTC;
+
+
 }
 
 // Called every frame
@@ -149,6 +169,8 @@ void ANBodyHandler::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	
+
+
 
 	//gradually spawn bodies to avoid a large lag spike at the start
 	if(spawningBodies)
@@ -176,6 +198,40 @@ void ANBodyHandler::Tick(float DeltaTime)
 		//first dt pass
 		if (elapsedFrameTime >= fixedFrameTime) {
 
+
+
+			perfITR++;
+
+			if (perfITR >= 10) {
+				perfITR = 0;
+
+				std::string printStrRecalc = "Recalculating TC took ";
+				printStrRecalc += std::to_string(timeTakenRecalc/10.0f);
+				printStrRecalc += " ms. \n";
+				GEngine->AddOnScreenDebugMessage(14, 5.0f, FColor::Yellow, printStrRecalc.c_str());
+
+				std::string printStrTC = "TC gravs took ";
+				printStrTC += std::to_string(timeTakenTC / 10.0f);
+				printStrTC += " ms. \n";
+				GEngine->AddOnScreenDebugMessage(15, 5.0f, FColor::Yellow, printStrTC.c_str());
+
+				std::string printStrDI = "direct integration took ";
+				printStrDI += std::to_string(timeTakenDI / 10.0f);
+				printStrDI += " ms. \n";
+				GEngine->AddOnScreenDebugMessage(13, 5.0f, FColor::Yellow, printStrDI.c_str());
+
+				std::string printStr = "moving bodies took ";
+				printStr += std::to_string(timeTakenMove / 10.0f);
+				printStr += " ms. \n";
+				GEngine->AddOnScreenDebugMessage(12, 5.0f, FColor::Yellow, printStr.c_str());
+
+				timeTakenRecalc = 0.0f;
+				timeTakenTC = 0.0f;
+				timeTakenDI = 0.0f;
+				timeTakenMove = 0.0f;
+
+			}
+
 			//dt influenced by simulation time scale 0.45 0.2 
 			double updatedDT = fixedFrameTime * timeMultiplier * 0.027f; //0.027 makes the time as 10 days/s		
 
@@ -183,21 +239,45 @@ void ANBodyHandler::Tick(float DeltaTime)
 			simulationElapsedTime += updatedDT * int(elapsedFrameTime / fixedFrameTime);
 			for (int j = 0; j < int(elapsedFrameTime / fixedFrameTime);j++) {
 				
+
+
+				
 				if (useTreeCodes) {
 					calculateWithTree(updatedDT);
-
 				}
 				else {
+					auto startDI = std::chrono::high_resolution_clock::now();
 					calculateAllVelocityChanges(updatedDT);
+					auto stopDI = std::chrono::high_resolution_clock::now();
+
+
+					float msTakenCALCTC = std::chrono::duration_cast<std::chrono::microseconds>(stopDI - startDI).count();
+
+					timeTakenDI += msTakenCALCTC;
+
+					
+
 				}
+
+
+				auto moveTIMEstart = std::chrono::high_resolution_clock::now();
 
 				//step 2: move bodies using their updated velocity, also destroy ones that 
 				for (int i = 0; i < myGravBodies.Num(); i++)
 				{
 					//second dt pass
 					myGravBodies[i]->MoveBody(updatedDT);
+					
 
 				}
+
+				auto moveTIMEstop = std::chrono::high_resolution_clock::now();
+
+				float msTakenMOVE = std::chrono::duration_cast<std::chrono::microseconds>(moveTIMEstop - moveTIMEstart).count();
+
+				timeTakenMove += msTakenMOVE;
+
+				
 			}
 
 

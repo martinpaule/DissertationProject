@@ -21,8 +21,8 @@ public:
 	FVector position;
 	FColor color = FColor::Green;
 
-	float Node_CombinedMass;
-	FVector Node_CentreOMass;
+	float Node_CombinedMass = 0.0f;
+	FVector Node_CentreOMass = FVector(0,0,0);
 
 
 	//helper function to check whether body us in the extent of a given tree node

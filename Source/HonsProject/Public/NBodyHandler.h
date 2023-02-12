@@ -8,6 +8,7 @@
 #include <string>
 #include "TreeHandler.h"
 #include "AccuracyModule.h"
+#include <chrono>
 #include "NBodyHandler.generated.h"
 
 
@@ -102,20 +103,20 @@ public:
 
 	
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-	int bodiesToSpawn = 20;
+	int bodiesToSpawn = 100;
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-	int SpawnsPerFrame = 5;
+	int SpawnsPerFrame = 50;
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-	FVector InitialSpawnCentre = FVector(0,0,0);
+	FVector InitialSpawnCentre = FVector(0,0,-10);
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 	float SpawnLocationBounds = 10;
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-	float SpawnInitialMaxSpeed = 3;
+	float SpawnInitialMaxSpeed = 10;
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-	float SpawnInitialMaxMass = 5;
+	float SpawnInitialMaxMass = 2;
 
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-	int SolarPlanetToSpawn = 0;//0-7 to spawn a specific planet+ sun,anything else for all of them
+	int SolarPlanetToSpawn = 100;//0-7 to spawn a specific planet+ sun,anything else for all of them
 
 
 	//double bigG = 0.000000000066743f; //when using kg,m and s
@@ -124,4 +125,10 @@ public:
 	bool spawningBodies = true;
 	
 
+
+	float timeTakenDI = 0.0f;
+	float timeTakenRecalc = 0.0f;
+	float timeTakenTC = 0.0f;
+	float timeTakenMove = 0.0f;
+	int perfITR = 0;
 };

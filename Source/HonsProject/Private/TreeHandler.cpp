@@ -32,6 +32,10 @@ void ATreeHandler::RecalculatePartitioning() {
 	//reset root
 	delete treeNodeRoot;
 
+	//also assign its combined mass and centre of mass
+	float combinedMass = 0.0f;
+	FVector centreOfMass = FVector(0.0f, 0.0f, 0.0f);
+
 	//find max and min on XYZ axis
 	FVector XYZ_min;
 	FVector XYZ_max;
@@ -63,7 +67,14 @@ void ATreeHandler::RecalculatePartitioning() {
 				XYZ_max.Z = bPos.Z;
 			}
 		}
+	
+		combinedMass += (*bodyHandlerBodies)[i]->mass;
+		centreOfMass += (*bodyHandlerBodies)[i]->position * (*bodyHandlerBodies)[i]->mass;
+
 	}
+
+	centreOfMass /= combinedMass;
+
 
 	//find a CUBE that is JUST enveloping the planets
 	float extent = XYZ_max.X - XYZ_min.X;
@@ -83,16 +94,7 @@ void ATreeHandler::RecalculatePartitioning() {
 	treeNodeRoot->extent = extent;
 	treeNodeRoot->bodies = *bodyHandlerBodies;
 	
-	//also assign its combined mass and centre of mass
-	float combinedMass = 0.0f;
-	FVector centreOfMass = FVector(0.0f, 0.0f, 0.0f);
-	for (int k = 0; k < treeNodeRoot->bodies.Num(); k++) {
 
-			combinedMass += treeNodeRoot->bodies[k]->mass;
-			centreOfMass += treeNodeRoot->bodies[k]->position * treeNodeRoot->bodies[k]->mass;
-	}
-
-	centreOfMass /= combinedMass;
 	treeNodeRoot->Node_CentreOMass = centreOfMass;
 	treeNodeRoot->Node_CombinedMass = combinedMass;
 
@@ -133,6 +135,8 @@ void ATreeHandler::partitionTree(TreeNode* rootNode)
 		rootNode->branch_nodes.Add(new TreeNode);
 		rootNode->branch_nodes.Last()->extent = rootNode->extent / 2.0f;
 		rootNode->branch_nodes.Last()->root_node = rootNode;
+		rootNode->branch_nodes.Last()->level = rootNode->level + 1;
+
 	}
 
 	float childOffs = rootNode->extent / 2.0f;
@@ -147,33 +151,29 @@ void ATreeHandler::partitionTree(TreeNode* rootNode)
 	rootNode->branch_nodes[6]->position = rootNode->position + FVector(-childOffs, -childOffs, childOffs);
 	rootNode->branch_nodes[7]->position = rootNode->position + FVector(-childOffs, -childOffs, -childOffs);
 
-	//loop through the children nodes
-	for (int j = 0; j < 8; j++) {
 
-		//declare
-		float combinedMass = 0.0f;
-		FVector centreOfMass = FVector(0.0f, 0.0f, 0.0f);
+	
+	//assign all relevant bodies into this child node, handling their mass and position to calculate their avg pos and comb mass
+	for (int k = 0; k < rootNode->bodies.Num(); k++) {
 
-		//assign all relevant bodies into this child node, handling their mass and position to calculate their avg pos and comb mass
-		for (int k = 0; k < rootNode->bodies.Num(); k++) {
+		//loop through the children nodes
+		for (int j = 0; j < 8; j++) {
+
+
 			if (rootNode->branch_nodes[j]->isInExtent(rootNode->bodies[k]->position)) {
 				rootNode->branch_nodes[j]->bodies.Add(rootNode->bodies[k]);
 
-				combinedMass += rootNode->bodies[k]->mass;
-				centreOfMass += rootNode->bodies[k]->position * rootNode->bodies[k]->mass;
+				rootNode->branch_nodes[j]->Node_CombinedMass += rootNode->bodies[k]->mass;
+				rootNode->branch_nodes[j]->Node_CentreOMass += rootNode->bodies[k]->position * rootNode->bodies[k]->mass;
+				break;
 			}
-		}
 
-		//calculate the node's centre of mass and combined mass
-		centreOfMass /= combinedMass;
-		rootNode->branch_nodes[j]->Node_CentreOMass = centreOfMass;
-		rootNode->branch_nodes[j]->Node_CombinedMass = combinedMass;
-		rootNode->branch_nodes[j]->level = rootNode->level + 1;
+		}
 	}
 
-	//RECURSIVE CALL
-	//decide which child node to attach it to
+	//RECURSIVE CALL to partition branch nodes (also calculate centre of mass
 	for (int j = 0; j < 8; j++) {
+		rootNode->branch_nodes[j]->Node_CentreOMass /= rootNode->branch_nodes[j]->Node_CombinedMass;
 		partitionTree(rootNode->branch_nodes[j]);
 	}
 }
