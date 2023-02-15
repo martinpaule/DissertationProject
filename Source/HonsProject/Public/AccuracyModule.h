@@ -54,5 +54,7 @@ public:
 	
 	void printResultToTXT();
 
+	bool shouldResetTest = false;
+	float resetTime = 1.0f; //in years
 
 };

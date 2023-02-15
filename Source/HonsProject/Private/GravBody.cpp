@@ -40,7 +40,7 @@ AGravBody::AGravBody()
 
 	myMat->SetVectorParameterValue(TEXT("Colour"), randCol);
 	
-	myCol = FColor(randCol.X*255, randCol.Y * 255, randCol.Z * 255);
+	myCol = randCol;
 
 }
 
@@ -104,12 +104,18 @@ void AGravBody::MoveBody(double editedDT)
 //v_ = (m1*v1 + m2*v2)/(m1 + m2)
 void AGravBody::combineCollisionBody(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) {
 
-	if (Cast<AGravBody>(OtherActor))
+	//perfectly inelastic collision
+	AGravBody* otherBody = Cast<AGravBody>(OtherActor);
+
+	if (otherBody)
 	{
+		
 
+		
 
-		//perfectly inelastic collision
-		AGravBody* otherBody = Cast<AGravBody>(OtherActor);
+		if (handlerID != otherBody->handlerID) {
+			return;
+		}
 
 		float massA = mass;
 		float massB = otherBody->mass;
@@ -127,7 +133,7 @@ void AGravBody::combineCollisionBody(UPrimitiveComponent* OverlappedComponent, A
 			toBeDestroyed = true;
 
 			//print message with timestamp, development feature, remove at the end
-			if (false) {
+			if (true) {
 				FDateTime nowTime = FDateTime::Now();
 				std::string printStr = "(";
 				FString myName = this->GetActorLabel();

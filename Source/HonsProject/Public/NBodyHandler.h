@@ -48,16 +48,16 @@ public:
 	UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite)
 	TArray<AGravBody*> myGravBodies;
 
+	ANBodyHandler* ghostSim = nullptr;
+
 	//tree code handler reference
 	UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite)
 	ATreeHandler* treeHandlerRef;
 	AAccuracyModule* accuracyCompRef;
 
-
-
 	//spawning
 	void spawnBodyAt(FVector position_, FVector velocity_, double mass_, std::string name_ = "GravBody", float radius_ = 0.0f, FVector4 colour_ = FVector4(0.0f,0.0f,0.0f,0.0f));
-	void spawnSolarSystem();
+	void spawnSolarSystem(int SolarPlanetToSpawn);
 	void spawnTestPlanets();
 	void graduallySpawnBodies(int spawnsPerFrame = 1);
 
@@ -84,39 +84,11 @@ public:
 	UPROPERTY(Category = "forUI", BlueprintReadWrite)
 	int gravCalculations = 0;
 
-	//testing
-	UPROPERTY(Category = "Testing", BlueprintReadWrite, EditAnywhere)
-	bool ShouldReset = false;
-	UPROPERTY(Category = "Testing", BlueprintReadWrite, EditAnywhere)
-	float resetTime = 1.0f;
-	UPROPERTY(Category = "Testing", BlueprintReadWrite, EditAnywhere)
-	float fixedFrameTime = 0.1f;
-	float elapsedFrameTime = 0.0f;
-
-	//simulation dependant variables
-	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-	bool useTreeCodes = false;
-	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-		bool shouldSpawnSolarSystem = false;
-	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-		bool ShouldSpawnTestPlanets = false;
 
 	
-	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-	int bodiesToSpawn = 100;
-	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-	int SpawnsPerFrame = 50;
-	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-	FVector InitialSpawnCentre = FVector(0,0,-10);
-	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-	float SpawnLocationBounds = 10;
-	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-	float SpawnInitialMaxSpeed = 10;
-	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-	float SpawnInitialMaxMass = 2;
-
-	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-	int SolarPlanetToSpawn = 100;//0-7 to spawn a specific planet+ sun,anything else for all of them
+	float fixedFrameTime = 0.1f;
+	float elapsedFrameTime = 0.0f;
+	
 
 
 	//double bigG = 0.000000000066743f; //when using kg,m and s
@@ -131,4 +103,20 @@ public:
 	float timeTakenTC = 0.0f;
 	float timeTakenMove = 0.0f;
 	int perfITR = 0;
+
+	UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite)
+	bool useTreeCodes_ = false;
+	int solarPlanetToSpawn = 100;
+	int bodiesToSpawn = 100;
+	bool bSpawnTestPlanets = false;
+	bool bSpawnSolarSystem = false;
+	int SpawnsPerFrame_ = 10.0f;
+	float spawnExtent = 10.0f;
+	float SpawnMaxSpeed = 5.0f;
+	float SpawnMaxMass = 5.0f;
+	FVector SpawnCentre = FVector(0.0f,0.0f,0.0f);
+
+	bool shouldAddToGhost = false;
+
+	int handlerID = 0;
 };

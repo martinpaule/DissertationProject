@@ -106,7 +106,7 @@ void ATreeHandler::DisplaySectors(TreeNode* rootNode) {
 
 	if (rootNode->isLeaf) {
 		if (rootNode->bodies.Num() == 1) {
-			DrawDebugBox(GetWorld(), rootNode->position * 1000.0f, FVector(rootNode->extent, rootNode->extent, rootNode->extent) * 1000.0f, rootNode->bodies[0]->myCol, false, 0.0f, 0, 7.0f);
+			DrawDebugBox(GetWorld(), rootNode->position * 1000.0f, FVector(rootNode->extent, rootNode->extent, rootNode->extent) * 1000.0f, FColor(rootNode->bodies[0]->myCol.X *255, rootNode->bodies[0]->myCol.Y * 255, rootNode->bodies[0]->myCol.Z * 255), false, 0.0f, 0, 7.0f);
 		}
 		else {
 			//DrawDebugBox(worldRef, position * 1000.0f, FVector(extent, extent, extent) * 1000.0f, FColor::Red, false, -1.0f, 0, 2.0f);
@@ -173,7 +173,9 @@ void ATreeHandler::partitionTree(TreeNode* rootNode)
 
 	//RECURSIVE CALL to partition branch nodes (also calculate centre of mass
 	for (int j = 0; j < 8; j++) {
-		rootNode->branch_nodes[j]->Node_CentreOMass /= rootNode->branch_nodes[j]->Node_CombinedMass;
+		if (rootNode->branch_nodes[j]->bodies.Num() > 0) {
+			rootNode->branch_nodes[j]->Node_CentreOMass /= rootNode->branch_nodes[j]->Node_CombinedMass;
+		}
 		partitionTree(rootNode->branch_nodes[j]);
 	}
 }
@@ -186,6 +188,18 @@ FVector ATreeHandler::getApproxForce(AGravBody* body, TreeNode * rootNode)
 	if (rootNode->bodies.Num() == 0) {
 		return FVector(0.0f, 0.0f, 0.0f);
 	}
+	else if (rootNode->bodies.Num() == 1 && body != rootNode->bodies[0]) {
+
+		FVector direction = rootNode->bodies[0]->position - body->position;
+		float distanceCubed = pow(direction.Length(), 3);
+		FVector returnForce = direction * bigG * rootNode->bodies[0]->mass;
+		returnForce /= distanceCubed;
+
+		gravCalcs++;
+
+		return returnForce;
+	}
+
 
 	//necessary variables
 	float distance_body_to_centreOfMass = (body->position - rootNode->Node_CentreOMass).Length();
@@ -197,7 +211,6 @@ FVector ATreeHandler::getApproxForce(AGravBody* body, TreeNode * rootNode)
 	//if the length of the cell is smaller than the distabce of the planet to the cell's centre of mass
 	if ((rootNode->extent*2.0f) / distance_body_to_centreOfMass < accuracy_Param) {
 	
-		double bigG = 39.4784f; //when using SolarMass, AU and Years
 	
 		FVector direction = rootNode->Node_CentreOMass - body->position;
 		float distanceCubed = distance_body_to_centreOfMass * distance_body_to_centreOfMass * distance_body_to_centreOfMass;
@@ -214,6 +227,7 @@ FVector ATreeHandler::getApproxForce(AGravBody* body, TreeNode * rootNode)
 				combinedForces += getApproxForce(body, rootNode->branch_nodes[j]);
 			}
 		}
+		
 	}
 
 	return combinedForces;

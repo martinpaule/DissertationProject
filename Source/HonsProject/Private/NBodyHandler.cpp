@@ -16,6 +16,7 @@ ANBodyHandler::ANBodyHandler()
 	PrimaryActorTick.bCanEverTick = true;
 
 	
+	
 }
 
 
@@ -29,9 +30,7 @@ void ANBodyHandler::recordFinalPositions() {
 		accuracyCompRef->notePlanet(name_, myGravBodies[i]->position, myGravBodies[i]->velocity, myGravBodies[i]->mass);
 	}
 
-	if (accuracyCompRef->planets.Num() >= 5) {
-		accuracyCompRef->printResultToTXT();
-	}
+	accuracyCompRef->printResultToTXT();
 }
 
 // Called when the game starts or when spawned
@@ -39,8 +38,12 @@ void ANBodyHandler::BeginPlay()
 {
 	Super::BeginPlay();
 
-	
-
+	//spawn tree code handler
+	FActorSpawnParameters SpawnInfo;
+	treeHandlerRef = GetWorld()->SpawnActor<ATreeHandler>(SpawnInfo);
+	treeHandlerRef->bodyHandlerBodies = &myGravBodies;
+	treeHandlerRef->bodyHandlerBodies = &myGravBodies;
+	//treeHandlerRef->shouldCalculateTC = useTreeCodes;
 
 	//example how to bind functions to input in code, keep to avoid looking this up again
 	//ADefaultPawn * pawn_ = Cast<ADefaultPawn>(UGameplayStatics::GetActorOfClass(GetWorld(), ADefaultPawn::StaticClass()));
@@ -59,21 +62,14 @@ void ANBodyHandler::BeginPlay()
 
 
 	//add manually placed bodies to the array
-	TArray<AActor*> FoundActors;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AGravBody::StaticClass(), FoundActors);	
-	for (int n = 0; n < FoundActors.Num(); n++) {
-		AGravBody* ref = Cast<AGravBody>(FoundActors[n]);
-		myGravBodies.Add(ref);
-	}
+	//TArray<AActor*> FoundActors;
+	//UGameplayStatics::GetAllActorsOfClass(GetWorld(), AGravBody::StaticClass(), FoundActors);	
+	//for (int n = 0; n < FoundActors.Num(); n++) {
+	//	AGravBody* ref = Cast<AGravBody>(FoundActors[n]);
+	//	myGravBodies.Add(ref);
+	//}
 
-	//spawn tree code handler
-	FActorSpawnParameters SpawnInfo;
-	treeHandlerRef = GetWorld()->SpawnActor<ATreeHandler>(SpawnInfo);
-	treeHandlerRef->bodyHandlerBodies = &myGravBodies;
-	treeHandlerRef->shouldCalculateTC = useTreeCodes;
-
-	FActorSpawnParameters SpawnInfoAH;
-	accuracyCompRef = GetWorld()->SpawnActor<AAccuracyModule>(SpawnInfoAH);
+	
 }
 
 //direct integration of gravitational dynamics using Newtonian formulae
@@ -175,7 +171,7 @@ void ANBodyHandler::Tick(float DeltaTime)
 	//gradually spawn bodies to avoid a large lag spike at the start
 	if(spawningBodies)
 	{
-		graduallySpawnBodies(SpawnsPerFrame);
+		graduallySpawnBodies(SpawnsPerFrame_);
 	}
 	else if(notPaused) { //tick
 
@@ -200,9 +196,9 @@ void ANBodyHandler::Tick(float DeltaTime)
 
 
 
-			perfITR++;
+			//perfITR++;
 
-			if (perfITR >= 10) {
+			if (perfITR >= 10 && false) {
 				perfITR = 0;
 
 				std::string printStrRecalc = "Recalculating TC took ";
@@ -242,7 +238,7 @@ void ANBodyHandler::Tick(float DeltaTime)
 
 
 				
-				if (useTreeCodes) {
+				if (useTreeCodes_) {
 					calculateWithTree(updatedDT);
 				}
 				else {
@@ -286,19 +282,22 @@ void ANBodyHandler::Tick(float DeltaTime)
 
 
 		//optional recording of locations 
-		if (simulationElapsedTime >= resetTime && ShouldReset) {
-			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, "recorded positions");
+		if (accuracyCompRef) {
+			if (simulationElapsedTime >= accuracyCompRef->resetTime && accuracyCompRef->shouldResetTest) {
+				GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, "recorded positions");
 
-			recordFinalPositions();
-			ClearSimulation();
+				recordFinalPositions();
+				ClearSimulation();
 
 
+			}
 		}
+		
 	}
 
 	if (treeHandlerRef->showTreeBoxes) {
 
-		if (!useTreeCodes) {
+		if (!useTreeCodes_) {
 			treeHandlerRef->RecalculatePartitioning();
 		}
 
@@ -317,13 +316,13 @@ void ANBodyHandler::spawnBodyAt(FVector position_, FVector velocity_, double mas
 
 	//assign body's variables
 	AGravBody * newBody = GetWorld()->SpawnActor<AGravBody>(position_*1000.0f, myRot, SpawnInfo);
+	newBody->SetActorEnableCollision(false);
 	newBody->velocity = velocity_;
 	newBody->mass = mass_;
 	newBody->position = position_;
 	newBody->radius = radius_;
 	newBody->toBeDestroyed = false;
 	newBody->SetActorLabel(name_.c_str());
-	//newBody->lastTrailPos = position_;
 
 	if (radius_ == 0.0f) {
 		radius_ = cbrt(mass_);
@@ -334,21 +333,42 @@ void ANBodyHandler::spawnBodyAt(FVector position_, FVector velocity_, double mas
 	//option to set colour too
 	if (colour_ != FVector4(0.0f, 0.0f, 0.0f, 0.0f)) {
 		newBody->myMat->SetVectorParameterValue(TEXT("Colour"), colour_);
-		//newBody.
+		newBody->myCol = colour_;
+	}
+	myGravBodies.Add(newBody);
+
+	if (shouldAddToGhost) {
+		//assign body's variables
+		AGravBody* ghostBody = GetWorld()->SpawnActor<AGravBody>(position_ * 1000.0f, myRot, SpawnInfo);
+		ghostBody->handlerID = 1;
+		ghostBody->velocity = velocity_;
+		ghostBody->mass = mass_;
+		ghostBody->position = position_;
+		ghostBody->radius = radius_;
+		ghostBody->toBeDestroyed = false;
+		name_ += "_ghost";
+		ghostBody->SetActorLabel(name_.c_str());
+
+		//currently more for display purposes
+		ghostBody->SetActorScale3D(FVector(radius_, radius_, radius_));
+
+		ghostBody->myMat->SetVectorParameterValue(TEXT("Colour"), newBody->myCol);
+		ghostBody->myMat->SetScalarParameterValue(TEXT("Opacity"), 0.1f);
+		ghostSim->myGravBodies.Add(ghostBody);
 	}
 
+	newBody->SetActorEnableCollision(true);
 
-	myGravBodies.Add(newBody);
 
 }
 
-void ANBodyHandler::spawnSolarSystem() {
+void ANBodyHandler::spawnSolarSystem(int SolarPlanetToSpawn) {
 
 
 	//define and spawn the sun
 	FVector bodyONE_pos = FVector(-9.0841f * pow(10, -3), 4.9241f * pow(10, -4), 2.0754f * pow(10, -4));
 	float massOne = 1.0f;
-	spawnBodyAt(bodyONE_pos + InitialSpawnCentre/2, FVector(0.0f, 0.0f, 0.0f), 1.0f, "Sun", 5.0f,FVector4(1.0f,1.0f,0.0f,1.0f));
+	spawnBodyAt(bodyONE_pos + SpawnCentre /2.0f, FVector(0.0f, 0.0f, 0.0f), 1.0f, "Sun", 5.0f,FVector4(1.0f,1.0f,0.0f,1.0f));
 
 
 	std::string bodyTwoName_;
@@ -445,7 +465,7 @@ void ANBodyHandler::spawnSolarSystem() {
 
 		dir.Normalize();
 		FVector RightVel = UKismetMathLibrary::GetRightVector(dir.Rotation()) * YVel;
-		spawnBodyAt(bodyTWO_pos + InitialSpawnCentre/2, RightVel, massTwo, bodyTwoName_, bodyTwoScale,planetColor);
+		spawnBodyAt(bodyTWO_pos + SpawnCentre /2, RightVel, massTwo, bodyTwoName_, bodyTwoScale,planetColor);
 	}
 
 }
@@ -474,34 +494,42 @@ void ANBodyHandler::graduallySpawnBodies(int spawnsPerFrame) {
 
 		//Exi the spawning loop
 		if (gradualSpawnerIndex >= bodiesToSpawn) {
+			if (handlerID == 1) {
+				return;
+			}
 			spawningBodies = false;
 			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, "Spawned all desired bodies");
-			if (shouldSpawnSolarSystem) {
-				spawnSolarSystem();
+			if (bSpawnSolarSystem) {
+				spawnSolarSystem(solarPlanetToSpawn);
 			}
-			if (ShouldSpawnTestPlanets) {
+			if (bSpawnTestPlanets) {
 				spawnTestPlanets();
 			}
 			bodiesInSimulation = myGravBodies.Num();
+
+			if (shouldAddToGhost) {
+				ghostSim->spawningBodies = false;
+			}
+
 			return;
 		}
 
 		//random location
-		FVector myLoc(-SpawnLocationBounds / 2, -SpawnLocationBounds / 2, -SpawnLocationBounds / 2);
-		myLoc.X += FMath::FRandRange(0, SpawnLocationBounds);
-		myLoc.Y += FMath::FRandRange(0, SpawnLocationBounds);
-		myLoc.Z += FMath::FRandRange(0, SpawnLocationBounds);
-		myLoc += InitialSpawnCentre; //translate it to desired spawn centre
+		FVector myLoc(-spawnExtent / 2, -spawnExtent / 2, -spawnExtent / 2);
+		myLoc.X += FMath::FRandRange(0, spawnExtent);
+		myLoc.Y += FMath::FRandRange(0, spawnExtent);
+		myLoc.Z += FMath::FRandRange(0, spawnExtent);
+		myLoc += SpawnCentre; //translate it to desired spawn centre
 
 		//random speed
-		FVector speed_ = FVector(-SpawnInitialMaxSpeed / 2, -SpawnInitialMaxSpeed / 2, -SpawnInitialMaxSpeed / 2);
-		speed_.X += FMath::FRandRange(0, SpawnInitialMaxSpeed);
-		speed_.Y += FMath::FRandRange(0, SpawnInitialMaxSpeed);
-		speed_.Z += FMath::FRandRange(0, SpawnInitialMaxSpeed);
+		FVector speed_ = FVector(-SpawnMaxSpeed / 2, -SpawnMaxSpeed / 2, -SpawnMaxSpeed / 2);
+		speed_.X += FMath::FRandRange(0, SpawnMaxSpeed);
+		speed_.Y += FMath::FRandRange(0, SpawnMaxSpeed);
+		speed_.Z += FMath::FRandRange(0, SpawnMaxSpeed);
 
 		//random mass
 		float mass_ = 0.001f;
-		mass_ += FMath::FRandRange(0.0f, SpawnInitialMaxMass);
+		mass_ += FMath::FRandRange(0.0f, SpawnMaxMass);
 
 		std::string bodName = "Body ";
 		bodName += std::to_string(gradualSpawnerIndex);

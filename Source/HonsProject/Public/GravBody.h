@@ -53,7 +53,7 @@ public:
 	void MoveBody(double editedDT);
 
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-	FColor myCol;
+		FVector4 myCol;
 	
 	//simulation variables
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
@@ -67,5 +67,5 @@ public:
 	bool universalDensity = true;
 	bool toBeDestroyed = false;
 
-
+	int handlerID = 0;
 };

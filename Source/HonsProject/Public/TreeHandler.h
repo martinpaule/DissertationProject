@@ -67,10 +67,9 @@ public:
 	UPROPERTY(Category = "VisualisationRelevant", EditAnywhere, BlueprintReadWrite)
 		bool showTreeBoxes = false;
 
-	UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite)
-	bool shouldCalculateTC = false;
-
 	//total gravitational calculations done
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 	int gravCalcs = 0;
+	double bigG = 39.4784f; //when using SolarMass, AU and Years
+
 };
