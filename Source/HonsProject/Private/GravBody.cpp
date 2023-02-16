@@ -88,12 +88,6 @@ void AGravBody::Tick(float DeltaTime)
 
 }
 
-void AGravBody::MoveBody(double editedDT)
-{
-	position += velocity * editedDT;
-	this->SetActorLocation(position* 1000.0f);
-
-}
 
 
 //perfectly inelastic

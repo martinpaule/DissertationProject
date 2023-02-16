@@ -39,6 +39,9 @@ void ASimulationManager::BeginPlay()
 	BodyHandler->accuracyCompRef->resetTime = resetTime;
 	BodyHandler->accuracyCompRef->shouldResetTest = ShouldReset;
 
+
+	BodyHandler->onlyMove = testOnlyMove;
+
 	if (shouldGhostAccuracy && useTreeCodes) {
 		BodyHandler->shouldAddToGhost = true;
 

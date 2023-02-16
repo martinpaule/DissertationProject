@@ -61,6 +61,8 @@ public:
 	void spawnTestPlanets();
 	void graduallySpawnBodies(int spawnsPerFrame = 1);
 
+	void moveBodies(bool alsoMoveActor, double updated_dt);
+
 	//direct integration of gravitational calculations
 	void calculateAllVelocityChanges(double dt);
 	//tree codes calculaton
@@ -119,4 +121,8 @@ public:
 	bool shouldAddToGhost = false;
 
 	int handlerID = 0;
+
+	//remove
+	bool onlyMove = false;
+	bool resetEm = false;
 };

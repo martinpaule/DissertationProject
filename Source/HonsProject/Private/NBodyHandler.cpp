@@ -232,13 +232,22 @@ void ANBodyHandler::Tick(float DeltaTime)
 			double updatedDT = fixedFrameTime * timeMultiplier * 0.027f; //0.027 makes the time as 10 days/s		
 
 
-			simulationElapsedTime += updatedDT * int(elapsedFrameTime / fixedFrameTime);
-			for (int j = 0; j < int(elapsedFrameTime / fixedFrameTime);j++) {
+			int iterations = int(elapsedFrameTime / fixedFrameTime);
+			simulationElapsedTime += updatedDT * iterations;
+			for (int j = 0; j < iterations;j++) {
 				
 
+				if (onlyMove) {
+					if (!resetEm) {
+						for (int i = 0; i < myGravBodies.Num(); i++)
+						{
+							myGravBodies[i]->velocity = FVector(0, 1, 0);
+						}
+						resetEm = true;
 
-				
-				if (useTreeCodes_) {
+					}
+				}
+				else if (useTreeCodes_) {
 					calculateWithTree(updatedDT);
 				}
 				else {
@@ -259,13 +268,11 @@ void ANBodyHandler::Tick(float DeltaTime)
 				auto moveTIMEstart = std::chrono::high_resolution_clock::now();
 
 				//step 2: move bodies using their updated velocity, also destroy ones that 
-				for (int i = 0; i < myGravBodies.Num(); i++)
-				{
-					//second dt pass
-					myGravBodies[i]->MoveBody(updatedDT);
-					
-
+				bool last = false;
+				if (j == iterations - 1) {
+					last = true;
 				}
+				moveBodies(last, updatedDT);
 
 				auto moveTIMEstop = std::chrono::high_resolution_clock::now();
 
@@ -306,6 +313,17 @@ void ANBodyHandler::Tick(float DeltaTime)
 
 }
 
+void ANBodyHandler::moveBodies(bool alsoMoveActor, double updated_dt) {
+
+	for (int i = 0; i < myGravBodies.Num(); i++) {
+		myGravBodies[i]->position += updated_dt * myGravBodies[i]->velocity;
+
+		if (alsoMoveActor) {
+			myGravBodies[i]->SetActorLocation(myGravBodies[i]->position * 1000.0f);
+		}
+	}
+
+}
 
 // setup function for spawning bodies - creates a new body with specified parameters
 void ANBodyHandler::spawnBodyAt(FVector position_, FVector velocity_, double mass_, std::string name_, float radius_, FVector4 colour_)

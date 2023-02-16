@@ -47,11 +47,6 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	USphereComponent* SphereCollider;
 
-	
-	//apply displacement to the body based on its velocity
-	UFUNCTION(BlueprintCallable, Category="Move")
-	void MoveBody(double editedDT);
-
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 		FVector4 myCol;
 	

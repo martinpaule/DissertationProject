@@ -61,5 +61,8 @@ public:
 		float resetTime = 1.0f;
 	UPROPERTY(Category = "Testing", BlueprintReadWrite, EditAnywhere)
 		bool shouldGhostAccuracy = false;
+
+	UPROPERTY(Category = "Testing", BlueprintReadWrite, EditAnywhere)
+		bool testOnlyMove = false;
 	
 };
