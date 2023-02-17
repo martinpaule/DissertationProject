@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
+#include "Components/ActorComponent.h"
 #include <fstream>
 #include <string>
 #include "AccuracyModule.generated.h"
@@ -18,8 +18,8 @@ public:
 	
 };
 
-UCLASS()
-class HONSPROJECT_API AAccuracyModule : public AActor
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
+class HONSPROJECT_API UAccuracyModule : public UActorComponent
 {
 	GENERATED_BODY()
 
@@ -29,7 +29,7 @@ public:
 
 
 	// Sets default values for this actor's properties
-	AAccuracyModule();
+	UAccuracyModule();
 
 
 
@@ -40,7 +40,7 @@ protected:
 
 public:
 	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	bool planetsEqual(planet a, planet b) {
 		if (a.mass == b.mass && a.name == b.name && a.pos == b.pos && a.vel == b.vel) {

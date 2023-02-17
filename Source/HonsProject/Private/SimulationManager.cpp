@@ -17,9 +17,12 @@ void ASimulationManager::BeginPlay()
 	Super::BeginPlay();
 
 
+	FTransform tr;
+	tr.SetIdentity();
+
 	//spawn tree code handler
-	FActorSpawnParameters SpawnInfo;
-	BodyHandler = GetWorld()->SpawnActor<ANBodyHandler>(SpawnInfo);
+	BodyHandler = Cast<UNBodyHandler>(this->AddComponentByClass(UNBodyHandler::StaticClass(), false, tr, true));
+	BodyHandler->RegisterComponent();
 
 	BodyHandler->solarPlanetToSpawn = SolarPlanetToSpawn;
 	BodyHandler->SpawnsPerFrame_ = SpawnsPerFrame;
@@ -34,23 +37,39 @@ void ASimulationManager::BeginPlay()
 	BodyHandler->fixedFrameTime = fixedFrameTime;
 
 
-	FActorSpawnParameters SpawnInfoAH;
-	BodyHandler->accuracyCompRef = GetWorld()->SpawnActor<AAccuracyModule>(SpawnInfoAH);
+	
+
+	BodyHandler->accuracyCompRef = Cast<UAccuracyModule>(this->AddComponentByClass(UAccuracyModule::StaticClass(), false, tr, true));
+	BodyHandler->accuracyCompRef->RegisterComponent();
+
 	BodyHandler->accuracyCompRef->resetTime = resetTime;
 	BodyHandler->accuracyCompRef->shouldResetTest = ShouldReset;
 
 
 	BodyHandler->onlyMove = testOnlyMove;
 
-	if (shouldGhostAccuracy && useTreeCodes) {
-		BodyHandler->shouldAddToGhost = true;
+	if (useTreeCodes) {
 
-		FActorSpawnParameters SpawnInfoT;
-		BodyHandler->ghostSim = GetWorld()->SpawnActor<ANBodyHandler>(SpawnInfoT);
-		BodyHandler->ghostSim->fixedFrameTime = fixedFrameTime;
-		//ghostSim->shouldAddToGhost = true;
-		BodyHandler->ghostSim->bodiesToSpawn = 0;
-		BodyHandler->ghostSim->handlerID = 1;
+
+		//spawn tree code handler
+		UTreeHandler * treeRef = Cast<UTreeHandler>(this->AddComponentByClass(UTreeHandler::StaticClass(), false, tr, true));
+		treeRef->RegisterComponent();
+		treeRef->bodyHandlerBodies = &BodyHandler->myGravBodies;
+
+		BodyHandler->treeHandlerRef = treeRef;
+
+		if (shouldGhostAccuracy) {
+			BodyHandler->shouldAddToGhost = true;
+
+			BodyHandler->ghostSim = Cast<UNBodyHandler>(this->AddComponentByClass(UNBodyHandler::StaticClass(), false, tr, true));
+			BodyHandler->ghostSim->RegisterComponent();
+
+			BodyHandler->ghostSim->fixedFrameTime = fixedFrameTime;
+			//ghostSim->shouldAddToGhost = true;
+			BodyHandler->ghostSim->bodiesToSpawn = 0;
+			BodyHandler->ghostSim->handlerID = 1;
+		}
+		
 
 	}
 

@@ -4,15 +4,15 @@
 #include <string>
 
 // Sets default values
-ATreeHandler::ATreeHandler()
+UTreeHandler::UTreeHandler()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryComponentTick.bCanEverTick = true;
 
 }
 
 // Called when the game starts or when spawned
-void ATreeHandler::BeginPlay()
+void UTreeHandler::BeginPlay()
 {
 	Super::BeginPlay();
 	
@@ -20,14 +20,14 @@ void ATreeHandler::BeginPlay()
 }
 
 // Called every frame
-void ATreeHandler::Tick(float DeltaTime)
+void UTreeHandler::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
-	Super::Tick(DeltaTime);
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 
 }
 
-void ATreeHandler::RecalculatePartitioning() {
+void UTreeHandler::RecalculatePartitioning() {
 	
 	//reset root
 	delete treeNodeRoot;
@@ -102,7 +102,7 @@ void ATreeHandler::RecalculatePartitioning() {
 	partitionTree(treeNodeRoot);
 }
 
-void ATreeHandler::DisplaySectors(TreeNode* rootNode) {
+void UTreeHandler::DisplaySectors(TreeNode* rootNode) {
 
 	if (rootNode->isLeaf) {
 		if (rootNode->bodies.Num() == 1) {
@@ -121,7 +121,7 @@ void ATreeHandler::DisplaySectors(TreeNode* rootNode) {
 	}
 }
 
-void ATreeHandler::partitionTree(TreeNode* rootNode)
+void UTreeHandler::partitionTree(TreeNode* rootNode)
 {
 	//exit if there is 1 or 0 children
 	if (rootNode->bodies.Num() < 2) {
@@ -181,7 +181,7 @@ void ATreeHandler::partitionTree(TreeNode* rootNode)
 }
 
 //recursive function calculating force on a body
-FVector ATreeHandler::getApproxForce(AGravBody* body, TreeNode * rootNode)
+FVector UTreeHandler::getApproxForce(AGravBody* body, TreeNode * rootNode)
 {
 
 	//return from an empty leaf

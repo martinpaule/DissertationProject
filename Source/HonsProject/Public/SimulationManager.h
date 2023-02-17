@@ -27,8 +27,8 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	ANBodyHandler* BodyHandler;
-	//ANBodyHandler* ghostSim;
+	UNBodyHandler* BodyHandler;
+	//UNBodyHandler* ghostSim;
 
 	//simulation dependant variables
 	UPROPERTY(Category = "SimulationType", EditAnywhere, BlueprintReadWrite)

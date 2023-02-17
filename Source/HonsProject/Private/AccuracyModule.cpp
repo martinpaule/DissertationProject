@@ -4,24 +4,24 @@
 #include "AccuracyModule.h"
 
 // Sets default values
-AAccuracyModule::AAccuracyModule()
+UAccuracyModule::UAccuracyModule()
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryComponentTick.bCanEverTick = true;
 
 }
 
 // Called when the game starts or when spawned
-void AAccuracyModule::BeginPlay()
+void UAccuracyModule::BeginPlay()
 {
 	Super::BeginPlay();
 
 }
 
 // Called every frame
-void AAccuracyModule::Tick(float DeltaTime)
+void UAccuracyModule::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
-	Super::Tick(DeltaTime);
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 
 
@@ -29,7 +29,7 @@ void AAccuracyModule::Tick(float DeltaTime)
 }
 
 
-void AAccuracyModule::notePlanet(std::string name_, FVector pos_, FVector vel_, float mass_) {
+void UAccuracyModule::notePlanet(std::string name_, FVector pos_, FVector vel_, float mass_) {
 	planet a;
 
 	a.name = name_;
@@ -45,7 +45,7 @@ void AAccuracyModule::notePlanet(std::string name_, FVector pos_, FVector vel_, 
 
 
 
-void AAccuracyModule::printResultToTXT() {
+void UAccuracyModule::printResultToTXT() {
 
 	//accuracy calculation variables
 	int positive_Comparisons = 0;

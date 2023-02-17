@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
+#include "Components/ActorComponent.h"
 #include "GravBody.h"
 #include "TreeHandler.generated.h"
 
@@ -36,13 +36,13 @@ public:
 
 
 UCLASS()
-class HONSPROJECT_API ATreeHandler : public AActor
+class HONSPROJECT_API UTreeHandler : public UActorComponent
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	ATreeHandler();
+	UTreeHandler();
 
 	//pointer to the array from nbodyHandler
 	TArray<AGravBody*> * bodyHandlerBodies;
@@ -54,7 +54,7 @@ protected:
 
 public:	
 	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	void RecalculatePartitioning();
 	void DisplaySectors(TreeNode* rootNode);

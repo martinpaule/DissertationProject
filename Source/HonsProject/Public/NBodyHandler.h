@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Pawn.h"
+#include "Components/ActorComponent.h"
 #include "UObject/ConstructorHelpers.h"
 #include <string>
 #include "TreeHandler.h"
@@ -13,13 +13,13 @@
 
 
 UCLASS()
-class HONSPROJECT_API ANBodyHandler : public APawn
+class HONSPROJECT_API UNBodyHandler : public UActorComponent
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	ANBodyHandler();
+	UNBodyHandler();
 
 protected:
 	// Called when the game starts or when spawned
@@ -27,7 +27,7 @@ protected:
 
 public:	
 	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 
 	//UI called functions
@@ -48,12 +48,12 @@ public:
 	UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite)
 	TArray<AGravBody*> myGravBodies;
 
-	ANBodyHandler* ghostSim = nullptr;
+	UNBodyHandler* ghostSim = nullptr;
 
 	//tree code handler reference
 	UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite)
-	ATreeHandler* treeHandlerRef;
-	AAccuracyModule* accuracyCompRef;
+	UTreeHandler* treeHandlerRef;
+	UAccuracyModule* accuracyCompRef;
 
 	//spawning
 	void spawnBodyAt(FVector position_, FVector velocity_, double mass_, std::string name_ = "GravBody", float radius_ = 0.0f, FVector4 colour_ = FVector4(0.0f,0.0f,0.0f,0.0f));

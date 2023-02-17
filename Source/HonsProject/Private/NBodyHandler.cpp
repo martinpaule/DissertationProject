@@ -10,17 +10,17 @@
 #include "DrawDebugHelpers.h"
 
 // Sets default values
-ANBodyHandler::ANBodyHandler()
+UNBodyHandler::UNBodyHandler()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryComponentTick.bCanEverTick = true;
 
 	
 	
 }
 
 
-void ANBodyHandler::recordFinalPositions() {
+void UNBodyHandler::recordFinalPositions() {
 
 	TArray<planet> a;
 	accuracyCompRef->planets.Add(a);
@@ -34,15 +34,12 @@ void ANBodyHandler::recordFinalPositions() {
 }
 
 // Called when the game starts or when spawned
-void ANBodyHandler::BeginPlay()
+void UNBodyHandler::BeginPlay()
 {
 	Super::BeginPlay();
 
-	//spawn tree code handler
-	FActorSpawnParameters SpawnInfo;
-	treeHandlerRef = GetWorld()->SpawnActor<ATreeHandler>(SpawnInfo);
-	treeHandlerRef->bodyHandlerBodies = &myGravBodies;
-	treeHandlerRef->bodyHandlerBodies = &myGravBodies;
+
+	
 	//treeHandlerRef->shouldCalculateTC = useTreeCodes;
 
 	//example how to bind functions to input in code, keep to avoid looking this up again
@@ -55,7 +52,7 @@ void ANBodyHandler::BeginPlay()
 	//	(
 	//		"MoveToSimMid", // The input identifier (specified in DefaultInput.ini)
 	//		this, // The object instance that is going to react to the input
-	//		&ANBodyHandler::moveToSimulationCore // The function that will fire when input is received
+	//		&UNBodyHandler::moveToSimulationCore // The function that will fire when input is received
 	//	);
 	//	EnableInput(GetWorld()->GetFirstPlayerController());
 	//}
@@ -73,7 +70,7 @@ void ANBodyHandler::BeginPlay()
 }
 
 //direct integration of gravitational dynamics using Newtonian formulae
-void ANBodyHandler::calculateAllVelocityChanges(double dt) {
+void UNBodyHandler::calculateAllVelocityChanges(double dt) {
 
 	gravCalculations = 0;
 
@@ -117,7 +114,7 @@ void ANBodyHandler::calculateAllVelocityChanges(double dt) {
 
 
 //tree code calculations of gravitational dynamics
-void ANBodyHandler::calculateWithTree(double dt) {
+void UNBodyHandler::calculateWithTree(double dt) {
 
 
 	auto RecalcStart = std::chrono::high_resolution_clock::now();
@@ -160,9 +157,9 @@ void ANBodyHandler::calculateWithTree(double dt) {
 }
 
 // Called every frame
-void ANBodyHandler::Tick(float DeltaTime)              
+void UNBodyHandler::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
-	Super::Tick(DeltaTime);
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	
 
@@ -313,7 +310,7 @@ void ANBodyHandler::Tick(float DeltaTime)
 
 }
 
-void ANBodyHandler::moveBodies(bool alsoMoveActor, double updated_dt) {
+void UNBodyHandler::moveBodies(bool alsoMoveActor, double updated_dt) {
 
 	for (int i = 0; i < myGravBodies.Num(); i++) {
 		myGravBodies[i]->position += updated_dt * myGravBodies[i]->velocity;
@@ -326,7 +323,7 @@ void ANBodyHandler::moveBodies(bool alsoMoveActor, double updated_dt) {
 }
 
 // setup function for spawning bodies - creates a new body with specified parameters
-void ANBodyHandler::spawnBodyAt(FVector position_, FVector velocity_, double mass_, std::string name_, float radius_, FVector4 colour_)
+void UNBodyHandler::spawnBodyAt(FVector position_, FVector velocity_, double mass_, std::string name_, float radius_, FVector4 colour_)
 {
 
 	FActorSpawnParameters SpawnInfo;
@@ -380,7 +377,7 @@ void ANBodyHandler::spawnBodyAt(FVector position_, FVector velocity_, double mas
 
 }
 
-void ANBodyHandler::spawnSolarSystem(int SolarPlanetToSpawn) {
+void UNBodyHandler::spawnSolarSystem(int SolarPlanetToSpawn) {
 
 
 	//define and spawn the sun
@@ -488,7 +485,7 @@ void ANBodyHandler::spawnSolarSystem(int SolarPlanetToSpawn) {
 
 }
 
-void ANBodyHandler::spawnTestPlanets()
+void UNBodyHandler::spawnTestPlanets()
 {
 	//20,20,2
 	FVector positions[15] = {FVector(20.0f, 0.0f, 0.0f),FVector(0.0f, 5.0f,20.0f), FVector(-5.0f,20.0f,10.0f), FVector(17.0f,-10.0f,4.0f), FVector(5.0f,0.0f, 5.0f), FVector(3.0f, -17.0f, 6.0f),FVector(11.0f,11.0f,11.0f), FVector(-6.0f,12.0f,-18.0f), FVector(-17.0f,1.0f,7.0f), FVector(8.0f,-16.0f,16.0f), FVector(9.0f,3.0f,20.0f),FVector(5.0f,-10.0f,15.0f), FVector(11.0f, -19.0f,7.0f), FVector(-7.0f,17.0f,19.0f), FVector(4.0f,-10.0f,16.0f) };
@@ -505,7 +502,7 @@ void ANBodyHandler::spawnTestPlanets()
 
 
 //function that allows gradual spawn of initial bodies rather than all at once, avoiding a big lag spike when handlingodies
-void ANBodyHandler::graduallySpawnBodies(int spawnsPerFrame) {
+void UNBodyHandler::graduallySpawnBodies(int spawnsPerFrame) {
 
 
 	for (int s = 0; s < spawnsPerFrame; s++) { // spawn all the bodies for this frame
@@ -561,7 +558,7 @@ void ANBodyHandler::graduallySpawnBodies(int spawnsPerFrame) {
 }
 
 
-void ANBodyHandler::doubleAllScales() {
+void UNBodyHandler::doubleAllScales() {
 	for (int i = 0; i < myGravBodies.Num(); i++)
 	{
 		float scale_ = myGravBodies[i]->GetActorScale().X;
@@ -571,7 +568,7 @@ void ANBodyHandler::doubleAllScales() {
 }
 
 
-void ANBodyHandler::pauseSimulation() {
+void UNBodyHandler::pauseSimulation() {
 	if (notPaused) {
 		notPaused = false;
 	}
@@ -580,21 +577,21 @@ void ANBodyHandler::pauseSimulation() {
 	}
 }
 
-void ANBodyHandler::raiseSimulationSpeed()
+void UNBodyHandler::raiseSimulationSpeed()
 {
 	timeMultiplier *= 2.0f;
 	notPaused = true;
 }
 
 
-void ANBodyHandler::lowerSimulationSpeed()
+void UNBodyHandler::lowerSimulationSpeed()
 {
 	timeMultiplier /= 2.0f;
 	notPaused = true;
 }
 
 //Work in progress
-void ANBodyHandler::RecentreSimulation() {
+void UNBodyHandler::RecentreSimulation() {
 
 
 	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, resultMoveCect.ToString());
@@ -628,7 +625,7 @@ void ANBodyHandler::RecentreSimulation() {
 	}
 }
 
-void ANBodyHandler::ClearSimulation() {
+void UNBodyHandler::ClearSimulation() {
 	//timeMultiplier = 1.0f;
 	simulationElapsedTime = 0.0f;
 	bodiesInSimulation = 0;
