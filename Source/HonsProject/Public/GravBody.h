@@ -62,5 +62,6 @@ public:
 	bool universalDensity = true;
 	bool toBeDestroyed = false;
 
+	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 	int handlerID = 0;
 };

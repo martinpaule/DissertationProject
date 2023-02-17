@@ -27,12 +27,36 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	UNBodyHandler* BodyHandler;
-	//UNBodyHandler* ghostSim;
+
+
+	UPROPERTY(Category = "UI_references", EditAnywhere, BlueprintReadWrite)
+	UNBodyHandler* BodyHandler_ref;
+	UPROPERTY(Category = "UI_references", EditAnywhere, BlueprintReadWrite)
+	UNBodyHandler* ghostSim_ref;
+	UPROPERTY(Category = "UI_references", EditAnywhere, BlueprintReadWrite)
+	UAccuracyModule* accuracyTester_ref;
+	UPROPERTY(Category = "UI_references", EditAnywhere, BlueprintReadWrite)
+	UTreeHandler* TreeHandler_ref;
+
+	//UI called functions
+	UFUNCTION(BlueprintCallable, Category = "SimSpeed")
+		void raiseSimulationSpeed();
+	UFUNCTION(BlueprintCallable, Category = "SimSpeed")
+		void lowerSimulationSpeed();
+	UFUNCTION(BlueprintCallable, Category = "SimSpeed")
+		void pauseSimulation();
+	UFUNCTION(BlueprintCallable, Category = "ClearSim")
+		void ClearSimulation();
+	
+	
+	UFUNCTION(BlueprintCallable, Category = "SimCentre")
+	void addGhostSim();
+	void createSimComponents();
+	void recordFinalPositions();//<- move to accuracy class
 
 	//simulation dependant variables
 	UPROPERTY(Category = "SimulationType", EditAnywhere, BlueprintReadWrite)
-		bool useTreeCodes = false;
+		bool useTreeCodes = true;
 	UPROPERTY(Category = "SimulationType", EditAnywhere, BlueprintReadWrite)
 		bool shouldSpawnSolarSystem = false;
 	UPROPERTY(Category = "SimulationType", EditAnywhere, BlueprintReadWrite)
@@ -52,6 +76,7 @@ public:
 		float SpawnInitialMaxMass = 2;
 	UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite, EditAnywhere)
 		float fixedFrameTime = 0.1f;
+	float elapsedFrameTime = 0.0f;
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 		int SolarPlanetToSpawn = 100;//0-7 to spawn a specific planet+ sun,anything else for all of them
 
@@ -63,6 +88,14 @@ public:
 		bool shouldGhostAccuracy = false;
 
 	UPROPERTY(Category = "Testing", BlueprintReadWrite, EditAnywhere)
-		bool testOnlyMove = false;
+		bool Paused = false;
 	
+	//UI variables
+	UPROPERTY(Category = "forUI", BlueprintReadWrite)
+		float simulationElapsedTime = 0.0f;
+	UPROPERTY(Category = "forUI", BlueprintReadWrite, EditAnywhere)
+		int bodiesInSimulation = 0;
+	UPROPERTY(Category = "forUI", BlueprintReadWrite, EditAnywhere)
+		float timeMultiplier = 1.0f;
 };
+

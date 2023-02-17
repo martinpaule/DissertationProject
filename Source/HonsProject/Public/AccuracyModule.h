@@ -57,4 +57,6 @@ public:
 	bool shouldResetTest = false;
 	float resetTime = 1.0f; //in years
 
+	//CHANGE TO ENUM! types: FrameAccuracy, LongAccuracy, 
+	FString accuracyTestType = FString("FrameAccuracy");
 };
