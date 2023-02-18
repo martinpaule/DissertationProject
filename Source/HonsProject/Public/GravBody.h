@@ -50,6 +50,7 @@ public:
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 		FVector4 myCol;
 	
+
 	//simulation variables
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 	FVector velocity = FVector(0.0f, 0.0f, 0.0f); //km/s
@@ -64,4 +65,6 @@ public:
 
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 	int handlerID = 0;
+	AGravBody* ghostRef = NULL;
+
 };

@@ -59,6 +59,9 @@ void ASimulationManager::addGhostSim() {
 		ghostSim_ref->spawnBodyAt(BodyHandler_ref->myGravBodies[i]->position, BodyHandler_ref->myGravBodies[i]->velocity, BodyHandler_ref->myGravBodies[i]->mass, std::string(TCHAR_TO_UTF8(*name_)) , BodyHandler_ref->myGravBodies[i]->radius, BodyHandler_ref->myGravBodies[i]->myCol);
 
 		ghostSim_ref->myGravBodies.Last()->handlerID = 1;
+		BodyHandler_ref->myGravBodies[i]->ghostRef = ghostSim_ref->myGravBodies.Last();
+
+
 		ghostSim_ref->myGravBodies.Last()->myMat->SetScalarParameterValue(TEXT("Opacity"), 0.1f);
 		BodyHandler_ref->myGravBodies[i]->SetActorEnableCollision(true);
 
@@ -143,6 +146,7 @@ void ASimulationManager::Tick(float DeltaTime)
 			for (int i = 0; i < BodyHandler_ref->myGravBodies.Num(); i++)
 			{
 				if (BodyHandler_ref->myGravBodies[i]->toBeDestroyed) {
+					BodyHandler_ref->myGravBodies[i]->ghostRef = NULL;
 					BodyHandler_ref->myGravBodies[i]->Destroy();
 					BodyHandler_ref->myGravBodies.RemoveAt(i);
 					i--;
@@ -152,6 +156,7 @@ void ASimulationManager::Tick(float DeltaTime)
 				for (int i = 0; i < ghostSim_ref->myGravBodies.Num(); i++)
 				{
 					if (ghostSim_ref->myGravBodies[i]->toBeDestroyed) {
+						ghostSim_ref->myGravBodies[i]->ghostRef = NULL;
 						ghostSim_ref->myGravBodies[i]->Destroy();
 						ghostSim_ref->myGravBodies.RemoveAt(i);
 						i--;

@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 #include "GravBody.h"
 #include "Misc/DateTime.h"
+#include "Math/UnrealMathVectorCommon.h"
 #include "NBodyHandler.h"
 
 // Sets default values
@@ -86,6 +87,30 @@ void AGravBody::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+
+	if (true && handlerID == 0) {
+		if (ghostRef) {
+			FVector dir = ghostRef->GetActorLocation() -  GetActorLocation();
+			float dist = dir.Length();
+			FColor lineCol;
+			FVector asV;
+			if (dist > 1000) {
+				lineCol = FColor::Red;
+			}
+			else {
+				asV = FMath::Lerp(FVector(0,255,0),FVector(255,0,0), dist / 1000.0f);
+				lineCol.R = asV.X;
+				lineCol.G = asV.Y;
+				lineCol.B = asV.Z;
+			}
+
+			DrawDebugLine(GetWorld(), GetActorLocation(), ghostRef->GetActorLocation(), lineCol, false, 0.0f, 0, 8.0f);
+		}
+		else {
+
+			DrawDebugBox(GetWorld(), position*1000.0f, FVector(100, 100, 100)* GetActorScale3D().X, FColor::Red, false, 0.0f, 0U, 7.0f);
+		}
+	}
 }
 
 
