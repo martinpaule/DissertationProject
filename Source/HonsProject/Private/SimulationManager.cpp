@@ -31,19 +31,25 @@ void ASimulationManager::addGhostSim() {
 	FTransform tr;
 	tr.SetIdentity();
 
+	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, "Added Ghost Sim");
+
+
 	if (ghostSim_ref) {
 		while (!ghostSim_ref->myGravBodies.IsEmpty())
 		{
 			ghostSim_ref->myGravBodies[0]->Destroy();
 			ghostSim_ref->myGravBodies.RemoveAt(0);
 		}
-		ghostSim_ref->DestroyComponent();
-		delete(ghostSim_ref);
+
+
+	}
+	else {
+		//create & assign ghost Nbody handler
+		ghostSim_ref = Cast<UNBodyHandler>(this->AddComponentByClass(UNBodyHandler::StaticClass(), false, tr, true));
+		ghostSim_ref->RegisterComponent();
 	}
 
-	//create & assign ghost Nbody handler
-	ghostSim_ref = Cast<UNBodyHandler>(this->AddComponentByClass(UNBodyHandler::StaticClass(), false, tr, true));
-	ghostSim_ref->RegisterComponent();
+	
 	ghostSim_ref->bodiesToSpawn = 0;
 	ghostSim_ref->handlerID = 1;
 	ghostSim_ref->spawningBodies = false;
@@ -146,7 +152,11 @@ void ASimulationManager::Tick(float DeltaTime)
 			for (int i = 0; i < BodyHandler_ref->myGravBodies.Num(); i++)
 			{
 				if (BodyHandler_ref->myGravBodies[i]->toBeDestroyed) {
-					BodyHandler_ref->myGravBodies[i]->ghostRef = NULL;
+
+					if (BodyHandler_ref->myGravBodies[i]->ghostRef) {
+						BodyHandler_ref->myGravBodies[i]->ghostRef->ghostRef = NULL;
+					}
+					
 					BodyHandler_ref->myGravBodies[i]->Destroy();
 					BodyHandler_ref->myGravBodies.RemoveAt(i);
 					i--;
@@ -156,7 +166,9 @@ void ASimulationManager::Tick(float DeltaTime)
 				for (int i = 0; i < ghostSim_ref->myGravBodies.Num(); i++)
 				{
 					if (ghostSim_ref->myGravBodies[i]->toBeDestroyed) {
-						ghostSim_ref->myGravBodies[i]->ghostRef = NULL;
+						if (ghostSim_ref->myGravBodies[i]->ghostRef) {
+							ghostSim_ref->myGravBodies[i]->ghostRef->ghostRef = NULL;
+						}
 						ghostSim_ref->myGravBodies[i]->Destroy();
 						ghostSim_ref->myGravBodies.RemoveAt(i);
 						i--;
@@ -213,6 +225,12 @@ void ASimulationManager::Tick(float DeltaTime)
 		}
 	}
 
+	if (ghostSim_ref) {
+		for (int i = 0; i < BodyHandler_ref->myGravBodies.Num(); i++)
+		{
+			BodyHandler_ref->myGravBodies[i]->DisplayErrorWithGhost();
+		}
+	}
 
 	if (TreeHandler_ref->showTreeBoxes) {
 
@@ -260,7 +278,7 @@ void ASimulationManager::ClearSimulation() {
 		BodyHandler_ref->myGravBodies.RemoveAt(0);
 	}
 
-	if (shouldGhostAccuracy) {
+	if (ghostSim_ref) {
 		while (!ghostSim_ref->myGravBodies.IsEmpty())
 		{
 			ghostSim_ref->myGravBodies[0]->Destroy();

@@ -8,7 +8,7 @@
 AGravBody::AGravBody()
 {
 	//create root component, collider and static mesh
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 	SceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("SceneComponent"));
 	SetRootComponent(SceneComponent);
 	
@@ -42,6 +42,33 @@ AGravBody::AGravBody()
 	myMat->SetVectorParameterValue(TEXT("Colour"), randCol);
 	
 	myCol = randCol;
+
+}
+
+void AGravBody::DisplayErrorWithGhost(){
+
+	if (ghostRef) {
+		FVector dir = ghostRef->GetActorLocation() - GetActorLocation();
+		float dist = dir.Length();
+		FColor lineCol;
+
+		float badDist = 10000;
+
+		if (dist > badDist) {
+			lineCol = FColor::Red;
+		}
+		else {
+			lineCol.R = (dist / badDist) * 255;
+			lineCol.G = 255 - (dist/ badDist)*255;
+			lineCol.B = 0;
+		}
+
+		DrawDebugLine(GetWorld(), GetActorLocation(), ghostRef->GetActorLocation(), lineCol, false, 0.0f, 0, 15.0f);
+	}
+	else {
+
+		DrawDebugBox(GetWorld(), position * 1000.0f, FVector(100, 100, 100) * GetActorScale3D().X, FColor::Red, false, 0.0f, 0U, 7.0f);
+	}
 
 }
 
@@ -87,30 +114,6 @@ void AGravBody::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-
-	if (true && handlerID == 0) {
-		if (ghostRef) {
-			FVector dir = ghostRef->GetActorLocation() -  GetActorLocation();
-			float dist = dir.Length();
-			FColor lineCol;
-			FVector asV;
-			if (dist > 1000) {
-				lineCol = FColor::Red;
-			}
-			else {
-				asV = FMath::Lerp(FVector(0,255,0),FVector(255,0,0), dist / 1000.0f);
-				lineCol.R = asV.X;
-				lineCol.G = asV.Y;
-				lineCol.B = asV.Z;
-			}
-
-			DrawDebugLine(GetWorld(), GetActorLocation(), ghostRef->GetActorLocation(), lineCol, false, 0.0f, 0, 8.0f);
-		}
-		else {
-
-			DrawDebugBox(GetWorld(), position*1000.0f, FVector(100, 100, 100)* GetActorScale3D().X, FColor::Red, false, 0.0f, 0U, 7.0f);
-		}
-	}
 }
 
 

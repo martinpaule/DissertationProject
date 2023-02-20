@@ -97,5 +97,7 @@ public:
 		int bodiesInSimulation = 0;
 	UPROPERTY(Category = "forUI", BlueprintReadWrite, EditAnywhere)
 		float timeMultiplier = 1.0f;
+
+	
 };
 

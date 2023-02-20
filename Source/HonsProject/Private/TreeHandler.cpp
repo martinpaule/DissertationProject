@@ -184,14 +184,10 @@ void UTreeHandler::partitionTree(TreeNode* rootNode)
 FVector UTreeHandler::getApproxForce(AGravBody* body, TreeNode * rootNode)
 {
 
-	//return from an empty leaf
-	if (rootNode->bodies.Num() == 0) {
-		return FVector(0.0f, 0.0f, 0.0f);
-	}
-	else if (rootNode->bodies.Num() == 1 && body != rootNode->bodies[0]) {
+	if (rootNode->bodies.Num() == 1 && body != rootNode->bodies[0]) {
 
 		FVector direction = rootNode->bodies[0]->position - body->position;
-		float distanceCubed = pow(direction.Length(), 3);
+		float distanceCubed = direction.Length() * direction.Length() * direction.Length();
 		FVector returnForce = direction * bigG * rootNode->bodies[0]->mass;
 		returnForce /= distanceCubed;
 
@@ -199,7 +195,13 @@ FVector UTreeHandler::getApproxForce(AGravBody* body, TreeNode * rootNode)
 
 		return returnForce;
 	}
+	if (rootNode->bodies.Num() == 0) {
+		return FVector(0, 0, 0);
+	}
+	if (rootNode->bodies.Num() == 1 && body == rootNode->bodies[0]) {
 
+		return FVector(0, 0, 0);
+	}
 
 	//necessary variables
 	float distance_body_to_centreOfMass = (body->position - rootNode->Node_CentreOMass).Length();
@@ -221,11 +223,9 @@ FVector UTreeHandler::getApproxForce(AGravBody* body, TreeNode * rootNode)
 	
 		return returnForce;
 	}
-	else {
-		if (!rootNode->isLeaf) {
-			for (int j = 0; j < 8; j++) {
-				combinedForces += getApproxForce(body, rootNode->branch_nodes[j]);
-			}
+	else if(!rootNode->isLeaf) {
+		for (int j = 0; j < 8; j++) {
+			combinedForces += getApproxForce(body, rootNode->branch_nodes[j]);
 		}
 		
 	}

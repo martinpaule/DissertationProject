@@ -49,7 +49,8 @@ public:
 
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 		FVector4 myCol;
-	
+
+	void DisplayErrorWithGhost();
 
 	//simulation variables
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
