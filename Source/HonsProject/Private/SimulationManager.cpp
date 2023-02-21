@@ -26,6 +26,19 @@ void ASimulationManager::recordFinalPositions() {
 	accuracyTester_ref->printResultToTXT();
 }
 
+
+void ASimulationManager::removeGhostSim() {
+	if (ghostSim_ref) {
+		while (!ghostSim_ref->myGravBodies.IsEmpty())
+		{
+			ghostSim_ref->myGravBodies[0]->Destroy();
+			ghostSim_ref->myGravBodies.RemoveAt(0);
+		}
+
+
+	}
+}
+
 void ASimulationManager::addGhostSim() {
 
 	FTransform tr;
@@ -104,24 +117,13 @@ void ASimulationManager::createSimComponents() {
 	accuracyTester_ref->resetTime = resetTime;
 	accuracyTester_ref->shouldResetTest = ShouldReset;
 
-	if (useTreeCodes) {
+	//create tree code handler
+	TreeHandler_ref = Cast<UTreeHandler>(this->AddComponentByClass(UTreeHandler::StaticClass(), false, tr, true));
+	TreeHandler_ref->RegisterComponent();
+	TreeHandler_ref->bodyHandlerBodies = &BodyHandler_ref->myGravBodies;
 
-
-		//create tree code handler
-		TreeHandler_ref = Cast<UTreeHandler>(this->AddComponentByClass(UTreeHandler::StaticClass(), false, tr, true));
-		TreeHandler_ref->RegisterComponent();
-		TreeHandler_ref->bodyHandlerBodies = &BodyHandler_ref->myGravBodies;
-
-		//assign tree code handler
-		BodyHandler_ref->treeHandlerRef = TreeHandler_ref;
-
-		//if user wants to debug accuracy with 
-		if (shouldGhostAccuracy) {
-			addGhostSim();
-		}
-
-
-	}
+	//assign tree code handler
+	BodyHandler_ref->treeHandlerRef = TreeHandler_ref;
 }
 
 // Called when the game starts or when spawned
@@ -205,11 +207,12 @@ void ASimulationManager::Tick(float DeltaTime)
 					//auto stopDI = std::chrono::high_resolution_clock::now();
 					//float msTakenCALCTC = std::chrono::duration_cast<std::chrono::microseconds>(stopDI - startDI).count();
 
-					BodyHandler_ref->calculateWithTree(updatedDT);
+					BodyHandler_ref->calculateWithTree(updatedDT,doFrameCalc);
 					if (ghostSim_ref) {
 						ghostSim_ref->calculateAllVelocityChanges(updatedDT);
 						ghostSim_ref->moveBodies(last, updatedDT);
 					}
+
 				}
 				//step 2: move bodies using their updated velocity, also destroy ones that 
 				BodyHandler_ref->moveBodies(last, updatedDT);
@@ -226,10 +229,7 @@ void ASimulationManager::Tick(float DeltaTime)
 	}
 
 	if (ghostSim_ref) {
-		for (int i = 0; i < BodyHandler_ref->myGravBodies.Num(); i++)
-		{
-			BodyHandler_ref->myGravBodies[i]->DisplayErrorWithGhost();
-		}
+		handleAveragePosError();
 	}
 
 	if (TreeHandler_ref->showTreeBoxes) {
@@ -287,3 +287,50 @@ void ASimulationManager::ClearSimulation() {
 	}
 }
 
+
+void ASimulationManager::handleAveragePosError(){
+
+
+	if (!showGhosPlanetErrors && !calcAveragePosError) {
+		return;
+	}
+
+	averagePosError = 0.0f;
+
+
+
+	for (int i = 0; i < BodyHandler_ref->myGravBodies.Num(); i++)
+	{
+		if (BodyHandler_ref->myGravBodies[i]->ghostRef) {
+			FVector dir = BodyHandler_ref->myGravBodies[i]->ghostRef->GetActorLocation() - GetActorLocation();
+			float dist = dir.Length();
+			FColor lineCol;
+
+			float badDist = 10000;
+
+			if (dist > badDist) {
+				lineCol = FColor::Red;
+			}
+			else {
+				lineCol.R = (dist / badDist) * 255;
+				lineCol.G = 255 - (dist / badDist) * 255;
+				lineCol.B = 0;
+			}
+			if (showGhosPlanetErrors) {
+				DrawDebugLine(GetWorld(), GetActorLocation(), BodyHandler_ref->myGravBodies[i]->ghostRef->GetActorLocation(), lineCol, false, 0.0f, 0, 15.0f);
+			}
+			if (calcAveragePosError) {
+				averagePosError += (BodyHandler_ref->myGravBodies[i]->ghostRef->position - BodyHandler_ref->myGravBodies[i]->position).Length();
+			}
+		}
+		else {
+			if (showGhosPlanetErrors) {
+				DrawDebugBox(GetWorld(), BodyHandler_ref->myGravBodies[i]->position * 1000.0f, FVector(100, 100, 100) * GetActorScale3D().X, FColor::Red, false, 0.0f, 0U, 7.0f);
+			}
+			if (calcAveragePosError) {
+				averagePosError += 10000;
+			}
+		}
+	}
+	averagePosError /= BodyHandler_ref->myGravBodies.Num();
+}

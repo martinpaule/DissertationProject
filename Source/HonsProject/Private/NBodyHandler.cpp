@@ -103,7 +103,7 @@ void UNBodyHandler::calculateAllVelocityChanges(double dt) {
 
 
 //tree code calculations of gravitational dynamics
-void UNBodyHandler::calculateWithTree(double dt) {
+void UNBodyHandler::calculateWithTree(double dt, bool calculateError) {
 
 
 
@@ -112,17 +112,51 @@ void UNBodyHandler::calculateWithTree(double dt) {
 
 	treeHandlerRef->gravCalcs = 0;
 
-	FVector deltaVelocity = FVector(0.0f, 0.0f, 0.0f);
+	FVector TreeSumOfForces = FVector(0.0f, 0.0f, 0.0f);
+	FVector RealSumOfForces = FVector(0.0f, 0.0f, 0.0f);
+
+	VelCalcAverageError = 0.0f;
 
 
+	//declarations
+	double distance = 0.0f;
+	double distanceCubed = 0.0f;
+	FVector direction = FVector(0.0f, 0.0f, 0.0f);
+	FVector iteratedBodyForce = FVector(0.0f, 0.0f, 0.0f);
 
 	for (int i = 0; i < myGravBodies.Num(); i++)
 	{
 		
 
 		//apply change in velocity to body I
-		deltaVelocity = dt * treeHandlerRef->getApproxForce(myGravBodies[i],treeHandlerRef->treeNodeRoot);
-		myGravBodies[i]->velocity += deltaVelocity;
+		TreeSumOfForces = treeHandlerRef->getApproxForce(myGravBodies[i],treeHandlerRef->treeNodeRoot);
+		myGravBodies[i]->velocity += dt * TreeSumOfForces;
+
+		if (calculateError) {
+			//calulate combined forces acting on body I
+			for (int j = 0; j < myGravBodies.Num(); j++)
+			{
+				if (i != j) //ignore the body's own force on itself
+				{
+
+
+					direction = myGravBodies[j]->position - myGravBodies[i]->position;
+					distance = direction.Length();
+					distanceCubed = distance * distance * distance;
+					iteratedBodyForce = direction * bigG * myGravBodies[j]->mass;
+					iteratedBodyForce /= distanceCubed;
+
+					//add this to the sum of forces acting on body I
+					RealSumOfForces += iteratedBodyForce;
+				}
+			}
+			
+			VelCalcAverageError += (RealSumOfForces - TreeSumOfForces).Length();
+		}
+
+	}
+	if (calculateError) {
+		VelCalcAverageError /= myGravBodies.Num();
 
 	}
 

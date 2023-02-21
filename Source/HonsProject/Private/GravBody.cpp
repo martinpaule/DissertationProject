@@ -45,32 +45,7 @@ AGravBody::AGravBody()
 
 }
 
-void AGravBody::DisplayErrorWithGhost(){
 
-	if (ghostRef) {
-		FVector dir = ghostRef->GetActorLocation() - GetActorLocation();
-		float dist = dir.Length();
-		FColor lineCol;
-
-		float badDist = 10000;
-
-		if (dist > badDist) {
-			lineCol = FColor::Red;
-		}
-		else {
-			lineCol.R = (dist / badDist) * 255;
-			lineCol.G = 255 - (dist/ badDist)*255;
-			lineCol.B = 0;
-		}
-
-		DrawDebugLine(GetWorld(), GetActorLocation(), ghostRef->GetActorLocation(), lineCol, false, 0.0f, 0, 15.0f);
-	}
-	else {
-
-		DrawDebugBox(GetWorld(), position * 1000.0f, FVector(100, 100, 100) * GetActorScale3D().X, FColor::Red, false, 0.0f, 0U, 7.0f);
-	}
-
-}
 
 //bind overlap function
 void AGravBody::PostInitializeComponents()

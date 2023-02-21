@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include <fstream>
+#include "GravBody.h"
 #include <string>
 #include "AccuracyModule.generated.h"
 
@@ -41,6 +42,12 @@ protected:
 public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+	TArray<AGravBody*> mainBodies;
+	TArray<AGravBody*> ghostBodies;
+
+	
+
 
 	bool planetsEqual(planet a, planet b) {
 		if (a.mass == b.mass && a.name == b.name && a.pos == b.pos && a.vel == b.vel) {

@@ -56,15 +56,17 @@ public:
 	//direct integration of gravitational calculations
 	void calculateAllVelocityChanges(double dt);
 	//tree codes calculaton
-	void calculateWithTree(double dt);
+	void calculateWithTree(double dt, bool calculateError = false);
 
+	UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite)
+	float VelCalcAverageError = 0.0f;
 
 	
 
 	UPROPERTY(Category = "forUI", BlueprintReadWrite)
 	int gravCalculations = 0;
 
-
+	
 	
 	//float fixedFrameTime = 0.1f;
 	//float elapsedFrameTime = 0.0f;

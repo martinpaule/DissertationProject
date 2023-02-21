@@ -49,10 +49,15 @@ public:
 		void ClearSimulation();
 	
 	
-	UFUNCTION(BlueprintCallable, Category = "SimCentre")
+	UFUNCTION(BlueprintCallable, Category = "TESTING")
 	void addGhostSim();
+
+	UFUNCTION(BlueprintCallable, Category = "TESTING")
+		void removeGhostSim();
+
 	void createSimComponents();
 	void recordFinalPositions();//<- move to accuracy class
+
 
 	//simulation dependant variables
 	UPROPERTY(Category = "SimulationType", EditAnywhere, BlueprintReadWrite)
@@ -98,6 +103,19 @@ public:
 	UPROPERTY(Category = "forUI", BlueprintReadWrite, EditAnywhere)
 		float timeMultiplier = 1.0f;
 
-	
+
+
+	UPROPERTY(Category = "Testing", BlueprintReadWrite, EditAnywhere)
+		float averagePosError = 0.0f;
+
+	void handleAveragePosError();
+	UPROPERTY(Category = "Testing", BlueprintReadWrite, EditAnywhere)
+		bool showGhosPlanetErrors = false;
+	UPROPERTY(Category = "Testing", BlueprintReadWrite, EditAnywhere)
+		bool calcAveragePosError = false;
+	UPROPERTY(Category = "Testing", BlueprintReadWrite)
+		bool doFrameCalc = false;
+
+
 };
 
