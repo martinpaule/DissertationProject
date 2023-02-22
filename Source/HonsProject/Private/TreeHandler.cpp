@@ -106,7 +106,7 @@ void UTreeHandler::DisplaySectors(TreeNode* rootNode) {
 
 	if (rootNode->isLeaf) {
 		if (rootNode->bodies.Num() == 1) {
-			DrawDebugBox(GetWorld(), rootNode->position * 1000.0f, FVector(rootNode->extent, rootNode->extent, rootNode->extent) * 1000.0f, FColor(rootNode->bodies[0]->myCol.X *255, rootNode->bodies[0]->myCol.Y * 255, rootNode->bodies[0]->myCol.Z * 255), false, 0.0f, 0, 7.0f);
+			DrawDebugBox(GetWorld(), rootNode->position * 1000.0f, FVector(rootNode->extent, rootNode->extent, rootNode->extent) * 1000.0f, FColor(rootNode->bodies[0]->myCol.X *255, rootNode->bodies[0]->myCol.Y * 255, rootNode->bodies[0]->myCol.Z * 255), false, 0.0f, 0, 15.0f);
 		}
 		else {
 			//DrawDebugBox(worldRef, position * 1000.0f, FVector(extent, extent, extent) * 1000.0f, FColor::Red, false, -1.0f, 0, 2.0f);
