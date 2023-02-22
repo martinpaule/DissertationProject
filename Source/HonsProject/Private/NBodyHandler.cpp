@@ -195,7 +195,7 @@ void UNBodyHandler::moveBodies(bool alsoMoveActor, double updated_dt) {
 }
 
 // setup function for spawning bodies - creates a new body with specified parameters
-void UNBodyHandler::spawnBodyAt(FVector position_, FVector velocity_, double mass_, std::string name_, float radius_, FVector4 colour_)
+void UNBodyHandler::spawnBodyAt(FVector position_, FVector velocity_, double mass_, FVector4 colour_, FString name_, float radius_)
 {
 
 	FActorSpawnParameters SpawnInfo;
@@ -209,7 +209,7 @@ void UNBodyHandler::spawnBodyAt(FVector position_, FVector velocity_, double mas
 	newBody->position = position_;
 	newBody->radius = radius_;
 	newBody->toBeDestroyed = false;
-	newBody->SetActorLabel(name_.c_str());
+	newBody->SetActorLabel(name_);
 
 	if (radius_ == 0.0f) {
 		radius_ = cbrt(mass_);
@@ -218,7 +218,7 @@ void UNBodyHandler::spawnBodyAt(FVector position_, FVector velocity_, double mas
 	newBody->SetActorScale3D(FVector(radius_, radius_, radius_));
 
 	//option to set colour too
-	if (colour_ != FVector4(0.0f, 0.0f, 0.0f, 0.0f)) {
+	if (colour_ != FVector4(1.0f, 0.0f, 1.0f, 1.0f)) {
 		newBody->myMat->SetVectorParameterValue(TEXT("Colour"), colour_);
 		newBody->myCol = colour_;
 	}
@@ -226,21 +226,19 @@ void UNBodyHandler::spawnBodyAt(FVector position_, FVector velocity_, double mas
 
 
 
-	//newBody->SetActorEnableCollision(true);
-
 
 }
 
-void UNBodyHandler::spawnSolarSystem(int SolarPlanetToSpawn) {
+void UNBodyHandler::spawnSolarSystem(FVector SunPosition_) {
 
 
 	//define and spawn the sun
 	FVector bodyONE_pos = FVector(-9.0841f * pow(10, -3), 4.9241f * pow(10, -4), 2.0754f * pow(10, -4));
 	float massOne = 1.0f;
-	spawnBodyAt(bodyONE_pos + SpawnCentre /2.0f, FVector(0.0f, 0.0f, 0.0f), 1.0f, "Sun", 5.0f,FVector4(1.0f,1.0f,0.0f,1.0f));
+	spawnBodyAt(bodyONE_pos + SunPosition_ /1000.0f, FVector(0.0f, 0.0f, 0.0f), 1.0f, FVector4(1.0f, 1.0f, 0.0f, 1.0f), "Sun", 5.0f);
 
 
-	std::string bodyTwoName_;
+	FString bodyTwoName_;
 	float massTwo = 0.0f;
 	float bodyTwoScale = 0.0f;
 	FVector bodyTWO_pos;
@@ -248,16 +246,9 @@ void UNBodyHandler::spawnSolarSystem(int SolarPlanetToSpawn) {
 
 
 	//define which body (or if all) to spawn
-	int it_begin;
-	int it_end;
-	if (SolarPlanetToSpawn < 0 || SolarPlanetToSpawn > 7) {
-		it_begin = 0;
-		it_end = 7;
-	}
-	else {
-		it_begin = SolarPlanetToSpawn;
-		it_end = SolarPlanetToSpawn;
-	}
+	int it_begin = 0;
+	int it_end = 7;
+
 
 	//define values
 	for (it_begin; it_begin <= it_end; it_begin++) {
@@ -334,7 +325,7 @@ void UNBodyHandler::spawnSolarSystem(int SolarPlanetToSpawn) {
 
 		dir.Normalize();
 		FVector RightVel = UKismetMathLibrary::GetRightVector(dir.Rotation()) * YVel;
-		spawnBodyAt(bodyTWO_pos + SpawnCentre /2, RightVel, massTwo, bodyTwoName_, bodyTwoScale,planetColor);
+		spawnBodyAt(bodyTWO_pos + SunPosition_ / 1000.0f, RightVel, massTwo, planetColor, bodyTwoName_, bodyTwoScale);
 	}
 
 }
@@ -347,9 +338,10 @@ void UNBodyHandler::spawnTestPlanets()
 	float masses[15] = { 1.0f,0.3f, 0.4f, 0.5f, 0.6f, 0.2f,0.3f, 1.2f, 1.4f, 2.0f, 1.8f,0.2f, 0.5f, 0.7f, 0.4f };
 
 	for (int i = 0; i < 15; i++) {
-		std::string bodName = "Body ";
-		bodName += std::to_string(i);
-		spawnBodyAt(positions[i]*0.8f, directions[i]*0.5f, masses[i]*2.0f, bodName);
+
+		FString bodName = "Body ";
+		bodName.Append(std::to_string(i).c_str());
+		spawnBodyAt(positions[i] * 0.8f, directions[i] * 0.5f, masses[i] * 2.0f, FVector4(1.0f, 0.0f, 1.0f, 1.0f), bodName);
 	}
 
 }
@@ -368,12 +360,13 @@ void UNBodyHandler::graduallySpawnBodies(int spawnsPerFrame) {
 			}
 			spawningBodies = false;
 			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, "Spawned all desired bodies");
-			if (bSpawnSolarSystem) {
-				spawnSolarSystem(solarPlanetToSpawn);
+			
+			/*if (bSpawnSolarSystem) {
+				spawnSolarSystem();
 			}
 			if (bSpawnTestPlanets) {
 				spawnTestPlanets();
-			}
+			}*/
 
 			return;
 		}
@@ -395,9 +388,9 @@ void UNBodyHandler::graduallySpawnBodies(int spawnsPerFrame) {
 		float mass_ = 0.001f;
 		mass_ += FMath::FRandRange(0.0f, SpawnMaxMass);
 
-		std::string bodName = "Body ";
-		bodName += std::to_string(gradualSpawnerIndex);
-		spawnBodyAt(myLoc, speed_, mass_, bodName);
+		FString bodName = "Body ";
+		bodName.Append(std::to_string(gradualSpawnerIndex).c_str());
+		spawnBodyAt(myLoc, speed_, mass_, FVector4(1.0f,0.0f,1.0f,1.0f), bodName);
 		gradualSpawnerIndex++;
 
 	}

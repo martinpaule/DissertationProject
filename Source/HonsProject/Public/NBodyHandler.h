@@ -46,8 +46,10 @@ public:
 	UTreeHandler* treeHandlerRef;
 
 	//spawning
-	void spawnBodyAt(FVector position_, FVector velocity_, double mass_, std::string name_ = "GravBody", float radius_ = 0.0f, FVector4 colour_ = FVector4(0.0f,0.0f,0.0f,0.0f));
-	void spawnSolarSystem(int SolarPlanetToSpawn);
+	UFUNCTION(BlueprintCallable, Category = "PlanetSpawn")
+	void spawnBodyAt(FVector position_, FVector velocity_, double mass_, FVector4 colour_, FString name_ = "GravBody", float radius_ = 0.0f);
+	UFUNCTION(BlueprintCallable, Category = "PlanetSpawn")
+	void spawnSolarSystem(FVector SunPosition_);
 	void spawnTestPlanets();
 	void graduallySpawnBodies(int spawnsPerFrame = 1);
 
@@ -66,7 +68,16 @@ public:
 	UPROPERTY(Category = "forUI", BlueprintReadWrite)
 	int gravCalculations = 0;
 
-	
+	UFUNCTION(BlueprintCallable, Category = "PlanetSpawn")
+	void startSpawning(int amount, FVector centre, float extent, float MaxVelocity_, double MaxMass_) {
+		spawningBodies = true;
+		bodiesToSpawn = amount;
+		SpawnCentre = centre;
+		spawnExtent = extent;
+		SpawnMaxSpeed = MaxVelocity_;
+		SpawnMaxMass = MaxMass_;
+		gradualSpawnerIndex = 0;
+	}
 	
 	//float fixedFrameTime = 0.1f;
 	//float elapsedFrameTime = 0.0f;
@@ -81,16 +92,14 @@ public:
 
 	UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite)
 	bool useTreeCodes_ = false;
-	int solarPlanetToSpawn = 100;
 	int bodiesToSpawn = 100;
 	bool bSpawnTestPlanets = false;
 	bool bSpawnSolarSystem = false;
-	int SpawnsPerFrame_ = 10.0f;
+	int SpawnsPerFrame_ = 100;
 	float spawnExtent = 10.0f;
 	float SpawnMaxSpeed = 5.0f;
 	float SpawnMaxMass = 5.0f;
 	FVector SpawnCentre = FVector(0.0f,0.0f,0.0f);
 
 	int handlerID = 0;
-
 };

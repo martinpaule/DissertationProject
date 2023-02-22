@@ -75,7 +75,7 @@ void ASimulationManager::addGhostSim() {
 		FString name_ = BodyHandler_ref->myGravBodies[i]->GetActorLabel();
 		name_.Append("_ghost");
 
-		ghostSim_ref->spawnBodyAt(BodyHandler_ref->myGravBodies[i]->position, BodyHandler_ref->myGravBodies[i]->velocity, BodyHandler_ref->myGravBodies[i]->mass, std::string(TCHAR_TO_UTF8(*name_)) , BodyHandler_ref->myGravBodies[i]->radius, BodyHandler_ref->myGravBodies[i]->myCol);
+		ghostSim_ref->spawnBodyAt(BodyHandler_ref->myGravBodies[i]->position, BodyHandler_ref->myGravBodies[i]->velocity, BodyHandler_ref->myGravBodies[i]->mass, BodyHandler_ref->myGravBodies[i]->myCol, name_ , BodyHandler_ref->myGravBodies[i]->radius);
 
 		ghostSim_ref->myGravBodies.Last()->handlerID = 1;
 		BodyHandler_ref->myGravBodies[i]->ghostRef = ghostSim_ref->myGravBodies.Last();
@@ -98,7 +98,6 @@ void ASimulationManager::createSimComponents() {
 	BodyHandler_ref->RegisterComponent();
 
 	//setup Nbody handler
-	BodyHandler_ref->solarPlanetToSpawn = SolarPlanetToSpawn;
 	BodyHandler_ref->SpawnsPerFrame_ = SpawnsPerFrame;
 	BodyHandler_ref->bodiesToSpawn = bodiesToSpawn;
 	BodyHandler_ref->bSpawnTestPlanets = ShouldSpawnTestPlanets;

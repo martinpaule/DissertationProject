@@ -70,7 +70,7 @@ public:
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 		int bodiesToSpawn = 100;
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-		int SpawnsPerFrame = 50;
+		int SpawnsPerFrame = 100;
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 		FVector InitialSpawnCentre = FVector(0, 0, -10);
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
@@ -82,8 +82,6 @@ public:
 	UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite, EditAnywhere)
 		float fixedFrameTime = 0.1f;
 	float elapsedFrameTime = 0.0f;
-	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-		int SolarPlanetToSpawn = 100;//0-7 to spawn a specific planet+ sun,anything else for all of them
 
 	UPROPERTY(Category = "Testing", BlueprintReadWrite, EditAnywhere)
 		bool ShouldReset = false;
