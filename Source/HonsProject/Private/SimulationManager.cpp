@@ -316,7 +316,7 @@ void ASimulationManager::handleAveragePosError(){
 				lineCol.B = 0;
 			}
 			if (showGhosPlanetErrors) {
-				DrawDebugLine(GetWorld(), BodyHandler_ref->myGravBodies[i]->GetActorLocation(), BodyHandler_ref->myGravBodies[i]->ghostRef->GetActorLocation(), lineCol, false, 0.0f, 0, 20.0f);
+				DrawDebugLine(GetWorld(), BodyHandler_ref->myGravBodies[i]->GetActorLocation(), BodyHandler_ref->myGravBodies[i]->ghostRef->GetActorLocation(), lineCol, false, 0.0f, 0, 13.0f);
 			}
 			if (calcAveragePosError) {
 				averagePosError += (BodyHandler_ref->myGravBodies[i]->ghostRef->position - BodyHandler_ref->myGravBodies[i]->position).Length();
@@ -324,7 +324,7 @@ void ASimulationManager::handleAveragePosError(){
 		}
 		else {
 			if (showGhosPlanetErrors) {
-				DrawDebugBox(GetWorld(), BodyHandler_ref->myGravBodies[i]->position * 1000.0f, FVector(100, 100, 100) * GetActorScale3D().X, FColor::Red, false, 0.0f, 0U, 20.0f);
+				DrawDebugBox(GetWorld(), BodyHandler_ref->myGravBodies[i]->position * 1000.0f, FVector(100, 100, 100) * GetActorScale3D().X, FColor::Red, false, 0.0f, 0U, 13.0f);
 			}
 			if (calcAveragePosError) {
 				averagePosError += 10000;
