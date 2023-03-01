@@ -7,6 +7,7 @@
 #include "UObject/ConstructorHelpers.h"
 #include <string>
 #include "TreeHandler.h"
+#include "TestPlanet.h"
 #include <chrono>
 #include "NBodyHandler.generated.h"
 

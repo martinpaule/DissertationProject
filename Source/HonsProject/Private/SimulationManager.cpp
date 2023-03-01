@@ -77,8 +77,12 @@ void ASimulationManager::addGhostSim() {
 
 		ghostSim_ref->spawnBodyAt(BodyHandler_ref->myGravBodies[i]->position, BodyHandler_ref->myGravBodies[i]->velocity, BodyHandler_ref->myGravBodies[i]->mass, BodyHandler_ref->myGravBodies[i]->myCol, name_ , BodyHandler_ref->myGravBodies[i]->radius);
 
-		ghostSim_ref->myGravBodies.Last()->handlerID = 1;
-		BodyHandler_ref->myGravBodies[i]->ghostRef = ghostSim_ref->myGravBodies.Last();
+		ATestPlanet * asTP = Cast<ATestPlanet>(ghostSim_ref->myGravBodies.Last());
+
+		asTP->handlerID = 1;
+
+
+		Cast<ATestPlanet>(BodyHandler_ref->myGravBodies[i])->ghostRef = asTP;
 
 
 		ghostSim_ref->myGravBodies.Last()->myMat->SetScalarParameterValue(TEXT("Opacity"), 0.1f);
@@ -120,6 +124,9 @@ void ASimulationManager::createSimComponents() {
 	TreeHandler_ref = Cast<UTreeHandler>(this->AddComponentByClass(UTreeHandler::StaticClass(), false, tr, true));
 	TreeHandler_ref->RegisterComponent();
 	TreeHandler_ref->bodyHandlerBodies = &BodyHandler_ref->myGravBodies;
+	//for (int i = 0; i < BodyHandler_ref->myGravBodies.Num(); i++) {
+	//	TreeHandler_ref->bodyHandlerBodies
+	//}
 
 	//assign tree code handler
 	BodyHandler_ref->treeHandlerRef = TreeHandler_ref;
@@ -154,8 +161,11 @@ void ASimulationManager::Tick(float DeltaTime)
 			{
 				if (BodyHandler_ref->myGravBodies[i]->toBeDestroyed) {
 
-					if (BodyHandler_ref->myGravBodies[i]->ghostRef) {
-						BodyHandler_ref->myGravBodies[i]->ghostRef->ghostRef = NULL;
+					ATestPlanet* asTP = Cast<ATestPlanet>(BodyHandler_ref->myGravBodies[i]);
+
+
+					if (asTP->ghostRef) {
+						asTP->ghostRef->ghostRef = NULL;
 					}
 					
 					BodyHandler_ref->myGravBodies[i]->Destroy();
@@ -167,8 +177,12 @@ void ASimulationManager::Tick(float DeltaTime)
 				for (int i = 0; i < ghostSim_ref->myGravBodies.Num(); i++)
 				{
 					if (ghostSim_ref->myGravBodies[i]->toBeDestroyed) {
-						if (ghostSim_ref->myGravBodies[i]->ghostRef) {
-							ghostSim_ref->myGravBodies[i]->ghostRef->ghostRef = NULL;
+
+						ATestPlanet* asTP_ = Cast<ATestPlanet>(ghostSim_ref->myGravBodies[i]);
+
+
+						if (asTP_->ghostRef) {
+							asTP_->ghostRef->ghostRef = NULL;
 						}
 						ghostSim_ref->myGravBodies[i]->Destroy();
 						ghostSim_ref->myGravBodies.RemoveAt(i);
@@ -300,8 +314,12 @@ void ASimulationManager::handleAveragePosError(){
 
 	for (int i = 0; i < BodyHandler_ref->myGravBodies.Num(); i++)
 	{
-		if (BodyHandler_ref->myGravBodies[i]->ghostRef) {
-			FVector dir = BodyHandler_ref->myGravBodies[i]->ghostRef->GetActorLocation() - GetActorLocation();
+
+		ATestPlanet* asTP_ = Cast<ATestPlanet>(BodyHandler_ref->myGravBodies[i]);
+
+
+		if (asTP_->ghostRef) {
+			FVector dir = asTP_->ghostRef->GetActorLocation() - GetActorLocation();
 			float dist = dir.Length();
 			FColor lineCol;
 
@@ -316,10 +334,10 @@ void ASimulationManager::handleAveragePosError(){
 				lineCol.B = 0;
 			}
 			if (showGhosPlanetErrors) {
-				DrawDebugLine(GetWorld(), BodyHandler_ref->myGravBodies[i]->GetActorLocation(), BodyHandler_ref->myGravBodies[i]->ghostRef->GetActorLocation(), lineCol, false, 0.0f, 0, 13.0f);
+				DrawDebugLine(GetWorld(), BodyHandler_ref->myGravBodies[i]->GetActorLocation(), asTP_->ghostRef->GetActorLocation(), lineCol, false, 0.0f, 0, 13.0f);
 			}
 			if (calcAveragePosError) {
-				averagePosError += (BodyHandler_ref->myGravBodies[i]->ghostRef->position - BodyHandler_ref->myGravBodies[i]->position).Length();
+				averagePosError += (asTP_->ghostRef->position - BodyHandler_ref->myGravBodies[i]->position).Length();
 			}
 		}
 		else {

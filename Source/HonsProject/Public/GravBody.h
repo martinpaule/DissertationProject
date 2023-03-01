@@ -29,13 +29,7 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	//engine runtime functions - important to avoid pointer erros
-	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent);
-	virtual void PostInitializeComponents();
 
-	//collision function
-	UFUNCTION(BlueprintCallable, Category = "collision")
-	void combineCollisionBody(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 	//Gravitation body object necessary component
 	UPROPERTY(Category = "BasicComponents", VisibleAnywhere, BlueprintReadWrite)
@@ -44,11 +38,7 @@ public:
 	UStaticMeshComponent * StaticMeshComponent;
 	UPROPERTY(Category = "BasicComponents", VisibleAnywhere, BlueprintReadWrite)
 	UMaterialInstanceDynamic* myMat;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	USphereComponent* SphereCollider;
 
-	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-		FVector4 myCol;
 
 	//simulation variables
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
@@ -59,11 +49,10 @@ public:
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 	double radius = 1; //km
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-	bool universalDensity = true;
 	bool toBeDestroyed = false;
 
+
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-	int handlerID = 0;
-	AGravBody* ghostRef = NULL;
+		FVector4 myCol;
 
 };

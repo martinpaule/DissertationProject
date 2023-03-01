@@ -202,7 +202,7 @@ void UNBodyHandler::spawnBodyAt(FVector position_, FVector velocity_, double mas
 	FRotator myRot(0, 0, 0);
 
 	//assign body's variables
-	AGravBody * newBody = GetWorld()->SpawnActor<AGravBody>(position_*1000.0f, myRot, SpawnInfo);
+	ATestPlanet* newBody = GetWorld()->SpawnActor<ATestPlanet>(position_*1000.0f, myRot, SpawnInfo);
 	//newBody->SetActorEnableCollision(true);
 	newBody->velocity = velocity_;
 	newBody->mass = mass_;
