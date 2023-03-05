@@ -1,7 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+#include <Kismet/KismetMathLibrary.h>
 
 #include "SimulationManager.h"
+
 
 // Sets default values
 ASimulationManager::ASimulationManager()
@@ -63,9 +65,7 @@ void ASimulationManager::addGhostSim() {
 	}
 
 	
-	ghostSim_ref->bodiesToSpawn = 0;
 	ghostSim_ref->handlerID = 1;
-	ghostSim_ref->spawningBodies = false;
 
 	//copy over bodies from main Nbody
 	for (int i = 0; i < BodyHandler_ref->myGravBodies.Num(); i++)
@@ -75,7 +75,7 @@ void ASimulationManager::addGhostSim() {
 		FString name_ = BodyHandler_ref->myGravBodies[i]->GetActorLabel();
 		name_.Append("_ghost");
 
-		ghostSim_ref->spawnBodyAt(BodyHandler_ref->myGravBodies[i]->position, BodyHandler_ref->myGravBodies[i]->velocity, BodyHandler_ref->myGravBodies[i]->mass, BodyHandler_ref->myGravBodies[i]->myCol, name_ , BodyHandler_ref->myGravBodies[i]->radius);
+		spawnPlanetAt(BodyHandler_ref->myGravBodies[i]->position, BodyHandler_ref->myGravBodies[i]->velocity, BodyHandler_ref->myGravBodies[i]->mass, BodyHandler_ref->myGravBodies[i]->myCol, name_ , BodyHandler_ref->myGravBodies[i]->radius, ghostSim_ref);
 
 		ATestPlanet * asTP = Cast<ATestPlanet>(ghostSim_ref->myGravBodies.Last());
 
@@ -102,16 +102,7 @@ void ASimulationManager::createSimComponents() {
 	BodyHandler_ref->RegisterComponent();
 
 	//setup Nbody handler
-	BodyHandler_ref->SpawnsPerFrame_ = SpawnsPerFrame;
-	BodyHandler_ref->bodiesToSpawn = bodiesToSpawn;
-	BodyHandler_ref->bSpawnTestPlanets = ShouldSpawnTestPlanets;
-	BodyHandler_ref->bSpawnSolarSystem = shouldSpawnSolarSystem;
 	BodyHandler_ref->useTreeCodes_ = useTreeCodes;
-	BodyHandler_ref->spawnExtent = SpawnLocationBounds;
-	BodyHandler_ref->SpawnMaxSpeed = SpawnInitialMaxSpeed;
-	BodyHandler_ref->SpawnMaxMass = SpawnInitialMaxMass;
-	BodyHandler_ref->SpawnCentre = InitialSpawnCentre;
-
 
 
 	//create accuracy tester
@@ -124,9 +115,6 @@ void ASimulationManager::createSimComponents() {
 	TreeHandler_ref = Cast<UTreeHandler>(this->AddComponentByClass(UTreeHandler::StaticClass(), false, tr, true));
 	TreeHandler_ref->RegisterComponent();
 	TreeHandler_ref->bodyHandlerBodies = &BodyHandler_ref->myGravBodies;
-	//for (int i = 0; i < BodyHandler_ref->myGravBodies.Num(); i++) {
-	//	TreeHandler_ref->bodyHandlerBodies
-	//}
 
 	//assign tree code handler
 	BodyHandler_ref->treeHandlerRef = TreeHandler_ref;
@@ -149,7 +137,7 @@ void ASimulationManager::Tick(float DeltaTime)
 
 	
 
-	if (!Paused && !BodyHandler_ref->spawningBodies) {
+	if (!Paused && !spawningBodies) {
 
 		elapsedFrameTime += DeltaTime;
 
@@ -239,6 +227,8 @@ void ASimulationManager::Tick(float DeltaTime)
 			elapsedFrameTime -= int(elapsedFrameTime / fixedFrameTime) * fixedFrameTime;
 
 		}
+	}else if (spawningBodies) {
+		graduallySpawnBodies(SpawnsPerFrame);
 	}
 
 	if (ghostSim_ref) {
@@ -281,8 +271,8 @@ void ASimulationManager::ClearSimulation() {
 	elapsedFrameTime = 0.0f;
 	
 	bodiesInSimulation = 0;
-	BodyHandler_ref->gradualSpawnerIndex = 0;
-	BodyHandler_ref->spawningBodies = true;
+	gradualSpawnerIndex = 0;
+	spawningBodies = true;
 
 
 	while (!BodyHandler_ref->myGravBodies.IsEmpty())
@@ -350,4 +340,204 @@ void ASimulationManager::handleAveragePosError(){
 		}
 	}
 	averagePosError /= BodyHandler_ref->myGravBodies.Num();
+}
+
+
+
+// setup function for spawning bodies - creates a new body with specified parameters
+void ASimulationManager::spawnPlanetAt(FVector position_, FVector velocity_, double mass_, FVector4 colour_, FString name_, float radius_, UNBodyHandler* handlerToAddInto)
+{
+
+	FActorSpawnParameters SpawnInfo;
+	FRotator myRot(0, 0, 0);
+
+	//assign body's variables
+	ATestPlanet* newBody = GetWorld()->SpawnActor<ATestPlanet>(position_ * 1000.0f, myRot, SpawnInfo);
+	//newBody->SetActorEnableCollision(true);
+	newBody->velocity = velocity_;
+	newBody->mass = mass_;
+	newBody->position = position_;
+	newBody->radius = radius_;
+	newBody->toBeDestroyed = false;
+	newBody->SetActorLabel(name_);
+
+	if (radius_ == 0.0f) {
+		radius_ = cbrt(mass_);
+	}
+	//currently more for display purposes
+	newBody->SetActorScale3D(FVector(radius_, radius_, radius_));
+
+	//option to set colour too
+	if (colour_ != FVector4(1.0f, 0.0f, 1.0f, 1.0f)) {
+		newBody->myMat->SetVectorParameterValue(TEXT("Colour"), colour_);
+		newBody->myCol = colour_;
+	}
+	handlerToAddInto->myGravBodies.Add(newBody);
+
+
+
+
+}
+
+
+
+void ASimulationManager::spawnSolarSystem(FVector SunPosition_) {
+
+
+	//define and spawn the sun
+	FVector bodyONE_pos = FVector(-9.0841f * pow(10, -3), 4.9241f * pow(10, -4), 2.0754f * pow(10, -4));
+	float massOne = 1.0f;
+	spawnPlanetAt(bodyONE_pos + SunPosition_ / 1000.0f, FVector(0.0f, 0.0f, 0.0f), 1.0f, FVector4(1.0f, 1.0f, 0.0f, 1.0f), "Sun", 5.0f,BodyHandler_ref);
+
+
+	FString bodyTwoName_;
+	float massTwo = 0.0f;
+	float bodyTwoScale = 0.0f;
+	FVector bodyTWO_pos;
+	FVector4 planetColor;
+
+
+	//define which body (or if all) to spawn
+	int it_begin = 0;
+	int it_end = 7;
+
+
+	//define values
+	for (it_begin; it_begin <= it_end; it_begin++) {
+		//which planet to simulate orbiting around the sun
+		switch (it_begin) {
+
+		case 0: //
+			bodyTwoName_ = "Jupiter";
+			massTwo = 0.9545f * pow(10, -3);
+			bodyTwoScale = 2.2f;
+			bodyTWO_pos = FVector(4.8917f, 7.0304f * pow(10, -1), -1.1236f * pow(10, -1));
+			planetColor = FVector4(0.8f, 0.8f, 0.7f, 1.0f);
+			break;
+		case 1: //
+			bodyTwoName_ = "Saturn";
+			massTwo = 2.859 * pow(10, -4);
+			bodyTwoScale = 1.9f;
+			bodyTWO_pos = FVector(8.0121f, -5.7062f, -2.1978f * pow(10, -1));
+			planetColor = FVector4(0.82f, 0.72f, 0.55f, 1.0f);
+			break;
+		case 2: //
+			bodyTwoName_ = "Neptune";
+			massTwo = 5.15f * pow(10, -5);
+			bodyTwoScale = 1.4f;
+			bodyTWO_pos = FVector(2.9739f * pow(10, 1), -3.081f, -6.2191f * pow(10, -1));
+			planetColor = FVector4(0.4f, 0.4f, 1.0f, 1.0f);
+			break;
+		case 3: //
+			bodyTwoName_ = "Uranus";
+			massTwo = 4.364f * pow(10, -5);
+			bodyTwoScale = 1.5f;
+			bodyTWO_pos = FVector(1.3488f * pow(10, 1), 1.4317f * pow(10, 1), -1.2157f * pow(10, -1));
+			planetColor = FVector4(0.6f, 0.6f, 0.95f, 1.0f);
+			break;
+		case 4: //
+			bodyTwoName_ = "Earth";
+			massTwo = 3.003f * pow(10, -6);
+			bodyTwoScale = 1.1f;
+			bodyTWO_pos = FVector(5.5374f * pow(10, -1), 8.1332f * pow(10, -1), 1.5998f * pow(10, -4));
+			planetColor = FVector4(0.1f, 0.1f, 0.95f, 1.0f);
+			break;
+		case 5: //
+			bodyTwoName_ = "Venus";
+			massTwo = 2.447f * pow(10, -6);
+			bodyTwoScale = 0.9f;
+			bodyTWO_pos = FVector(-2.4692f * pow(10, -1), -6.8513f * pow(10, -1), 4.5184f * pow(10, -3));
+			planetColor = FVector4(0.95f, 0.2f, 0.95f, 1.0f);
+			break;
+		case 6: //
+			bodyTwoName_ = "Mars";
+			massTwo = 3.226f * pow(10, -7);
+			bodyTwoScale = 0.6f;
+			bodyTWO_pos = FVector(6.2360f * pow(10, -1), 1.3693f, 1.3376f * pow(10, -2));
+			planetColor = FVector4(0.8f, 0.3f, 0.05f, 1.0f);
+			break;
+		case 7:
+			bodyTwoName_ = "Mercury";
+			massTwo = 1.66f * pow(10, -7);
+			bodyTwoScale = 0.5f;
+			bodyTWO_pos = FVector(-1.514f * pow(10, -1), -4.4286f * pow(10, -1), -2.2969f * pow(10, -2));
+			planetColor = FVector4(0.95f, 0.6f, 0.0f, 1.0f);
+			break;
+		}
+
+		//calculate the values into a tangential velocity.
+		//v^2 = m1 * G / distance
+
+		FVector dir = bodyONE_pos - bodyTWO_pos;
+		float distance = dir.Length();
+
+		float YVel = bigG * massOne;
+		YVel /= distance;
+		YVel = sqrt(YVel);
+
+		dir.Normalize();
+		FVector RightVel = UKismetMathLibrary::GetRightVector(dir.Rotation()) * YVel;
+		spawnPlanetAt(bodyTWO_pos + SunPosition_ / 1000.0f, RightVel, massTwo, planetColor, bodyTwoName_, bodyTwoScale,BodyHandler_ref);
+	}
+
+}
+
+void ASimulationManager::spawnTestPlanets()
+{
+	//20,20,2
+	FVector positions[15] = { FVector(20.0f, 0.0f, 0.0f),FVector(0.0f, 5.0f,20.0f), FVector(-5.0f,20.0f,10.0f), FVector(17.0f,-10.0f,4.0f), FVector(5.0f,0.0f, 5.0f), FVector(3.0f, -17.0f, 6.0f),FVector(11.0f,11.0f,11.0f), FVector(-6.0f,12.0f,-18.0f), FVector(-17.0f,1.0f,7.0f), FVector(8.0f,-16.0f,16.0f), FVector(9.0f,3.0f,20.0f),FVector(5.0f,-10.0f,15.0f), FVector(11.0f, -19.0f,7.0f), FVector(-7.0f,17.0f,19.0f), FVector(4.0f,-10.0f,16.0f) };
+	FVector directions[15] = { FVector(-5.0f,20.0f,10.0f),FVector(5.0f,-10.0f,15.0f), FVector(11.0f, -19.0f,7.0f), FVector(-7.0f,17.0f,19.0f),  FVector(-17.0f,1.0f,7.0f), FVector(8.0f,-16.0f,16.0f),FVector(17.0f,-10.0f,4.0f), FVector(5.0f,0.0f, 5.0f), FVector(20.0f, 0.0f, 0.0f),FVector(0.0f, 5.0f,20.0f), FVector(3.0f, -17.0f, 6.0f),FVector(11.0f,11.0f,11.0f), FVector(-6.0f,12.0f,-18.0f), FVector(9.0f,3.0f,20.0f), FVector(4.0f,-10.0f,16.0f) };
+	float masses[15] = { 1.0f,0.3f, 0.4f, 0.5f, 0.6f, 0.2f,0.3f, 1.2f, 1.4f, 2.0f, 1.8f,0.2f, 0.5f, 0.7f, 0.4f };
+
+	for (int i = 0; i < 15; i++) {
+
+		FString bodName = "Body ";
+		bodName.Append(std::to_string(i).c_str());
+		spawnPlanetAt(positions[i] * 0.8f, directions[i] * 0.5f, masses[i] * 2.0f, FVector4(1.0f, 0.0f, 1.0f, 1.0f), bodName,0,BodyHandler_ref);
+	}
+
+}
+
+
+//function that allows gradual spawn of initial bodies rather than all at once, avoiding a big lag spike when handlingodies
+void ASimulationManager::graduallySpawnBodies(int spawnsPerFrame) {
+
+
+	for (int s = 0; s < spawnsPerFrame; s++) { // spawn all the bodies for this frame
+
+		//Exi the spawning loop
+		if (gradualSpawnerIndex >= bodiesToSpawn) {
+			
+			spawningBodies = false;
+			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, "Spawned all desired bodies");
+
+
+			return;
+		}
+
+		//random location
+		FVector myLoc(-SpawnLocationBounds / 2, -SpawnLocationBounds / 2, -SpawnLocationBounds / 2);
+		myLoc.X += FMath::FRandRange(0, SpawnLocationBounds);
+		myLoc.Y += FMath::FRandRange(0, SpawnLocationBounds);
+		myLoc.Z += FMath::FRandRange(0, SpawnLocationBounds);
+		myLoc += InitialSpawnCentre; //translate it to desired spawn centre
+
+		//random speed
+		FVector speed_ = FVector(-SpawnInitialMaxSpeed / 2, -SpawnInitialMaxSpeed / 2, -SpawnInitialMaxSpeed / 2);
+		speed_.X += FMath::FRandRange(0, SpawnInitialMaxSpeed);
+		speed_.Y += FMath::FRandRange(0, SpawnInitialMaxSpeed);
+		speed_.Z += FMath::FRandRange(0, SpawnInitialMaxSpeed);
+
+		//random mass
+		float mass_ = 0.001f;
+		mass_ += FMath::FRandRange(0.0f, SpawnInitialMaxMass);
+
+		FString bodName = "Body ";
+		bodName.Append(std::to_string(gradualSpawnerIndex).c_str());
+		spawnPlanetAt(myLoc, speed_, mass_, FVector4(1.0f, 0.0f, 1.0f, 1.0f), bodName, 0 ,BodyHandler_ref);
+		gradualSpawnerIndex++;
+
+	}
+
+	return;
 }

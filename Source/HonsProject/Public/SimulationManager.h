@@ -48,7 +48,29 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "ClearSim")
 		void ClearSimulation();
 	
-	
+	UFUNCTION(BlueprintCallable, Category = "PlanetSpawn")
+		void spawnPlanetAt(FVector position_, FVector velocity_, double mass_, FVector4 colour_, FString name_, float radius_, UNBodyHandler * handlerToAddInto);
+
+
+	////spawning
+	//UFUNCTION(BlueprintCallable, Category = "PlanetSpawn")
+	//	void spawnBodyAt(FVector position_, FVector velocity_, double mass_, FVector4 colour_, FString name_ = "GravBody", float radius_ = 0.0f);
+	UFUNCTION(BlueprintCallable, Category = "PlanetSpawn")
+		void spawnSolarSystem(FVector SunPosition_);
+	void spawnTestPlanets();
+	void graduallySpawnBodies(int spawnsPerFrame = 1);
+	UFUNCTION(BlueprintCallable, Category = "PlanetSpawn")
+		void startSpawning(int amount, FVector centre, float extent, float MaxVelocity_, double MaxMass_) {
+		spawningBodies = true;
+		bodiesToSpawn = amount;
+		InitialSpawnCentre = centre;
+		SpawnLocationBounds = extent;
+		SpawnInitialMaxSpeed = MaxVelocity_;
+		SpawnInitialMaxMass = MaxMass_;
+		gradualSpawnerIndex = 0;
+	}
+
+
 	UFUNCTION(BlueprintCallable, Category = "TESTING")
 	void addGhostSim();
 
@@ -115,5 +137,13 @@ public:
 		bool doFrameCalc = false;
 
 
+
+
+
+	//double bigG = 0.000000000066743f; //when using kg,m and s
+	double bigG = 39.4784f; //when using SolarMass, AU and Years
+	int gradualSpawnerIndex = 0;
+	bool spawningBodies = false;
+	
 };
 
