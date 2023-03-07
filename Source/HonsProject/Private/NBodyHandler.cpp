@@ -29,31 +29,7 @@ void UNBodyHandler::BeginPlay()
 
 
 	
-	//treeHandlerRef->shouldCalculateTC = useTreeCodes;
-
-	//example how to bind functions to input in code, keep to avoid looking this up again
-	//ADefaultPawn * pawn_ = Cast<ADefaultPawn>(UGameplayStatics::GetActorOfClass(GetWorld(), ADefaultPawn::StaticClass()));
-	//UInputComponent * inp_ = pawn_->InputComponent;
-	//if (inp_)
-	//{
-	//	// Bind an action to it
-	//	inp_->BindAxis
-	//	(
-	//		"MoveToSimMid", // The input identifier (specified in DefaultInput.ini)
-	//		this, // The object instance that is going to react to the input
-	//		&UNBodyHandler::moveToSimulationCore // The function that will fire when input is received
-	//	);
-	//	EnableInput(GetWorld()->GetFirstPlayerController());
-	//}
-
-
-	//add manually placed bodies to the array
-	//TArray<AActor*> FoundActors;
-	//UGameplayStatics::GetAllActorsOfClass(GetWorld(), AGravBody::StaticClass(), FoundActors);	
-	//for (int n = 0; n < FoundActors.Num(); n++) {
-	//	AGravBody* ref = Cast<AGravBody>(FoundActors[n]);
-	//	myGravBodies.Add(ref);
-	//}
+	
 
 	
 }

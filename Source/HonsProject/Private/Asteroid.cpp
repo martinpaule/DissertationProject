@@ -26,6 +26,7 @@ AAsteroid::AAsteroid()
 	case 1:
 		if (MeshAssetB.Succeeded()) {
 			tempM = MeshAssetB.Object;
+			
 		}
 		break;
 	case 2:
