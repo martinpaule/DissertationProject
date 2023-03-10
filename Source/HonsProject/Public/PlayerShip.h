@@ -30,8 +30,8 @@ public:
 		UStaticMeshComponent* StaticMeshComponent;
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 		UCameraComponent* OurCamera;
-	UPROPERTY(Category = "BasicComponents", VisibleAnywhere, BlueprintReadWrite)
-		USceneComponent* camChaserComp;
+	//UPROPERTY(Category = "BasicComponents", VisibleAnywhere, BlueprintReadWrite)
+	//	USceneComponent* camChaserComp;
 
 	UNiagaraSystem* shipTrail1;
 	//UNiagaraSystem* shipTrail2;
@@ -39,7 +39,6 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	float camRotateSpeed = 40.0f;
 	bool shipCatchingUpToCam = false;
 	FVector shipDirection = FVector(0,100,0);
 	float shipMoveSpeed = 800.0f;
@@ -49,7 +48,17 @@ protected:
 	bool warping = false;
 	float warpTimeLeft = 3.0f;
 
-	FVector defaultCamPos = FVector(-1250.0f, 0.0f, 800.0f);
+
+	
+	UPROPERTY(Category = "TESTING", EditAnywhere, BlueprintReadWrite)
+	FVector defaultCamPos = FVector(-1250.0f, 0.0f, 500.0f);
+	FVector nowCamPos;
+	UPROPERTY(Category = "TESTING", EditAnywhere, BlueprintReadWrite)
+	float camMoveSpeed = 25.0f;
+	UPROPERTY(Category = "TESTING", EditAnywhere, BlueprintReadWrite)
+	float CamOffsetFromMiddle = 400.0f;
+
+
 
 public:	
 	// Called every frame

@@ -13,12 +13,14 @@ APlayerShip::APlayerShip()
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+
+
 	SceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("SceneComponent"));
 	SetRootComponent(SceneComponent);
 
-	camChaserComp = CreateDefaultSubobject<USceneComponent>(TEXT("camChaserComponent"));
-	camChaserComp->SetupAttachment(SceneComponent);
-	camChaserComp->SetRelativeLocation(defaultCamPos);
+	//camChaserComp = CreateDefaultSubobject<USceneComponent>(TEXT("camChaserComponent"));
+	//camChaserComp->SetupAttachment(SceneComponent);
+	//camChaserComp->SetRelativeLocation(defaultCamPos);
 	//camChaserComp->SetRelativeRotation(FRotator(-30.0f, 0.0f, 0.0f));
 
 
@@ -39,9 +41,10 @@ APlayerShip::APlayerShip()
 
 	OurCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("OurCamera"));
 	// Attach our camera and visible object to our root component. Offset and rotate the camera.
-	//OurCamera->SetupAttachment(RootComponent);
-	//OurCamera->SetRelativeLocation(defaultCamPos);
-	//OurCamera->SetRelativeRotation(FRotator(-30.0f, 0.0f, 0.0f));
+	OurCamera->SetupAttachment(RootComponent);
+	OurCamera->SetRelativeLocation(defaultCamPos);
+	OurCamera->SetRelativeRotation(FRotator(-20.0f, 0.0f, 0.0f));
+	nowCamPos = defaultCamPos;
 
 
 	 
@@ -98,6 +101,7 @@ void APlayerShip::Tick(float DeltaTime)
 	}
 
 
+
 	//if ((OurCamera->GetRelativeLocation() - defaultCamPos).Length() > 5) {
 	//	FVector moveDir = (defaultCamPos - OurCamera->GetRelativeLocation());
 	//	moveDir.Normalize();
@@ -110,13 +114,20 @@ void APlayerShip::Tick(float DeltaTime)
 	//		OurCamera->SetRelativeLocation(defaultCamPos);
 	//	}
 
-	OurCamera->SetWorldLocation(camChaserComp->GetComponentLocation());
+	
 
-	FRotator bnn = (SceneComponent->GetComponentLocation() - OurCamera->GetComponentLocation()).Rotation();
-	bnn.Roll = SceneComponent->GetComponentRotation().Roll;
+	if ((defaultCamPos - nowCamPos).Length() > 10) {
+		OurCamera->SetRelativeLocation(nowCamPos);
 
 
-	OurCamera->SetWorldRotation(bnn);
+	}
+
+	//
+	//FRotator bnn = (SceneComponent->GetComponentLocation() - OurCamera->GetComponentLocation()).Rotation();
+	////bnn.Roll = SceneComponent->GetComponentRotation().Roll;
+	//
+	//
+	//OurCamera->SetWorldRotation(bnn);
 
 
 }
@@ -176,7 +187,27 @@ void APlayerShip::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 void APlayerShip::MoveShipForward(float AxisValue) {
 
 	if (!warping) {
-		AddActorWorldOffset(GetActorForwardVector()*shipMoveSpeed * GetWorld()->DeltaTimeSeconds * AxisValue);
+
+		if(AxisValue){
+			AddActorWorldOffset(GetActorForwardVector() * shipMoveSpeed * GetWorld()->DeltaTimeSeconds * AxisValue);
+			if (nowCamPos.X < defaultCamPos.X + CamOffsetFromMiddle && nowCamPos.X > defaultCamPos.X - CamOffsetFromMiddle) {
+				nowCamPos.X += GetWorld()->DeltaTimeSeconds * camMoveSpeed *3.0f * -AxisValue;
+			}
+		}
+		else {
+			float dist = defaultCamPos.X - nowCamPos.X;
+			if (abs(dist) > 3) {
+				float dir = dist / abs(dist);
+
+				nowCamPos.X += dir * camMoveSpeed * 2.0f * GetWorld()->DeltaTimeSeconds;
+
+				if (abs(defaultCamPos.X - nowCamPos.X) < 3) {
+
+					nowCamPos.X = defaultCamPos.X;
+				}
+			}
+		}
+
 
 		if (warpStrength > 1.0f && AxisValue) {
 
@@ -193,19 +224,59 @@ void APlayerShip::MoveShipForward(float AxisValue) {
 
 void APlayerShip::MoveShipRight(float AxisValue) {
 
-	AddActorWorldOffset(GetActorRightVector() * shipMoveSpeed * GetWorld()->DeltaTimeSeconds * AxisValue);
 
+	if(AxisValue){
+		AddActorLocalRotation(FRotator(0, AxisValue * shipRotateSpeed * GetWorld()->DeltaTimeSeconds, 0));
+
+		if (nowCamPos.Y < defaultCamPos.Y + CamOffsetFromMiddle && nowCamPos.Y > defaultCamPos.Y - CamOffsetFromMiddle) {
+			nowCamPos.Y += GetWorld()->DeltaTimeSeconds * camMoveSpeed * AxisValue * 2.0f;
+		}
+	}
+	else {
+		float dist = defaultCamPos.Y - nowCamPos.Y;
+		if (abs(dist) > 3) {
+			float dir = dist / abs(dist);
+
+			nowCamPos.Y += dir * camMoveSpeed * 2.0f * GetWorld()->DeltaTimeSeconds;
+
+			if (abs(defaultCamPos.Y - nowCamPos.Y) < 3) {
+
+				nowCamPos.Y = defaultCamPos.Y;
+			}
+		}
+	}
 
 }
 
 
 void APlayerShip::RotateShipUp(float AxisValue) {
 	
-	//FVector a = OurCamera->GetComponentLocation();
 
-	AddActorLocalRotation(FRotator(AxisValue * shipRotateSpeed * GetWorld()->DeltaTimeSeconds, 0, 0));
 
-	//OurCamera->SetWorldLocation(a);
+
+	
+	if (AxisValue) {
+		//FVector defaultCamPos = FVector(-1250.0f, 0.0f, 500.0f);
+		AddActorLocalRotation(FRotator(-AxisValue * shipRotateSpeed * GetWorld()->DeltaTimeSeconds, 0, 0));
+		if (nowCamPos.Z < defaultCamPos.Z + CamOffsetFromMiddle && nowCamPos.Z > defaultCamPos.Z - CamOffsetFromMiddle) {
+			nowCamPos.Z += GetWorld()->DeltaTimeSeconds * camMoveSpeed * -AxisValue;
+		}
+	}
+	else {
+		float dist = defaultCamPos.Z - nowCamPos.Z;
+		if (abs(dist) > 3) {
+			float dir = dist / abs(dist);
+
+			nowCamPos.Z += dir * camMoveSpeed * 2.0f * GetWorld()->DeltaTimeSeconds;
+
+			if (abs(defaultCamPos.Z - nowCamPos.Z) < 3) {
+			
+				nowCamPos.Z = defaultCamPos.Z;
+			}
+		}
+	}
+	
+
 }
 
 
@@ -213,11 +284,12 @@ void APlayerShip::RotateShipUp(float AxisValue) {
 void APlayerShip::RotateShipRight(float AxisValue) {
 
 	
+
+
 	
 	AddActorLocalRotation(FRotator(0, 0, AxisValue * shipRotateSpeed * GetWorld()->DeltaTimeSeconds));
 
 
-	//OurCamera->AddRelativeLocation(FVector(AxisValue * shipRotateSpeed / 3 * GetWorld()->DeltaTimeSeconds,0,0));
 
 }
 
