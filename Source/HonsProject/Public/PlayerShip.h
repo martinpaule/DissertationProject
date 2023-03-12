@@ -12,6 +12,7 @@
 
 
 class UNiagaraSystem;
+class UNiagaraComponent;
 
 
 UCLASS()
@@ -34,7 +35,14 @@ public:
 	//	USceneComponent* camChaserComp;
 
 	UNiagaraSystem* shipTrail1;
+	UNiagaraSystem* WarpDrive;
+	UNiagaraComponent* WarpDriveComp;
+	UInputComponent* inputCompRef;
 	//UNiagaraSystem* shipTrail2;
+
+
+	UPROPERTY(Category = "BasicComponents", VisibleAnywhere, BlueprintReadWrite)
+		bool moveCamBack = false;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -48,10 +56,13 @@ protected:
 	bool warping = false;
 	float warpTimeLeft = 3.0f;
 
+	bool slowingWarp = false;
+	float partLife = 0;
 
 	
 	UPROPERTY(Category = "TESTING", EditAnywhere, BlueprintReadWrite)
 	FVector defaultCamPos = FVector(-1250.0f, 0.0f, 500.0f);
+	UPROPERTY(Category = "CameraTings", EditAnywhere, BlueprintReadWrite)
 	FVector nowCamPos;
 	UPROPERTY(Category = "TESTING", EditAnywhere, BlueprintReadWrite)
 	float camMoveSpeed = 25.0f;
@@ -78,4 +89,5 @@ public:
 
 	void ChargeWarpSpeed(float AxisValue);
 
+	void handleCameraLerp(float DeltaTime);
 };

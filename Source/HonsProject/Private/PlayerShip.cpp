@@ -52,6 +52,9 @@ APlayerShip::APlayerShip()
 	auto particleSys = ConstructorHelpers::FObjectFinder<UNiagaraSystem>(TEXT("NiagaraSystem'/Game/MyHonsContent/PlanetRelated/P_Trail.p_Trail'"));
 	shipTrail1 = particleSys.Object;
 
+	auto particleSysWarp = ConstructorHelpers::FObjectFinder<UNiagaraSystem>(TEXT("NiagaraSystem'/Game/MyHonsContent/PlayerShip/HyperSpaceFX.HyperSpaceFX'"));
+	WarpDrive = particleSysWarp.Object;
+
 }
 
 
@@ -74,7 +77,10 @@ void APlayerShip::BeginPlay()
 	NiagaraComp2->SetWorldScale3D(FVector(2.0f, 2.0f, 2.0f));
 	NiagaraComp->SetWorldScale3D(FVector(2.0f, 2.0f, 2.0f));
 
+	
 
+	//WarpDriveComp->SetComponentTickEnabled(false);
+	//WarpDriveComp->Deactivate();
 }
 
 // Called every frame
@@ -97,38 +103,39 @@ void APlayerShip::Tick(float DeltaTime)
 		if (warpTimeLeft < 0.0f) {
 			warping = false;
 			warpStrength = 0;
+
+
+			partLife = 1.0f;
+			slowingWarp = true;
 		}
 	}
 
+	if (slowingWarp) {
+		partLife -= DeltaTime;
 
-
-	//if ((OurCamera->GetRelativeLocation() - defaultCamPos).Length() > 5) {
-	//	FVector moveDir = (defaultCamPos - OurCamera->GetRelativeLocation());
-	//	moveDir.Normalize();
-	//
-	//	OurCamera->SetRelativeLocation(defaultCamPos);
-	//
-	//}
-	//else {
-	//	if (OurCamera->GetRelativeLocation() != defaultCamPos) {
-	//		OurCamera->SetRelativeLocation(defaultCamPos);
-	//	}
-
-	
-
-	if ((defaultCamPos - nowCamPos).Length() > 10) {
-		OurCamera->SetRelativeLocation(nowCamPos);
-
+		if (partLife < 0.0f) {
+			slowingWarp = false;
+			WarpDriveComp->DestroyComponent();
+			WarpDriveComp = NULL;
+			//WarpDriveComp->Deactivate();
+		}
 
 	}
 
-	//
-	//FRotator bnn = (SceneComponent->GetComponentLocation() - OurCamera->GetComponentLocation()).Rotation();
-	////bnn.Roll = SceneComponent->GetComponentRotation().Roll;
-	//
-	//
-	//OurCamera->SetWorldRotation(bnn);
 
+	GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, "banaenae");
+
+	//inputCompRef->
+
+	if (moveCamBack) {
+		handleCameraLerp(DeltaTime);
+	}
+	
+	if ((defaultCamPos - nowCamPos).Length() > 10) {
+		OurCamera->SetRelativeLocation(nowCamPos);
+
+		//OurCamera.settarg
+	}
 
 }
 
@@ -136,6 +143,9 @@ void APlayerShip::Tick(float DeltaTime)
 void APlayerShip::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+
+	inputCompRef = PlayerInputComponent;
 
 	if (PlayerInputComponent)
 	{
@@ -194,25 +204,18 @@ void APlayerShip::MoveShipForward(float AxisValue) {
 				nowCamPos.X += GetWorld()->DeltaTimeSeconds * camMoveSpeed *3.0f * -AxisValue;
 			}
 		}
-		else {
-			float dist = defaultCamPos.X - nowCamPos.X;
-			if (abs(dist) > 3) {
-				float dir = dist / abs(dist);
 
-				nowCamPos.X += dir * camMoveSpeed * 2.0f * GetWorld()->DeltaTimeSeconds;
-
-				if (abs(defaultCamPos.X - nowCamPos.X) < 3) {
-
-					nowCamPos.X = defaultCamPos.X;
-				}
-			}
-		}
-
-
+		//launch drive
 		if (warpStrength > 1.0f && AxisValue) {
 
 			warping = true;
 			warpTimeLeft = 3.0f;
+
+			
+			WarpDriveComp = UNiagaraFunctionLibrary::SpawnSystemAttached(WarpDrive, RootComponent, NAME_None, FVector(7777.0f, 0.0f, 0.0f), FRotator(0.f), EAttachLocation::Type::KeepRelativeOffset, true);
+
+			WarpDriveComp->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+			slowingWarp = false;
 
 		}
 
@@ -232,19 +235,7 @@ void APlayerShip::MoveShipRight(float AxisValue) {
 			nowCamPos.Y += GetWorld()->DeltaTimeSeconds * camMoveSpeed * AxisValue * 2.0f;
 		}
 	}
-	else {
-		float dist = defaultCamPos.Y - nowCamPos.Y;
-		if (abs(dist) > 3) {
-			float dir = dist / abs(dist);
-
-			nowCamPos.Y += dir * camMoveSpeed * 2.0f * GetWorld()->DeltaTimeSeconds;
-
-			if (abs(defaultCamPos.Y - nowCamPos.Y) < 3) {
-
-				nowCamPos.Y = defaultCamPos.Y;
-			}
-		}
-	}
+	
 
 }
 
@@ -262,19 +253,7 @@ void APlayerShip::RotateShipUp(float AxisValue) {
 			nowCamPos.Z += GetWorld()->DeltaTimeSeconds * camMoveSpeed * -AxisValue;
 		}
 	}
-	else {
-		float dist = defaultCamPos.Z - nowCamPos.Z;
-		if (abs(dist) > 3) {
-			float dir = dist / abs(dist);
-
-			nowCamPos.Z += dir * camMoveSpeed * 2.0f * GetWorld()->DeltaTimeSeconds;
-
-			if (abs(defaultCamPos.Z - nowCamPos.Z) < 3) {
-			
-				nowCamPos.Z = defaultCamPos.Z;
-			}
-		}
-	}
+	
 	
 
 }
@@ -315,4 +294,51 @@ void APlayerShip::ChargeWarpSpeed(float AxisValue) {
 		}
 	}
 
+}
+
+void APlayerShip::handleCameraLerp(float DeltaTime) {
+
+	if (!inputCompRef->GetAxisValue("MoveForward")) {
+		float dist = defaultCamPos.X - nowCamPos.X;
+		if (abs(dist) > 3) {
+			float dir = dist / abs(dist);
+
+			nowCamPos.X += dir * camMoveSpeed * 2.0f * DeltaTime;
+
+			if (abs(defaultCamPos.X - nowCamPos.X) < 3) {
+
+				nowCamPos.X = defaultCamPos.X;
+			}
+		}
+	}
+
+	if (!inputCompRef->GetAxisValue("MoveRight")) {
+		float dist = defaultCamPos.Y - nowCamPos.Y;
+		if (abs(dist) > 3) {
+			float dir = dist / abs(dist);
+
+			nowCamPos.Y += dir * camMoveSpeed * 2.0f * DeltaTime;
+
+			if (abs(defaultCamPos.Y - nowCamPos.Y) < 3) {
+
+				nowCamPos.Y = defaultCamPos.Y;
+			}
+		}
+	}
+
+	if (!inputCompRef->GetAxisValue("RotateUp")) {
+		float dist = defaultCamPos.Z - nowCamPos.Z;
+		if (abs(dist) > 3) {
+			float dir = dist / abs(dist);
+
+			nowCamPos.Z += dir * camMoveSpeed * 2.0f * DeltaTime;
+
+			if (abs(defaultCamPos.Z - nowCamPos.Z) < 3) {
+
+				nowCamPos.Z = defaultCamPos.Z;
+			}
+		}
+	}
+
+	
 }
