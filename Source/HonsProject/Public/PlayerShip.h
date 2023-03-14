@@ -31,8 +31,8 @@ public:
 		UStaticMeshComponent* StaticMeshComponent;
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 		UCameraComponent* OurCamera;
-	//UPROPERTY(Category = "BasicComponents", VisibleAnywhere, BlueprintReadWrite)
-	//	USceneComponent* camChaserComp;
+	UPROPERTY(Category = "BasicComponents", VisibleAnywhere, BlueprintReadWrite)
+		USceneComponent* camChaserComp;
 
 	UNiagaraSystem* shipTrail1;
 	UNiagaraSystem* WarpDrive;
@@ -49,21 +49,32 @@ protected:
 
 	bool shipCatchingUpToCam = false;
 	FVector shipDirection = FVector(0,100,0);
+
+
 	float shipMoveSpeed = 800.0f;
 	float shipRotateSpeed = 40.0f;
-
+	
 	float warpStrength = 0.0f;
 	bool warping = false;
 	float warpTimeLeft = 3.0f;
-
+	
 	bool slowingWarp = false;
 	float partLife = 0;
 
 	
+	bool movingBacktoDefaultCamPos = false;
+	FVector lerpPos_;
+	FRotator lerpRot;
+	float lerpVal = 0.0f;
+
+
 	UPROPERTY(Category = "TESTING", EditAnywhere, BlueprintReadWrite)
 	FVector defaultCamPos = FVector(-1250.0f, 0.0f, 500.0f);
 	UPROPERTY(Category = "CameraTings", EditAnywhere, BlueprintReadWrite)
 	FVector nowCamPos;
+
+	FVector speedCamOffset;
+
 	UPROPERTY(Category = "TESTING", EditAnywhere, BlueprintReadWrite)
 	float camMoveSpeed = 25.0f;
 	UPROPERTY(Category = "TESTING", EditAnywhere, BlueprintReadWrite)
@@ -90,4 +101,9 @@ public:
 	void ChargeWarpSpeed(float AxisValue);
 
 	void handleCameraLerp(float DeltaTime);
+
+	void RMBrot(float DeltaTime);
+
+
+	void MouseWheelFunc(float AxisValue);
 };
