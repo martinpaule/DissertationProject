@@ -18,9 +18,13 @@ APlayerShip::APlayerShip()
 	SceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("SceneComponent"));
 	SetRootComponent(SceneComponent);
 
+
+	FVector defaultCamOffset = FVector(-1250.0f, 0.0f, 500.0f).GetSafeNormal();
+	float camDistanceFromRoot = 1000.0f;
+
 	camChaserComp = CreateDefaultSubobject<USceneComponent>(TEXT("camChaserComponent"));
 	camChaserComp->SetupAttachment(SceneComponent);
-	camChaserComp->SetRelativeLocation(defaultCamPos);
+	camChaserComp->SetRelativeLocation(defaultCamOffset * camDistanceFromRoot);
 	camChaserComp->SetRelativeRotation(FRotator(-20.0f, 0.0f, 0.0f));
 
 
@@ -42,9 +46,8 @@ APlayerShip::APlayerShip()
 	OurCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("OurCamera"));
 	// Attach our camera and visible object to our root component. Offset and rotate the camera.
 	OurCamera->SetupAttachment(RootComponent);
-	OurCamera->SetRelativeLocation(defaultCamPos);
+	OurCamera->SetRelativeLocation(defaultCamOffset * camDistanceFromRoot);
 	OurCamera->SetRelativeRotation(FRotator(-20.0f, 0.0f, 0.0f));
-	nowCamPos = defaultCamPos;
 
 
 	 
@@ -56,7 +59,6 @@ APlayerShip::APlayerShip()
 	WarpDrive = particleSysWarp.Object;
 
 
-	speedCamOffset = FVector(0.0f, 0.0f, 0.0f);
 
 }
 
@@ -82,15 +84,19 @@ void APlayerShip::BeginPlay()
 
 	
 
-	//WarpDriveComp->SetComponentTickEnabled(false);
-	//WarpDriveComp->Deactivate();
+	FTransform tr;
+	tr.SetIdentity();
+
+	//create Nbody handler
+	camHandleComp = Cast<UCameraHandlingComponent>(this->AddComponentByClass(UCameraHandlingComponent::StaticClass(), false, tr, true));
+	camHandleComp->RegisterComponent();
+	camHandleComp->shipRef = this;
 }
 
 // Called every frame
 void APlayerShip::Tick(float DeltaTime)
 {
 
-	//camMoved = false;
 
 	Super::Tick(DeltaTime);
 
@@ -123,16 +129,13 @@ void APlayerShip::Tick(float DeltaTime)
 			slowingWarp = false;
 			WarpDriveComp->DestroyComponent();
 			WarpDriveComp = NULL;
-			//WarpDriveComp->Deactivate();
 		}
 
 	}
 
-
-
-
-	handleCameraLerp(DeltaTime);
-
+	GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Blue, std::to_string(inputCompRef->GetAxisValue("mouseWheelMV")).c_str());
+	
+	//inputCompRef->execGetControllerMouseDelta()
 
 }
 
@@ -193,12 +196,7 @@ void APlayerShip::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 			this, // The object instance that is going to react to the input
 			&APlayerShip::ChargeWarpSpeed // The function that will fire when input is received
 		);
-		PlayerInputComponent->BindAxis
-		(
-			"mouseWheel", // The input identifier (specified in DefaultInput.ini)
-			this, // The object instance that is going to react to the input
-			&APlayerShip::MouseWheelFunc // The function that will fire when input is received
-		);
+
 
 		
 		EnableInput(GetWorld()->GetFirstPlayerController());
@@ -213,26 +211,13 @@ void APlayerShip::MoveShipForward(float AxisValue) {
 
 	if (!warping) {
 
+
 		if(AxisValue){
 			AddActorWorldOffset(GetActorForwardVector() * shipMoveSpeed * GetWorld()->DeltaTimeSeconds * AxisValue);
-			if (speedCamOffset.X <  CamOffsetFromMiddle && speedCamOffset.X > - CamOffsetFromMiddle) {
-				speedCamOffset.X += GetWorld()->DeltaTimeSeconds * camMoveSpeed *3.0f * -AxisValue;
-			}
-
-
-
-			
 		}
-		else if(abs(speedCamOffset.X) > 3) {
-			float dir = speedCamOffset.X / abs(speedCamOffset.X);
 
-			speedCamOffset.X += -dir * camMoveSpeed * 2.0f * GetWorld()->DeltaTimeSeconds;
+		camHandleComp->MoveShipForward_CamHandle(AxisValue);
 
-			if (abs(speedCamOffset.X) < 3) {
-
-				speedCamOffset.X = 0.0f;
-			}
-		}
 
 		//launch drive
 		if (warpStrength > 1.0f && AxisValue) {
@@ -255,23 +240,11 @@ void APlayerShip::MoveShipForward(float AxisValue) {
 void APlayerShip::MoveShipRight(float AxisValue) {
 
 
-	if(AxisValue){
+	if (AxisValue) {
 		AddActorLocalRotation(FRotator(0, AxisValue * shipRotateSpeed * GetWorld()->DeltaTimeSeconds, 0));
 
-		if (speedCamOffset.Y <  CamOffsetFromMiddle && speedCamOffset.Y > - CamOffsetFromMiddle) {
-			speedCamOffset.Y += GetWorld()->DeltaTimeSeconds * camMoveSpeed * AxisValue * 2.0f;
-		}
 	}
-	else if (abs(speedCamOffset.Y) > 3) {
-		float dir = speedCamOffset.Y / abs(speedCamOffset.Y);
-
-		speedCamOffset.Y += -dir * camMoveSpeed * 2.0f * GetWorld()->DeltaTimeSeconds;
-
-		if (abs(speedCamOffset.Y) < 3) {
-
-			speedCamOffset.Y = 0.0f;
-		}
-	}
+	camHandleComp->MoveShipRight_CamHandle(AxisValue);
 
 }
 
@@ -283,22 +256,10 @@ void APlayerShip::RotateShipUp(float AxisValue) {
 
 	
 	if (AxisValue) {
-		//FVector defaultCamPos = FVector(-1250.0f, 0.0f, 500.0f);
 		AddActorLocalRotation(FRotator(-AxisValue * shipRotateSpeed * GetWorld()->DeltaTimeSeconds, 0, 0));
-		if (speedCamOffset.Z <  CamOffsetFromMiddle && speedCamOffset.Z >  - CamOffsetFromMiddle) {
-			speedCamOffset.Z += GetWorld()->DeltaTimeSeconds * camMoveSpeed * -AxisValue;
-		}
 	}
-	else if (abs(speedCamOffset.Z) > 3) {
-		float dir = speedCamOffset.Z / abs(speedCamOffset.Z);
+	camHandleComp->RotateShipUp_CamHandle(AxisValue);
 
-		speedCamOffset.Z += -dir * camMoveSpeed * 2.0f * GetWorld()->DeltaTimeSeconds;
-
-		if (abs(speedCamOffset.Z) < 3) {
-
-			speedCamOffset.Z = 0.0f;
-		}
-	}
 	
 
 }
@@ -341,143 +302,10 @@ void APlayerShip::ChargeWarpSpeed(float AxisValue) {
 
 }
 
-void APlayerShip::handleCameraLerp(float DeltaTime) {
-
-	FVector dirV_ = (SceneComponent->GetComponentLocation() - OurCamera->GetComponentLocation()).GetSafeNormal();
-	FRotator finRot;
-
-
-	//GetWorld()->GetFirstPlayerController()->axis
-
-	if (inputCompRef->GetAxisValue("RMBdown")) {
-		float mouseX, mouseY;
-		FVector2D VPsize;
-		//inputCompRef->position
-		GetWorld()->GetFirstPlayerController()->GetMousePosition(mouseX, mouseY);
-		GetWorld()->GetGameViewport()->GetViewportSize(VPsize);
-
-
-		float dtLokSpeed = DeltaTime * 10.0f;
-
-
-
-		float mouseYmove = -dtLokSpeed * (int(mouseY) - int(VPsize.Y / 2));
-		float mouseXmove = dtLokSpeed * (int(mouseX) - int(VPsize.X / 2));
-
-
-
-		FVector2D upRot(-dirV_.X, dirV_.Y);
-
-		FVector2D MouseXY_(mouseXmove,mouseYmove);
-
-
-		upRot.Normalize();
-
-		if (nowCamPos.Rotation().Pitch > 87 && mouseYmove < 0 || nowCamPos.Rotation().Pitch < -87 && mouseYmove > 0) {
-			mouseYmove = 0;
-		}
-
-		nowCamPos = nowCamPos.RotateAngleAxis(mouseXmove, FVector(0,0, 1));
-		nowCamPos = nowCamPos.RotateAngleAxis(mouseYmove, FVector(upRot.Y, upRot.X, 0));
-
-		
-		
-		GetWorld()->GetFirstPlayerController()->SetMouseLocation(float(VPsize.X) / 2, float(VPsize.Y) / 2);
-
-
-	
-
-		movingBacktoDefaultCamPos = false;
-
-		finRot = ( -1.0f*(nowCamPos + speedCamOffset)).GetSafeNormal().Rotation();
-
-		OurCamera->SetRelativeLocation(nowCamPos + speedCamOffset);
-		OurCamera->SetWorldRotation(finRot);
-	}
-	else {
-		if (inputCompRef->GetAxisValue("MoveForward")) {
-
-			if (!movingBacktoDefaultCamPos) {
-				if ((nowCamPos - defaultCamPos).Length() > 2.0f || !OurCamera->GetComponentRotation().Equals(camChaserComp->GetComponentRotation(),2.0f)) {
-					movingBacktoDefaultCamPos = true;
-					lerpVal = 0.0f;
-
-					lerpPos_ = nowCamPos;
-					lerpRot = OurCamera->GetComponentRotation();
-				}
-				
-
-
-
-			}
-			else {
-
-
-				lerpVal += DeltaTime*2.0f;
-				
-				if (lerpVal >= 1.0f) {
-					lerpVal = 1.0f;
-					movingBacktoDefaultCamPos = false;
-				}
-
-
-
-
-				nowCamPos.X = FMath::Lerp(lerpPos_.X,defaultCamPos.X, lerpVal);
-				nowCamPos.Y = FMath::Lerp(lerpPos_.Y,defaultCamPos.Y, lerpVal);
-				nowCamPos.Z = FMath::Lerp(lerpPos_.Z,defaultCamPos.Z, lerpVal);
-
-				OurCamera->SetRelativeLocation(nowCamPos + speedCamOffset);
-
-				FRotator myRot_;
-				FRotator rotDesired = camChaserComp->GetComponentRotation();
-				myRot_.Yaw = FMath::Lerp(lerpRot.Yaw, rotDesired.Yaw, lerpVal);
-				myRot_.Pitch = FMath::Lerp(lerpRot.Pitch, rotDesired.Pitch, lerpVal);
-				myRot_.Roll = FMath::Lerp(lerpRot.Roll, rotDesired.Roll, lerpVal);
-
-				OurCamera->SetWorldRotation(myRot_);
-
-
-
-			}
-
-
-
-
-		}
-	}
-
-
-	
-	GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Purple, nowCamPos.ToString());
-	GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Blue, nowCamPos.Rotation().ToString());
-	
-	
-}
 
 
 void APlayerShip::RMBrot(float AxisValue) {
 
 
-
-}
-
-void APlayerShip::MouseWheelFunc(float AxisValue) {
-
-
-	//GEngine->AddOnScreenDebugMessage(-1, 0.2f, FColor::Blue, std::to_string(AxisValue).c_str());
-
-	if (AxisValue > 0 && defaultCamPos.Length() < 3000) {
-		defaultCamPos += defaultCamPos.GetSafeNormal() * 100.0f;
-		nowCamPos += nowCamPos.GetSafeNormal() * 100.0f;
-		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Blue, "AAAAAAAAAAA");
-	}
-	else if (AxisValue < 0 && defaultCamPos.Length() > 500) {
-		defaultCamPos -= defaultCamPos.GetSafeNormal() * 100.0f;
-		nowCamPos -= nowCamPos.GetSafeNormal() * 100.0f;
-
-	}
-
-	OurCamera->SetRelativeLocation(nowCamPos + speedCamOffset);
 
 }

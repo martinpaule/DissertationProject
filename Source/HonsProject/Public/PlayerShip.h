@@ -6,7 +6,7 @@
 #include "GameFramework/Pawn.h"
 
 
-
+#include "CameraHandlingComponent.h"
 #include "Camera/CameraComponent.h"
 #include "PlayerShip.generated.h"
 
@@ -34,21 +34,21 @@ public:
 	UPROPERTY(Category = "BasicComponents", VisibleAnywhere, BlueprintReadWrite)
 		USceneComponent* camChaserComp;
 
+	UPROPERTY(Category = "BasicComponents", VisibleAnywhere, BlueprintReadWrite)
+		UCameraHandlingComponent* camHandleComp;
+
+
 	UNiagaraSystem* shipTrail1;
 	UNiagaraSystem* WarpDrive;
 	UNiagaraComponent* WarpDriveComp;
 	UInputComponent* inputCompRef;
-	//UNiagaraSystem* shipTrail2;
 
 
-	UPROPERTY(Category = "BasicComponents", VisibleAnywhere, BlueprintReadWrite)
-		bool moveCamBack = false;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	bool shipCatchingUpToCam = false;
-	FVector shipDirection = FVector(0,100,0);
 
 
 	float shipMoveSpeed = 800.0f;
@@ -61,24 +61,7 @@ protected:
 	bool slowingWarp = false;
 	float partLife = 0;
 
-	
-	bool movingBacktoDefaultCamPos = false;
-	FVector lerpPos_;
-	FRotator lerpRot;
-	float lerpVal = 0.0f;
 
-
-	UPROPERTY(Category = "TESTING", EditAnywhere, BlueprintReadWrite)
-	FVector defaultCamPos = FVector(-1250.0f, 0.0f, 500.0f);
-	UPROPERTY(Category = "CameraTings", EditAnywhere, BlueprintReadWrite)
-	FVector nowCamPos;
-
-	FVector speedCamOffset;
-
-	UPROPERTY(Category = "TESTING", EditAnywhere, BlueprintReadWrite)
-	float camMoveSpeed = 25.0f;
-	UPROPERTY(Category = "TESTING", EditAnywhere, BlueprintReadWrite)
-	float CamOffsetFromMiddle = 400.0f;
 
 
 
@@ -100,10 +83,8 @@ public:
 
 	void ChargeWarpSpeed(float AxisValue);
 
-	void handleCameraLerp(float DeltaTime);
 
 	void RMBrot(float DeltaTime);
 
-
-	void MouseWheelFunc(float AxisValue);
+	 
 };
