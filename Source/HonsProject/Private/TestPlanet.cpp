@@ -2,6 +2,7 @@
 
 
 #include "TestPlanet.h"
+#include <string>
 
 
 // Sets default values
@@ -12,6 +13,12 @@ ATestPlanet::ATestPlanet()
 	ConstructorHelpers::FObjectFinder<UStaticMesh>MeshAsset(TEXT("StaticMesh'/Game/MyHonsContent/PlanetRelated/PlanetMesh.PlanetMesh'"));
 	UStaticMesh* Asset = MeshAsset.Object;
 
+
+	SceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("SceneComponent"));
+	SetRootComponent(SceneComponent);
+
+	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshCompopnent"));
+	StaticMeshComponent->SetupAttachment(SceneComponent);
 
 	StaticMeshComponent->SetStaticMesh(Asset);
 	StaticMeshComponent->SetGenerateOverlapEvents(false);
@@ -27,13 +34,11 @@ ATestPlanet::ATestPlanet()
 
 	myMat = UMaterialInstanceDynamic::Create(Mat_o, NULL);
 	StaticMeshComponent->SetMaterial(0, myMat);
-	myMat->SetVectorParameterValue(TEXT("Colour"), myCol);
 
 
 
 
 	
-
 }
 
 
@@ -43,6 +48,9 @@ ATestPlanet::ATestPlanet()
 void ATestPlanet::BeginPlay()
 {
 	Super::BeginPlay();
+
+
+	
 
 }
 
@@ -73,12 +81,12 @@ void ATestPlanet::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyC
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 
 	if (universalDensity) {
-		float scale_ = cbrt(mass);
+		float scale_ = cbrt(GravComp->mass);
 		this->SetActorScale3D(FVector(scale_, scale_, scale_));
 	}
 
 	if (PropertyChangedEvent.Property->GetName() == "radius") {
-		float scale_ = radius * 2.0f / 100.0f;
+		float scale_ = GravComp->radius * 2.0f / 100.0f;
 		this->SetActorScale3D(FVector(scale_, scale_, scale_));
 		universalDensity = false;
 	}
@@ -108,20 +116,20 @@ void ATestPlanet::combineCollisionBody(UPrimitiveComponent* OverlappedComponent,
 			return;
 		}
 
-		float massA = mass;
-		float massB = otherBody->mass;
-		FVector velocityA = velocity;
-		FVector velocityB = otherBody->velocity;
+		float massA = GravComp->mass;
+		float massB = otherBody->GravComp->mass;
+		FVector velocityA = GravComp->velocity;
+		FVector velocityB = otherBody->GravComp->velocity;
 		FVector finalVelocity = (massA * velocityA + massB * velocityB) / (massA + massB);
 
 		//add the smaller body's mass and speed to the larger one
-		if (otherBody->mass >= mass) {
-			otherBody->velocity = finalVelocity;
-			otherBody->mass += mass;
+		if (otherBody->GravComp->mass >= GravComp->mass) {
+			otherBody->GravComp->velocity = finalVelocity;
+			otherBody->GravComp->mass += GravComp->mass;
 			float scale_ = otherBody->GetActorScale3D().X;
 			scale_ += this->GetActorScale3D().X / 15.0f;
 			otherBody->SetActorScale3D(FVector(scale_, scale_, scale_));
-			toBeDestroyed = true;
+			GravComp->toBeDestroyed = true;
 
 			//print message with timestamp, development feature, remove at the end
 			if (true) {

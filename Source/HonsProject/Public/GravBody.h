@@ -6,7 +6,6 @@
 #include "Components/PrimitiveComponent.h"
 #include "Components/SphereComponent.h"
 #include "GameFramework/Actor.h"
-#include <string>
 #include "GravBody.generated.h"
 
 

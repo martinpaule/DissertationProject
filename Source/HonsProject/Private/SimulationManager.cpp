@@ -21,7 +21,7 @@ void ASimulationManager::recordFinalPositions() {
 	accuracyTester_ref->planets.Add(a);
 
 	for (int i = 0; i < BodyHandler_ref->myGravBodies.Num(); i++) {
-		std::string name_ = std::string(TCHAR_TO_UTF8(*BodyHandler_ref->myGravBodies[i]->GetActorLabel()));
+		std::string name_ = std::string(TCHAR_TO_UTF8(*BodyHandler_ref->myGravBodies[i]->GetOwner()->GetActorLabel()));
 		accuracyTester_ref->notePlanet(name_, BodyHandler_ref->myGravBodies[i]->position, BodyHandler_ref->myGravBodies[i]->velocity, BodyHandler_ref->myGravBodies[i]->mass);
 	}
 
@@ -33,7 +33,8 @@ void ASimulationManager::removeGhostSim() {
 	if (ghostSim_ref) {
 		while (!ghostSim_ref->myGravBodies.IsEmpty())
 		{
-			ghostSim_ref->myGravBodies[0]->Destroy();
+			ghostSim_ref->myGravBodies[0]->GetOwner()->Destroy();
+			ghostSim_ref->myGravBodies[0]->DestroyComponent();
 			ghostSim_ref->myGravBodies.RemoveAt(0);
 		}
 
@@ -52,7 +53,8 @@ void ASimulationManager::addGhostSim() {
 	if (ghostSim_ref) {
 		while (!ghostSim_ref->myGravBodies.IsEmpty())
 		{
-			ghostSim_ref->myGravBodies[0]->Destroy();
+			ghostSim_ref->myGravBodies[0]->GetOwner()->Destroy();
+			ghostSim_ref->myGravBodies[0]->DestroyComponent();
 			ghostSim_ref->myGravBodies.RemoveAt(0);
 		}
 
@@ -70,23 +72,25 @@ void ASimulationManager::addGhostSim() {
 	//copy over bodies from main Nbody
 	for (int i = 0; i < BodyHandler_ref->myGravBodies.Num(); i++)
 	{
-		BodyHandler_ref->myGravBodies[i]->SetActorEnableCollision(false);
+		//BodyHandler_ref->myGravBodies[i]->GetOwner()->SetActorEnableCollision(false);
 		
-		FString name_ = BodyHandler_ref->myGravBodies[i]->GetActorLabel();
+		//create ghost's planet name
+		FString name_ = BodyHandler_ref->myGravBodies[i]->GetOwner()->GetActorLabel();
 		name_.Append("_ghost");
 
+		//add this planet to the ghost sim handler
 		spawnPlanetAt(BodyHandler_ref->myGravBodies[i]->position, BodyHandler_ref->myGravBodies[i]->velocity, BodyHandler_ref->myGravBodies[i]->mass, BodyHandler_ref->myGravBodies[i]->myCol, name_ , BodyHandler_ref->myGravBodies[i]->radius, ghostSim_ref);
 
-		ATestPlanet * asTP = Cast<ATestPlanet>(ghostSim_ref->myGravBodies.Last());
-
+		//setup ghost relevant values
+		ATestPlanet * asTP = Cast<ATestPlanet>(ghostSim_ref->myGravBodies.Last()->GetOwner());
 		asTP->handlerID = 1;
+		asTP->myMat->SetScalarParameterValue(TEXT("Opacity"), 0.1f);
+
+		//assign reference to ghost
+		Cast<ATestPlanet>(BodyHandler_ref->myGravBodies[i]->GetOwner())->ghostRef = asTP;
 
 
-		Cast<ATestPlanet>(BodyHandler_ref->myGravBodies[i])->ghostRef = asTP;
-
-
-		ghostSim_ref->myGravBodies.Last()->myMat->SetScalarParameterValue(TEXT("Opacity"), 0.1f);
-		BodyHandler_ref->myGravBodies[i]->SetActorEnableCollision(true);
+		//BodyHandler_ref->myGravBodies[i]->GetOwner()->SetActorEnableCollision(true);
 
 
 	}
@@ -149,14 +153,15 @@ void ASimulationManager::Tick(float DeltaTime)
 			{
 				if (BodyHandler_ref->myGravBodies[i]->toBeDestroyed) {
 
-					ATestPlanet* asTP = Cast<ATestPlanet>(BodyHandler_ref->myGravBodies[i]);
+					ATestPlanet* asTP = Cast<ATestPlanet>(BodyHandler_ref->myGravBodies[i]->GetOwner());
 
 
 					if (asTP->ghostRef) {
 						asTP->ghostRef->ghostRef = NULL;
 					}
 					
-					BodyHandler_ref->myGravBodies[i]->Destroy();
+					BodyHandler_ref->myGravBodies[i]->GetOwner()->Destroy();
+					BodyHandler_ref->myGravBodies[i]->DestroyComponent();
 					BodyHandler_ref->myGravBodies.RemoveAt(i);
 					i--;
 				}
@@ -166,13 +171,14 @@ void ASimulationManager::Tick(float DeltaTime)
 				{
 					if (ghostSim_ref->myGravBodies[i]->toBeDestroyed) {
 
-						ATestPlanet* asTP_ = Cast<ATestPlanet>(ghostSim_ref->myGravBodies[i]);
+						ATestPlanet* asTP_ = Cast<ATestPlanet>(ghostSim_ref->myGravBodies[i]->GetOwner());
 
 
 						if (asTP_->ghostRef) {
 							asTP_->ghostRef->ghostRef = NULL;
 						}
-						ghostSim_ref->myGravBodies[i]->Destroy();
+						ghostSim_ref->myGravBodies[i]->GetOwner()->Destroy();
+						ghostSim_ref->myGravBodies[i]->DestroyComponent();
 						ghostSim_ref->myGravBodies.RemoveAt(i);
 						i--;
 					}
@@ -265,8 +271,7 @@ void ASimulationManager::lowerSimulationSpeed()
 }
 
 void ASimulationManager::ClearSimulation() {
-	//timeMultiplier = 1.0f;
-	//notPaused = false;
+
 	simulationElapsedTime = 0.0f;
 	elapsedFrameTime = 0.0f;
 	
@@ -277,14 +282,17 @@ void ASimulationManager::ClearSimulation() {
 
 	while (!BodyHandler_ref->myGravBodies.IsEmpty())
 	{
-		BodyHandler_ref->myGravBodies[0]->Destroy();
+
+		BodyHandler_ref->myGravBodies[0]->GetOwner()->Destroy();
+		BodyHandler_ref->myGravBodies[0]->DestroyComponent();
 		BodyHandler_ref->myGravBodies.RemoveAt(0);
 	}
 
 	if (ghostSim_ref) {
 		while (!ghostSim_ref->myGravBodies.IsEmpty())
 		{
-			ghostSim_ref->myGravBodies[0]->Destroy();
+			ghostSim_ref->myGravBodies[0]->GetOwner()->Destroy();
+			ghostSim_ref->myGravBodies[0]->DestroyComponent();
 			ghostSim_ref->myGravBodies.RemoveAt(0);
 		}
 	}
@@ -305,7 +313,7 @@ void ASimulationManager::handleAveragePosError(){
 	for (int i = 0; i < BodyHandler_ref->myGravBodies.Num(); i++)
 	{
 
-		ATestPlanet* asTP_ = Cast<ATestPlanet>(BodyHandler_ref->myGravBodies[i]);
+		ATestPlanet* asTP_ = Cast<ATestPlanet>(BodyHandler_ref->myGravBodies[i]->GetOwner());
 
 
 		if (asTP_->ghostRef) {
@@ -324,10 +332,10 @@ void ASimulationManager::handleAveragePosError(){
 				lineCol.B = 0;
 			}
 			if (showGhosPlanetErrors) {
-				DrawDebugLine(GetWorld(), BodyHandler_ref->myGravBodies[i]->GetActorLocation(), asTP_->ghostRef->GetActorLocation(), lineCol, false, 0.0f, 0, 13.0f);
+				DrawDebugLine(GetWorld(), asTP_->GetActorLocation(), asTP_->ghostRef->GetActorLocation(), lineCol, false, 0.0f, 0, 13.0f);
 			}
 			if (calcAveragePosError) {
-				averagePosError += (asTP_->ghostRef->position - BodyHandler_ref->myGravBodies[i]->position).Length();
+				averagePosError += (asTP_->ghostRef->GravComp->position - BodyHandler_ref->myGravBodies[i]->position).Length();
 			}
 		}
 		else {
@@ -354,12 +362,25 @@ void ASimulationManager::spawnPlanetAt(FVector position_, FVector velocity_, dou
 	//assign body's variables
 	ATestPlanet* newBody = GetWorld()->SpawnActor<ATestPlanet>(position_ * 1000.0f, myRot, SpawnInfo);
 	//newBody->SetActorEnableCollision(true);
-	newBody->velocity = velocity_;
-	newBody->mass = mass_;
-	newBody->position = position_;
-	newBody->radius = radius_;
-	newBody->toBeDestroyed = false;
+
+
+	FTransform tr;
+	tr.SetIdentity();
+
+	//create Nbody handler
+	UGravBodyComponent * ref_cp  = Cast<UGravBodyComponent>(AddComponentByClass(UGravBodyComponent::StaticClass(), true, tr, true));
+
+
+	ref_cp->velocity = velocity_;
+	ref_cp->mass = mass_;
+	ref_cp->position = position_;
+	ref_cp->radius = radius_;
+	ref_cp->toBeDestroyed = false;
 	newBody->SetActorLabel(name_);
+
+
+	newBody->GravComp = ref_cp;
+	ref_cp->RegisterComponent();
 
 	if (radius_ == 0.0f) {
 		radius_ = cbrt(mass_);
@@ -370,9 +391,9 @@ void ASimulationManager::spawnPlanetAt(FVector position_, FVector velocity_, dou
 	//option to set colour too
 	if (colour_ != FVector4(1.0f, 0.0f, 1.0f, 1.0f)) {
 		newBody->myMat->SetVectorParameterValue(TEXT("Colour"), colour_);
-		newBody->myCol = colour_;
+		newBody->GravComp->myCol = colour_;
 	}
-	handlerToAddInto->myGravBodies.Add(newBody);
+	handlerToAddInto->myGravBodies.Add(newBody->GravComp);
 
 
 

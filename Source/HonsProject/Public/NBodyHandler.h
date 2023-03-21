@@ -32,7 +32,7 @@ public:
 
 	//array holding a reference to all bodies
 	UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite)
-	TArray<AGravBody*> myGravBodies;
+	TArray<UGravBodyComponent*> myGravBodies;
 
 
 	//tree code handler reference

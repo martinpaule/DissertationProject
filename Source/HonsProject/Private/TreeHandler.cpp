@@ -181,7 +181,7 @@ void UTreeHandler::partitionTree(TreeNode* rootNode)
 }
 
 //recursive function calculating force on a body
-FVector UTreeHandler::getApproxForce(AGravBody* body, TreeNode * rootNode)
+FVector UTreeHandler::getApproxForce(UGravBodyComponent* body, TreeNode * rootNode)
 {
 
 	if (rootNode->bodies.Num() == 1 && body != rootNode->bodies[0]) {

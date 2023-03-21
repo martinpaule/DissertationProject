@@ -4,14 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "GravBody.h"
+#include "GravBodyComponent.h"
 #include "TreeHandler.generated.h"
 
 struct TreeNode {
 public:
 	TreeNode * root_node = nullptr;
 	TArray<TreeNode *> branch_nodes;
-	TArray<AGravBody*> bodies;
+	TArray<UGravBodyComponent*> bodies;
 	bool isLeaf = true;
 
 	int level;
@@ -45,7 +45,7 @@ public:
 	UTreeHandler();
 
 	//pointer to the array from nbodyHandler
-	TArray<AGravBody*> * bodyHandlerBodies;
+	TArray<UGravBodyComponent*> * bodyHandlerBodies;
 	TreeNode * treeNodeRoot;
 
 protected:
@@ -61,7 +61,7 @@ public:
 	void partitionTree(TreeNode* rootNode);
 
 	//recursive function to get force acting on a given 1 body
-	FVector getApproxForce(AGravBody* body, TreeNode* rootNode);
+	FVector getApproxForce(UGravBodyComponent* body, TreeNode* rootNode);
 
 	//visualise oct trees
 	UPROPERTY(Category = "VisualisationRelevant", EditAnywhere, BlueprintReadWrite)

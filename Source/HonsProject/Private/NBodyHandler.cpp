@@ -158,7 +158,8 @@ void UNBodyHandler::moveBodies(bool alsoMoveActor, double updated_dt) {
 		myGravBodies[i]->position += updated_dt * myGravBodies[i]->velocity;
 
 		if (alsoMoveActor) {
-			myGravBodies[i]->SetActorLocation(myGravBodies[i]->position * 1000.0f);
+			myGravBodies[i]->GetOwner()->SetActorLocation(myGravBodies[i]->position * 1000.0f);
+				//SetActorLocation(myGravBodies[i]->position * 1000.0f);
 		}
 	}
 

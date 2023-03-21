@@ -3,14 +3,19 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GravBody.h"
+
+#include "Components/PrimitiveComponent.h"
+#include "Components/SphereComponent.h"
+#include "GameFramework/Actor.h"
+#include "GravBodyComponent.h"
+
 #include "Asteroid.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class HONSPROJECT_API AAsteroid : public AGravBody
+class HONSPROJECT_API AAsteroid : public AActor
 {
 	GENERATED_BODY()
 public:
@@ -26,8 +31,20 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 
+	//Gravitation body object necessary component
+	UPROPERTY(Category = "BasicComponents", VisibleAnywhere, BlueprintReadWrite)
+		USceneComponent* SceneComponent;
+	UPROPERTY(Category = "BasicComponents", VisibleAnywhere, BlueprintReadWrite)
+		UStaticMeshComponent* StaticMeshComponent;
+	UPROPERTY(Category = "BasicComponents", VisibleAnywhere, BlueprintReadWrite)
+		UMaterialInstanceDynamic* myMat;
 		
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		USphereComponent* SphereCollider;
 	
+
+	
+
+	UPROPERTY(Category = "BasicComponents", VisibleAnywhere, BlueprintReadWrite)
+	UGravBodyComponent* GravComp;
 };

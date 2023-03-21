@@ -3,19 +3,36 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GravBody.h"
+
+#include "Components/SphereComponent.h"
+#include "GameFramework/Actor.h"
+#include "GravBodyComponent.h"
+
 #include "TestPlanet.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class HONSPROJECT_API ATestPlanet : public AGravBody
+class HONSPROJECT_API ATestPlanet : public AActor
 {
 	GENERATED_BODY()
 public:
 	// Sets default values for this actor's properties
 	ATestPlanet();
+
+
+
+	//Gravitation body object necessary component
+	UPROPERTY(Category = "BasicComponents", VisibleAnywhere, BlueprintReadWrite)
+		USceneComponent* SceneComponent;
+	UPROPERTY(Category = "BasicComponents", VisibleAnywhere, BlueprintReadWrite)
+		UStaticMeshComponent* StaticMeshComponent;
+	UPROPERTY(Category = "BasicComponents", VisibleAnywhere, BlueprintReadWrite)
+		UMaterialInstanceDynamic* myMat;
+	UPROPERTY(Category = "BasicComponents", VisibleAnywhere, BlueprintReadWrite)
+		UGravBodyComponent* GravComp;
+
 
 protected:
 	// Called when the game starts or when spawned
@@ -47,4 +64,7 @@ public:
 	bool universalDensity = true;
 
 	ATestPlanet* ghostRef = NULL;
+
+
+
 };
