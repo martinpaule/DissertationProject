@@ -27,6 +27,11 @@ void UTreeHandler::TickComponent(float DeltaTime, ELevelTick TickType, FActorCom
 
 }
 
+
+
+
+
+
 void UTreeHandler::RecalculatePartitioning() {
 	
 	//reset root
@@ -124,9 +129,15 @@ void UTreeHandler::DisplaySectors(TreeNode* rootNode) {
 void UTreeHandler::partitionTree(TreeNode* rootNode)
 {
 	//exit if there is 1 or 0 children
-	if (rootNode->bodies.Num() < 2) {
+	if (rootNode->bodies.Num() == 1) {
+		rootNode->bodies[0]->leaf_ref = rootNode;
 		return;
 	}
+	//exit if there is 1 or 0 children
+	if (rootNode->bodies.Num() == 0) {
+		return;
+	}
+
 
 	rootNode->isLeaf = false;
 
@@ -231,4 +242,33 @@ FVector UTreeHandler::getApproxForce(UGravBodyComponent* body, TreeNode * rootNo
 	}
 
 	return combinedForces;
+}
+
+TreeNode * UTreeHandler::getLowestSectorInc(FVector position, TreeNode * rootNode) {
+
+	if (rootNode->branch_nodes.Num() == 0) {
+		return rootNode;
+	}
+	for (int j = 0; j < 8; j++) {
+		if (rootNode->branch_nodes[j]->isInExtent(position)) {
+			getLowestSectorInc(position, rootNode->branch_nodes[j]);
+		}
+	}
+	return NULL;
+}
+
+void UTreeHandler::mergeEmptiesAboveMe(TreeNode* rootNode) {
+
+	for (int i = 0; i < 9; i++) {
+		if (i == 8) {
+			rootNode->root_node->isLeaf = true;
+			rootNode->root_node->branch_nodes.Empty();
+			mergeEmptiesAboveMe(rootNode->root_node);
+		}
+
+		if (rootNode->root_node->branch_nodes[i]->bodies.Num() > 0) {
+			return;
+		}
+	}
+	return;
 }

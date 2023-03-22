@@ -56,9 +56,13 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+	UFUNCTION(BlueprintCallable, Category = "TreeTings")
 	void RecalculatePartitioning();
 	void DisplaySectors(TreeNode* rootNode);
 	void partitionTree(TreeNode* rootNode);
+
+	TreeNode* getLowestSectorInc(FVector position, TreeNode* rootNode);
+	void mergeEmptiesAboveMe(TreeNode* rootNode);
 
 	//recursive function to get force acting on a given 1 body
 	FVector getApproxForce(UGravBodyComponent* body, TreeNode* rootNode);

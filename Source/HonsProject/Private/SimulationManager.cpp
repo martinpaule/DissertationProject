@@ -147,7 +147,7 @@ void ASimulationManager::Tick(float DeltaTime)
 
 		if (elapsedFrameTime >= fixedFrameTime) {
 
-
+			bool PlanetOutOfBounds = false;
 			//step 0: destroy overlapping bodies from previous step - must be done before force calculation otherwise the current step will be inaccurate
 			for (int i = 0; i < BodyHandler_ref->myGravBodies.Num(); i++)
 			{
@@ -159,13 +159,42 @@ void ASimulationManager::Tick(float DeltaTime)
 					if (asTP->ghostRef) {
 						asTP->ghostRef->ghostRef = NULL;
 					}
-					
+
+					if (useTreeCodes) {
+						BodyHandler_ref->myGravBodies[i]->leaf_ref->bodies.Empty();
+					}
 					BodyHandler_ref->myGravBodies[i]->GetOwner()->Destroy();
 					BodyHandler_ref->myGravBodies[i]->DestroyComponent();
 					BodyHandler_ref->myGravBodies.RemoveAt(i);
 					i--;
 				}
+				else if (useTreeCodes) {
+					if (BodyHandler_ref->myGravBodies[i]->leaf_ref->isInExtent(BodyHandler_ref->myGravBodies[i]->position)) {
+						BodyHandler_ref->myGravBodies[i]->leaf_ref->Node_CentreOMass = BodyHandler_ref->myGravBodies[i]->position;
+					}
+					else {
+						if (TreeHandler_ref->treeNodeRoot->isInExtent(BodyHandler_ref->myGravBodies[i]->position)) {
+
+							BodyHandler_ref->myGravBodies[i]->leaf_ref->bodies.Remove(BodyHandler_ref->myGravBodies[i]);
+							TreeHandler_ref->mergeEmptiesAboveMe(BodyHandler_ref->myGravBodies[i]->leaf_ref);
+
+
+							TreeNode* ref_tn = TreeHandler_ref->getLowestSectorInc(BodyHandler_ref->myGravBodies[i]->position, TreeHandler_ref->treeNodeRoot);
+							ref_tn->bodies.Add(BodyHandler_ref->myGravBodies[i]);
+
+							TreeHandler_ref->partitionTree(ref_tn);
+						}
+						else {
+							PlanetOutOfBounds = true;
+						}
+					}
+
+				}
+
+
 			}
+
+
 			if (ghostSim_ref) {
 				for (int i = 0; i < ghostSim_ref->myGravBodies.Num(); i++)
 				{
@@ -184,17 +213,18 @@ void ASimulationManager::Tick(float DeltaTime)
 					}
 				}
 			}
-			
 			bodiesInSimulation = BodyHandler_ref->myGravBodies.Num();
+			
+			if (PlanetOutOfBounds) {
+				TreeHandler_ref->RecalculatePartitioning();
+			}
 
+			//step 1: Gravitational calculations using fixed time updates
 
 			//dt influenced by simulation time scale 
 			double updatedDT = fixedFrameTime * timeMultiplier * 0.027f; //0.027 makes the time as 10 days/s		
-
 			int iterations = int(elapsedFrameTime / fixedFrameTime);
-
 			simulationElapsedTime += updatedDT * iterations;
-
 			for (int j = 0; j < iterations; j++) {
 
 				//check whether to move bodies on this it too
@@ -203,7 +233,7 @@ void ASimulationManager::Tick(float DeltaTime)
 					last = true;
 				}
 
-				//step 1: Gravitational calculations using desired method
+				
 				if (!useTreeCodes) {
 					BodyHandler_ref->calculateAllVelocityChanges(updatedDT);
 					
@@ -368,23 +398,24 @@ void ASimulationManager::spawnPlanetAt(FVector position_, FVector velocity_, dou
 	tr.SetIdentity();
 
 	//create Nbody handler
-	UGravBodyComponent * ref_cp  = Cast<UGravBodyComponent>(AddComponentByClass(UGravBodyComponent::StaticClass(), true, tr, true));
+	newBody->GravComp = Cast<UGravBodyComponent>(newBody->AddComponentByClass(UGravBodyComponent::StaticClass(), true, tr, true));
+	newBody->GravComp->RegisterComponent();
 
 
-	ref_cp->velocity = velocity_;
-	ref_cp->mass = mass_;
-	ref_cp->position = position_;
-	ref_cp->radius = radius_;
-	ref_cp->toBeDestroyed = false;
+	newBody->GravComp->velocity = velocity_;
+	newBody->GravComp->mass = mass_;
+	newBody->GravComp->position = position_;
+	newBody->GravComp->radius = radius_;
+	newBody->GravComp->toBeDestroyed = false;
 	newBody->SetActorLabel(name_);
 
 
-	newBody->GravComp = ref_cp;
-	ref_cp->RegisterComponent();
+	//ewBody->GravComp = ref_cp;
 
 	if (radius_ == 0.0f) {
 		radius_ = cbrt(mass_);
 	}
+
 	//currently more for display purposes
 	newBody->SetActorScale3D(FVector(radius_, radius_, radius_));
 

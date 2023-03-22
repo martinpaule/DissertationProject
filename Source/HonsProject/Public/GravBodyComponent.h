@@ -6,6 +6,8 @@
 #include "Components/ActorComponent.h"
 #include "GravBodyComponent.generated.h"
 
+struct TreeNode;
+
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class HONSPROJECT_API UGravBodyComponent : public UActorComponent
@@ -37,4 +39,6 @@ public:
 
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 		FVector4 myCol;
+
+	TreeNode * leaf_ref;
 };

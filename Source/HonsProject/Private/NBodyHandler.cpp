@@ -83,7 +83,7 @@ void UNBodyHandler::calculateWithTree(double dt, bool calculateError) {
 
 
 
-	treeHandlerRef->RecalculatePartitioning();
+	//treeHandlerRef->RecalculatePartitioning();
 
 
 	treeHandlerRef->gravCalcs = 0;
@@ -155,6 +155,8 @@ void UNBodyHandler::TickComponent(float DeltaTime, ELevelTick TickType, FActorCo
 void UNBodyHandler::moveBodies(bool alsoMoveActor, double updated_dt) {
 
 	for (int i = 0; i < myGravBodies.Num(); i++) {
+		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, "moving");
+
 		myGravBodies[i]->position += updated_dt * myGravBodies[i]->velocity;
 
 		if (alsoMoveActor) {

@@ -80,16 +80,16 @@ void ATestPlanet::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyC
 	//means scale = radius*2/100
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 
-	if (universalDensity) {
-		float scale_ = cbrt(GravComp->mass);
-		this->SetActorScale3D(FVector(scale_, scale_, scale_));
-	}
-
-	if (PropertyChangedEvent.Property->GetName() == "radius") {
-		float scale_ = GravComp->radius * 2.0f / 100.0f;
-		this->SetActorScale3D(FVector(scale_, scale_, scale_));
-		universalDensity = false;
-	}
+	//if (universalDensity) {
+	//	float scale_ = cbrt(GravComp->mass);
+	//	this->SetActorScale3D(FVector(scale_, scale_, scale_));
+	//}
+	//
+	//if (PropertyChangedEvent.Property->GetName() == "radius") {
+	//	float scale_ = GravComp->radius * 2.0f / 100.0f;
+	//	this->SetActorScale3D(FVector(scale_, scale_, scale_));
+	//	universalDensity = false;
+	//}
 
 }
 
