@@ -247,9 +247,6 @@ FVector UTreeHandler::getApproxForce(UGravBodyComponent* body, TreeNode * rootNo
 
 TreeNode * UTreeHandler::getLowestSectorOfPos(FVector position) {
 
-	//TreeNode* ret_ =;
-
-
 	return  searchLowestSectorRecursive(position, treeNodeRoot);
 	
 }

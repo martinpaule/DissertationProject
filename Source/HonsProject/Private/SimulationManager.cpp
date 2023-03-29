@@ -206,7 +206,7 @@ void ASimulationManager::Tick(float DeltaTime)
 
 			bodiesInSimulation = BodyHandler_ref->myGravBodies.Num();
 			
-			if (PlanetOutOfBounds) {
+			if (PlanetOutOfBounds && newTrees) {
 				TreeHandler_ref->RecalculatePartitioning();
 			}
 
@@ -235,7 +235,7 @@ void ASimulationManager::Tick(float DeltaTime)
 					//auto stopDI = std::chrono::high_resolution_clock::now();
 					//float msTakenCALCTC = std::chrono::duration_cast<std::chrono::microseconds>(stopDI - startDI).count();
 
-					BodyHandler_ref->calculateWithTree(updatedDT,doFrameCalc);
+					BodyHandler_ref->calculateWithTree(updatedDT,doFrameCalc, newTrees);
 					if (ghostSim_ref) {
 						ghostSim_ref->calculateAllVelocityChanges(updatedDT);
 						ghostSim_ref->moveBodies(last, updatedDT);

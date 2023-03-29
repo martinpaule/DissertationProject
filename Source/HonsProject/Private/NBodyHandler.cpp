@@ -79,12 +79,12 @@ void UNBodyHandler::calculateAllVelocityChanges(double dt) {
 
 
 //tree code calculations of gravitational dynamics
-void UNBodyHandler::calculateWithTree(double dt, bool calculateError) {
+void UNBodyHandler::calculateWithTree(double dt, bool calculateError, bool newTrees) {
 
 
-
-	//treeHandlerRef->RecalculatePartitioning();
-
+	if (!newTrees) {
+		treeHandlerRef->RecalculatePartitioning();
+	}
 
 	treeHandlerRef->gravCalcs = 0;
 

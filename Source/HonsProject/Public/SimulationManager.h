@@ -138,7 +138,7 @@ public:
 		bool doFrameCalc = false;
 
 
-	bool newTrees = true;
+	bool newTrees = false;
 
 
 

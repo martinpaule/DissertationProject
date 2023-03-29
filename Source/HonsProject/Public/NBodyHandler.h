@@ -46,7 +46,7 @@ public:
 	//direct integration of gravitational calculations
 	void calculateAllVelocityChanges(double dt);
 	//tree codes calculaton
-	void calculateWithTree(double dt, bool calculateError = false);
+	void calculateWithTree(double dt, bool calculateError, bool newTrees);
 
 	
 
