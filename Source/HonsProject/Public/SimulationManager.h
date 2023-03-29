@@ -80,6 +80,7 @@ public:
 	void createSimComponents();
 	void recordFinalPositions();//<- move to accuracy class
 
+	void deletePlanetInHandler(UGravBodyComponent * ref_, bool deleteLeafRef);
 
 	//simulation dependant variables
 	UPROPERTY(Category = "SimulationType", EditAnywhere, BlueprintReadWrite)
@@ -137,6 +138,7 @@ public:
 		bool doFrameCalc = false;
 
 
+	bool newTrees = true;
 
 
 

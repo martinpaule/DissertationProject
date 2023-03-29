@@ -31,7 +31,6 @@ void UTreeHandler::TickComponent(float DeltaTime, ELevelTick TickType, FActorCom
 
 
 
-
 void UTreeHandler::RecalculatePartitioning() {
 	
 	//reset root
@@ -128,18 +127,20 @@ void UTreeHandler::DisplaySectors(TreeNode* rootNode) {
 
 void UTreeHandler::partitionTree(TreeNode* rootNode)
 {
-	//exit if there is 1 or 0 children
+	//exitx if there is 1 or 0 children
 	if (rootNode->bodies.Num() == 1) {
 		rootNode->bodies[0]->leaf_ref = rootNode;
 		return;
 	}
-	//exit if there is 1 or 0 children
 	if (rootNode->bodies.Num() == 0) {
 		return;
 	}
 
 
 	rootNode->isLeaf = false;
+
+	//clear previous partitions
+	rootNode->branch_nodes.Empty();
 
 	//setup 8 children nodes
 	for (int i = 0; i < 8; i++) {
@@ -244,14 +245,23 @@ FVector UTreeHandler::getApproxForce(UGravBodyComponent* body, TreeNode * rootNo
 	return combinedForces;
 }
 
-TreeNode * UTreeHandler::getLowestSectorInc(FVector position, TreeNode * rootNode) {
+TreeNode * UTreeHandler::getLowestSectorOfPos(FVector position) {
 
-	if (rootNode->branch_nodes.Num() == 0) {
-		return rootNode;
+	//TreeNode* ret_ =;
+
+
+	return  searchLowestSectorRecursive(position, treeNodeRoot);
+	
+}
+
+TreeNode* UTreeHandler::searchLowestSectorRecursive(FVector position, TreeNode* nowTInree) {
+
+	if (nowTInree->branch_nodes.Num() == 0) {
+		return nowTInree;
 	}
 	for (int j = 0; j < 8; j++) {
-		if (rootNode->branch_nodes[j]->isInExtent(position)) {
-			getLowestSectorInc(position, rootNode->branch_nodes[j]);
+		if (nowTInree->branch_nodes[j]->isInExtent(position)) {
+			return searchLowestSectorRecursive(position, nowTInree->branch_nodes[j]);
 		}
 	}
 	return NULL;

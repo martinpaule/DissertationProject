@@ -7,10 +7,11 @@
 #include "GravBodyComponent.h"
 #include "TreeHandler.generated.h"
 
+//struct TreeNode;
 struct TreeNode {
 public:
-	TreeNode * root_node = nullptr;
-	TArray<TreeNode *> branch_nodes;
+	TreeNode* root_node = nullptr;
+	TArray<TreeNode*> branch_nodes;
 	TArray<UGravBodyComponent*> bodies;
 	bool isLeaf = true;
 
@@ -22,7 +23,7 @@ public:
 	FColor color = FColor::Green;
 
 	float Node_CombinedMass = 0.0f;
-	FVector Node_CentreOMass = FVector(0,0,0);
+	FVector Node_CentreOMass = FVector(0, 0, 0);
 
 
 	//helper function to check whether body us in the extent of a given tree node
@@ -33,7 +34,6 @@ public:
 		return false;
 	}
 };
-
 
 UCLASS()
 class HONSPROJECT_API UTreeHandler : public UActorComponent
@@ -48,6 +48,8 @@ public:
 	TArray<UGravBodyComponent*> * bodyHandlerBodies;
 	TreeNode * treeNodeRoot;
 
+
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -61,7 +63,9 @@ public:
 	void DisplaySectors(TreeNode* rootNode);
 	void partitionTree(TreeNode* rootNode);
 
-	TreeNode* getLowestSectorInc(FVector position, TreeNode* rootNode);
+	TreeNode* getLowestSectorOfPos(FVector position);
+	TreeNode* searchLowestSectorRecursive (FVector position, TreeNode * nowTInree);
+	
 	void mergeEmptiesAboveMe(TreeNode* rootNode);
 
 	//recursive function to get force acting on a given 1 body
