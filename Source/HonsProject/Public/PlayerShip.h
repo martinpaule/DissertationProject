@@ -7,7 +7,8 @@
 
 
 #include "CameraHandlingComponent.h"
-#include "Camera/CameraComponent.h"
+#include "PlayerMovement.h"
+
 #include "PlayerShip.generated.h"
 
 
@@ -29,37 +30,26 @@ public:
 		USceneComponent* SceneComponent;
 	UPROPERTY(Category = "BasicComponents", VisibleAnywhere, BlueprintReadWrite)
 		UStaticMeshComponent* StaticMeshComponent;
-	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-		UCameraComponent* OurCamera;
-	UPROPERTY(Category = "BasicComponents", VisibleAnywhere, BlueprintReadWrite)
-		USceneComponent* camChaserComp;
 
 	UPROPERTY(Category = "BasicComponents", VisibleAnywhere, BlueprintReadWrite)
 		UCameraHandlingComponent* camHandleComp;
+
+	UPROPERTY(Category = "BasicComponents", VisibleAnywhere, BlueprintReadWrite)
+		UPlayerMovement *playerMovementComponent;
 
 
 	UNiagaraSystem* shipTrail1;
 	UNiagaraSystem* WarpDrive;
 	UNiagaraComponent* WarpDriveComp;
+
+	//necessary components
 	UInputComponent* inputCompRef;
-
-
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 
-
-	float shipMoveSpeed = 800.0f;
-	float shipRotateSpeed = 40.0f;
-	
-	float warpStrength = 0.0f;
-	bool warping = false;
-	float warpTimeLeft = 3.0f;
-	
-	bool slowingWarp = false;
-	float partLife = 0;
 
 
 
@@ -69,11 +59,10 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+
+	//void rotate
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-	
-	//void rotate
-
 
 	void MoveShipForward(float AxisValue);
 	void MoveShipRight(float AxisValue);
@@ -82,9 +71,6 @@ public:
 	void RotateShipRight(float AxisValue);
 
 	void ChargeWarpSpeed(float AxisValue);
-
-
-	void RMBrot(float DeltaTime);
 
 	 
 };

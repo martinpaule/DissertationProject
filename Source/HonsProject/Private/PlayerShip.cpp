@@ -22,17 +22,13 @@ APlayerShip::APlayerShip()
 	FVector defaultCamOffset = FVector(-1250.0f, 0.0f, 500.0f).GetSafeNormal();
 	float camDistanceFromRoot = 1000.0f;
 
-	camChaserComp = CreateDefaultSubobject<USceneComponent>(TEXT("camChaserComponent"));
-	camChaserComp->SetupAttachment(SceneComponent);
-	camChaserComp->SetRelativeLocation(defaultCamOffset * camDistanceFromRoot);
-	camChaserComp->SetRelativeRotation(FRotator(-20.0f, 0.0f, 0.0f));
 
 
 
 	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshCompopnent"));
 	StaticMeshComponent->SetupAttachment(SceneComponent);
 
-	auto MeshAsset = ConstructorHelpers::FObjectFinder<UStaticMesh>(TEXT("StaticMesh'/Game/MyHonsContent/PlayerShip/scene.scene'"));
+	auto MeshAsset = ConstructorHelpers::FObjectFinder<UStaticMesh>(TEXT("StaticMesh'/Game/ImportedContent/PlayerShip/scene.scene'"));
 	UStaticMesh* tempM = MeshAsset.Object;
 	StaticMeshComponent->SetStaticMesh(tempM);
 
@@ -41,21 +37,12 @@ APlayerShip::APlayerShip()
 	//camRef
 	AutoPossessPlayer = EAutoReceiveInput::Player0;
 
-
-
-	OurCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("OurCamera"));
-	// Attach our camera and visible object to our root component. Offset and rotate the camera.
-	OurCamera->SetupAttachment(RootComponent);
-	OurCamera->SetRelativeLocation(defaultCamOffset * camDistanceFromRoot);
-	OurCamera->SetRelativeRotation(FRotator(-20.0f, 0.0f, 0.0f));
-
-
 	 
 
-	auto particleSys = ConstructorHelpers::FObjectFinder<UNiagaraSystem>(TEXT("NiagaraSystem'/Game/MyHonsContent/PlanetRelated/P_Trail.p_Trail'"));
+	auto particleSys = ConstructorHelpers::FObjectFinder<UNiagaraSystem>(TEXT("NiagaraSystem'/Game/MyContent/Graphics/PlanetRelated/p_Trail.p_Trail'"));
 	shipTrail1 = particleSys.Object;
 
-	auto particleSysWarp = ConstructorHelpers::FObjectFinder<UNiagaraSystem>(TEXT("NiagaraSystem'/Game/MyHonsContent/PlayerShip/HyperSpaceFX.HyperSpaceFX'"));
+	auto particleSysWarp = ConstructorHelpers::FObjectFinder<UNiagaraSystem>(TEXT("NiagaraSystem'/Game/MyContent/Graphics/PlanetRelated/HyperSpaceFX.HyperSpaceFX'"));
 	WarpDrive = particleSysWarp.Object;
 
 
@@ -86,11 +73,17 @@ void APlayerShip::BeginPlay()
 
 	FTransform tr;
 	tr.SetIdentity();
-
+	
 	//create Nbody handler
 	camHandleComp = Cast<UCameraHandlingComponent>(this->AddComponentByClass(UCameraHandlingComponent::StaticClass(), false, tr, true));
 	camHandleComp->RegisterComponent();
 	camHandleComp->shipRef = this;
+	camHandleComp->initF();
+
+	//create Nbody handler
+	playerMovementComponent = Cast<UPlayerMovement>(this->AddComponentByClass(UPlayerMovement::StaticClass(), false, tr, true));
+	playerMovementComponent->RegisterComponent();
+	//playerMovementComponent->shipRef = this;
 }
 
 // Called every frame
@@ -100,40 +93,15 @@ void APlayerShip::Tick(float DeltaTime)
 
 	Super::Tick(DeltaTime);
 
+	playerMovementComponent->handleMovement(DeltaTime);
 
-
-	GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, std::to_string(warpStrength).c_str());
-
-	if (warping) {
-		warpTimeLeft -= DeltaTime;
-
-
-		AddActorWorldOffset(GetActorForwardVector() * shipMoveSpeed * GetWorld()->DeltaTimeSeconds * int(warpStrength)*3);
-
-
-
-		if (warpTimeLeft < 0.0f) {
-			warping = false;
-			warpStrength = 0;
-
-
-			partLife = 1.0f;
-			slowingWarp = true;
-		}
+	if (WarpDriveComp != NULL && !playerMovementComponent->warping) {
+		WarpDriveComp->DestroyComponent();
+		WarpDriveComp = NULL;
 	}
 
-	if (slowingWarp) {
-		partLife -= DeltaTime;
 
-		if (partLife < 0.0f) {
-			slowingWarp = false;
-			WarpDriveComp->DestroyComponent();
-			WarpDriveComp = NULL;
-		}
-
-	}
-
-	GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Blue, std::to_string(inputCompRef->GetAxisValue("mouseWheelMV")).c_str());
+	//GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Blue, std::to_string(inputCompRef->GetAxisValue("mouseWheelMV")).c_str());
 	
 	//inputCompRef->execGetControllerMouseDelta()
 
@@ -152,13 +120,13 @@ void APlayerShip::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 		
 
 
-		// Bind an action to it
-		PlayerInputComponent->BindAxis
-		(
-			"RMBdown", // The input identifier (specified in DefaultInput.ini)
-			this, // The object instance that is going to react to the input
-			&APlayerShip::RMBrot // The function that will fire when input is received
-		);
+		//// Bind an action to it
+		//PlayerInputComponent->BindAxis
+		//(
+		//	"RMBdown", // The input identifier (specified in DefaultInput.ini)
+		//	this, // The object instance that is going to react to the input
+		//	&APlayerShip::RMBrot // The function that will fire when input is received
+		//);
 
 		// Bind an action to it
 		PlayerInputComponent->BindAxis
@@ -205,107 +173,45 @@ void APlayerShip::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	
 }
 
-
-
 void APlayerShip::MoveShipForward(float AxisValue) {
 
-	if (!warping) {
+	playerMovementComponent->MoveForward(AxisValue);
+	camHandleComp->MoveShipForward_CamHandle(AxisValue);
+
+	//launch drive
+	if (playerMovementComponent->warpStrength > 1.0f && AxisValue) {
+
+		playerMovementComponent->warping = true;
+		playerMovementComponent->warpTimeLeft = 3.0f;
 
 
-		if(AxisValue){
-			AddActorWorldOffset(GetActorForwardVector() * shipMoveSpeed * GetWorld()->DeltaTimeSeconds * AxisValue);
-		}
+		WarpDriveComp = UNiagaraFunctionLibrary::SpawnSystemAttached(WarpDrive, RootComponent, NAME_None, FVector(7777.0f, 0.0f, 0.0f), FRotator(0.f), EAttachLocation::Type::KeepRelativeOffset, true);
 
-		camHandleComp->MoveShipForward_CamHandle(AxisValue);
-
-
-		//launch drive
-		if (warpStrength > 1.0f && AxisValue) {
-
-			warping = true;
-			warpTimeLeft = 3.0f;
-
-			
-			WarpDriveComp = UNiagaraFunctionLibrary::SpawnSystemAttached(WarpDrive, RootComponent, NAME_None, FVector(7777.0f, 0.0f, 0.0f), FRotator(0.f), EAttachLocation::Type::KeepRelativeOffset, true);
-
-			WarpDriveComp->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
-			slowingWarp = false;
-
-		}
+		WarpDriveComp->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+		playerMovementComponent->slowingWarp = false;
 
 	}
 
 }
-
 void APlayerShip::MoveShipRight(float AxisValue) {
 
-
-	if (AxisValue) {
-		AddActorLocalRotation(FRotator(0, AxisValue * shipRotateSpeed * GetWorld()->DeltaTimeSeconds, 0));
-
-	}
+	playerMovementComponent->MoveRight(AxisValue);
 	camHandleComp->MoveShipRight_CamHandle(AxisValue);
 
 }
 
-
 void APlayerShip::RotateShipUp(float AxisValue) {
-	
-
-
-
-	
-	if (AxisValue) {
-		AddActorLocalRotation(FRotator(-AxisValue * shipRotateSpeed * GetWorld()->DeltaTimeSeconds, 0, 0));
-	}
+	playerMovementComponent->RotateUp(AxisValue);
 	camHandleComp->RotateShipUp_CamHandle(AxisValue);
-
-	
-
 }
-
-
 
 void APlayerShip::RotateShipRight(float AxisValue) {
 
-	
-
-
-	
-	AddActorLocalRotation(FRotator(0, 0, AxisValue * shipRotateSpeed * GetWorld()->DeltaTimeSeconds));
-
-
-
+	playerMovementComponent->RotateRight(AxisValue);
 }
 
 void APlayerShip::ChargeWarpSpeed(float AxisValue) {
 
-
-	if (warping) {
-		return;
-	}
-
-	if (AxisValue) {
-		warpStrength += GetWorld()->DeltaTimeSeconds;
-	}
-	else {
-
-		
-
-		if (warpStrength > 0.0f) {
-			warpStrength -= GetWorld()->DeltaTimeSeconds;
-			if (warpStrength < 0.0f) {
-				warpStrength = 0.0f;
-			}
-		}
-	}
-
+	playerMovementComponent->ChargeWarp(AxisValue);
 }
 
-
-
-void APlayerShip::RMBrot(float AxisValue) {
-
-
-
-}

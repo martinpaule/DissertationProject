@@ -10,7 +10,7 @@ ATestPlanet::ATestPlanet()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
-	ConstructorHelpers::FObjectFinder<UStaticMesh>MeshAsset(TEXT("StaticMesh'/Game/MyHonsContent/PlanetRelated/PlanetMesh.PlanetMesh'"));
+	ConstructorHelpers::FObjectFinder<UStaticMesh>MeshAsset(TEXT("StaticMesh'/Game/MyContent/Graphics/PlanetRelated/PlanetMesh.PlanetMesh'"));
 	UStaticMesh* Asset = MeshAsset.Object;
 
 

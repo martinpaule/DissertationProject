@@ -18,16 +18,33 @@ UCameraHandlingComponent::UCameraHandlingComponent()
 	nowCamOffset = defaultCamOffset;
 	camDistanceFromRoot = 1500.0f;
 	speedCamOffset = FVector(0.0f, 0.0f, 0.0f);
+
+
+	// Attach our camera and visible object to our root component. Offset and rotate the camera.
+	
+
+
+	
+
 }
 
+void UCameraHandlingComponent::initF() {
+	camChaserComp = CreateDefaultSubobject<USceneComponent>(TEXT("camChaserComponent"));
+	camChaserComp->SetupAttachment(shipRef->SceneComponent);
+	camChaserComp->SetRelativeLocation(defaultCamOffset * camDistanceFromRoot);
+	camChaserComp->SetRelativeRotation(FRotator(-20.0f, 0.0f, 0.0f));
+
+	OurCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("OurCamera"));
+	OurCamera->SetupAttachment(shipRef->SceneComponent);
+	OurCamera->SetRelativeLocation(defaultCamOffset * camDistanceFromRoot);
+	OurCamera->SetRelativeRotation(FRotator(-20.0f, 0.0f, 0.0f));
+}
 
 // Called when the game starts
 void UCameraHandlingComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// ...
-	
 }
 
 
@@ -45,7 +62,7 @@ void UCameraHandlingComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 
 void UCameraHandlingComponent::handleCameraLerp(float DeltaTime) {
 
-	FVector dirV_ = (shipRef->SceneComponent->GetComponentLocation() - shipRef->OurCamera->GetComponentLocation()).GetSafeNormal();
+	FVector dirV_ = (shipRef->SceneComponent->GetComponentLocation() - OurCamera->GetComponentLocation()).GetSafeNormal();
 	FRotator finRot;
 
 
@@ -100,7 +117,7 @@ void UCameraHandlingComponent::handleCameraLerp(float DeltaTime) {
 		finRot = dirV_.Rotation();
 
 		//OurCamera->SetRelativeLocation(nowCamOffset * camDistanceFromRoot + speedCamOffset);
-		shipRef->OurCamera->SetRelativeRotation((-nowCamOffset).Rotation());
+		OurCamera->SetRelativeRotation((-nowCamOffset).Rotation());
 
 	}
 	else {
@@ -110,12 +127,12 @@ void UCameraHandlingComponent::handleCameraLerp(float DeltaTime) {
 		if (shipRef->inputCompRef->GetAxisValue("MoveForward")) {
 
 			if (!movingBacktoDefaultCamPos) {
-				if ((nowCamOffset - defaultCamOffset).Length() > 2.0f || !shipRef->OurCamera->GetComponentRotation().Equals(shipRef->camChaserComp->GetComponentRotation(), 2.0f)) {
+				if ((nowCamOffset - defaultCamOffset).Length() > 2.0f || !OurCamera->GetComponentRotation().Equals(camChaserComp->GetComponentRotation(), 2.0f)) {
 					movingBacktoDefaultCamPos = true;
 					lerpVal = 0.0f;
 
 					lerpPos_ = nowCamOffset;
-					lerpRot = shipRef->OurCamera->GetComponentRotation();
+					lerpRot = OurCamera->GetComponentRotation();
 				}
 
 
@@ -142,12 +159,12 @@ void UCameraHandlingComponent::handleCameraLerp(float DeltaTime) {
 				//OurCamera->SetRelativeLocation(nowCamOffset * camDistanceFromRoot + speedCamOffset);
 
 				FRotator myRot_;
-				FRotator rotDesired = shipRef->camChaserComp->GetComponentRotation();
+				FRotator rotDesired = camChaserComp->GetComponentRotation();
 				myRot_.Yaw = FMath::Lerp(lerpRot.Yaw, rotDesired.Yaw, lerpVal);
 				myRot_.Pitch = FMath::Lerp(lerpRot.Pitch, rotDesired.Pitch, lerpVal);
 				myRot_.Roll = FMath::Lerp(lerpRot.Roll, rotDesired.Roll, lerpVal);
 
-				shipRef->OurCamera->SetWorldRotation(myRot_);
+				OurCamera->SetWorldRotation(myRot_);
 
 
 
@@ -159,7 +176,7 @@ void UCameraHandlingComponent::handleCameraLerp(float DeltaTime) {
 		}
 	}
 
-	shipRef->OurCamera->SetRelativeLocation(nowCamOffset * camDistanceFromRoot + speedCamOffset);
+	OurCamera->SetRelativeLocation(nowCamOffset * camDistanceFromRoot + speedCamOffset);
 
 
 	//GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Purple, nowCamOffset.ToString());

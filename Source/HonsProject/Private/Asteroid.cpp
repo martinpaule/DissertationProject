@@ -50,7 +50,7 @@ AAsteroid::AAsteroid()
 	//	}
 
 
-	auto MeshAssetD = ConstructorHelpers::FObjectFinder<UStaticMesh>(TEXT("StaticMesh'/Game/GreenwoodFantasyVillage/Meshes/SM_RockD.SM_RockD'"));
+	auto MeshAssetD = ConstructorHelpers::FObjectFinder<UStaticMesh>(TEXT("StaticMesh'/Game/ImportedContent/GreenwoodFantasyVillage/Meshes/SM_RockD.SM_RockD'"));
 	UStaticMesh* tempM = MeshAssetD.Object;
 	StaticMeshComponent->SetStaticMesh(tempM);
 
@@ -79,9 +79,9 @@ void AAsteroid::BeginPlay()
 	FTransform tr;
 	tr.SetIdentity();
 	//create Nbody handler
-	GravComp = Cast<UGravBodyComponent>(this->AddComponentByClass(UGravBodyComponent::StaticClass(), false, tr, true));
-	GravComp->RegisterComponent();
-	myMat->SetVectorParameterValue(TEXT("OreColour"), GravComp->myCol);
+	//GravComp = Cast<UGravBodyComponent>(this->AddComponentByClass(UGravBodyComponent::StaticClass(), false, tr, true));
+	//GravComp->RegisterComponent();
+	//myMat->SetVectorParameterValue(TEXT("OreColour"), GravComp->myCol);
 
 	
 	

@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Camera/CameraComponent.h"
+
 #include "CameraHandlingComponent.generated.h"
 
 
@@ -18,6 +20,10 @@ public:
 	// Sets default values for this component's properties
 	UCameraHandlingComponent();
 
+	UPROPERTY(Category = "BasicComponents", VisibleAnywhere, BlueprintReadWrite)
+		USceneComponent* camChaserComp;
+	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
+		UCameraComponent* OurCamera;
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
@@ -63,4 +69,5 @@ public:
 
 	FVector speedCamOffset;
 
+	void initF();
 };
