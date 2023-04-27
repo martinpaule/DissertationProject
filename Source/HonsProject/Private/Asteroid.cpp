@@ -52,8 +52,9 @@ AAsteroid::AAsteroid()
 
 	auto MeshAssetD = ConstructorHelpers::FObjectFinder<UStaticMesh>(TEXT("StaticMesh'/Game/ImportedContent/GreenwoodFantasyVillage/Meshes/SM_RockD.SM_RockD'"));
 	UStaticMesh* tempM = MeshAssetD.Object;
+	//tempM.scale
 	StaticMeshComponent->SetStaticMesh(tempM);
-
+	StaticMeshComponent->SetRelativeScale3D(FVector(0.3f,0.3f,0.3f));
 
 
 
@@ -76,8 +77,9 @@ void AAsteroid::BeginPlay()
 {
 	Super::BeginPlay();
 
-	FTransform tr;
-	tr.SetIdentity();
+	//FTransform tr;
+	//tr.SetIdentity();
+
 	//create Nbody handler
 	//GravComp = Cast<UGravBodyComponent>(this->AddComponentByClass(UGravBodyComponent::StaticClass(), false, tr, true));
 	//GravComp->RegisterComponent();

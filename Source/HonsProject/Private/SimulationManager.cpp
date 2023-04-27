@@ -393,15 +393,13 @@ void ASimulationManager::spawnPlanetAt(FVector position_, FVector velocity_, dou
 	newBody->GravComp->RegisterComponent();
 
 
-	newBody->GravComp->velocity = velocity_;
-	newBody->GravComp->mass = mass_;
-	newBody->GravComp->position = position_;
-	newBody->GravComp->radius = radius_;
 	newBody->GravComp->toBeDestroyed = false;
+	newBody->GravComp->position = position_;
+	newBody->GravComp->velocity = velocity_;
+	newBody->GravComp->radius = radius_;
+	newBody->GravComp->mass = mass_;
 	newBody->SetActorLabel(name_);
 
-
-	//ewBody->GravComp = ref_cp;
 
 	if (radius_ == 0.0f) {
 		radius_ = cbrt(mass_);

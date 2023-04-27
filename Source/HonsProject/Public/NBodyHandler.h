@@ -31,7 +31,7 @@ public:
 
 
 	//array holding a reference to all bodies
-	UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite)
+	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 	TArray<UGravBodyComponent*> myGravBodies;
 
 
@@ -66,8 +66,12 @@ public:
 	bool useTreeCodes_ = false;
 
 	UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite)
-		float VelCalcAverageError = 0.0f;
+	float VelCalcAverageError = 0.0f;
 	
 
 	int handlerID = 0;
+
+	UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite, EditAnywhere)
+		float fixedFrameTime = 0.1f;
+	float elapsedFrameTime = 0.0f;
 };

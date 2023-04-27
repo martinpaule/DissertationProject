@@ -29,7 +29,8 @@ public:
 	//simulation variables
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 		FVector velocity = FVector(0.0f, 0.0f, 0.0f); //km/s
-	FVector position = FVector(0.0f, 0.0f, 0.0f); //km/s
+	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
+		FVector position = FVector(0.0f, 0.0f, 0.0f); 
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 		double mass = 1; //kg
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)

@@ -59,6 +59,7 @@ public:
 		void spawnSolarSystem(FVector SunPosition_);
 	void spawnTestPlanets();
 	void graduallySpawnBodies(int spawnsPerFrame = 1);
+	
 	UFUNCTION(BlueprintCallable, Category = "PlanetSpawn")
 		void startSpawning(int amount, FVector centre, float extent, float MaxVelocity_, double MaxMass_) {
 		spawningBodies = true;
@@ -102,6 +103,8 @@ public:
 		float SpawnInitialMaxSpeed = 10;
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 		float SpawnInitialMaxMass = 2;
+
+
 	UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite, EditAnywhere)
 		float fixedFrameTime = 0.1f;
 	float elapsedFrameTime = 0.0f;
