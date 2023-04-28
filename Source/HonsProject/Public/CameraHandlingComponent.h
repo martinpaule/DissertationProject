@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+//#include <GameFramework/>
+
 #include "Camera/CameraComponent.h"
 
 #include "CameraHandlingComponent.generated.h"
@@ -32,42 +34,5 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	APlayerShip * shipRef;
-
-	void handleCameraLerp(float DeltaTime);
-
-	bool oneHoldFramePassed = false;
-
-
-	UPROPERTY(Category = "CameraTings", EditAnywhere, BlueprintReadWrite)
-	float camDistanceFromRoot = 1000.0f;
-	//float camDistanceFromRoot = 1000.0f;
-
-	UPROPERTY(Category = "TESTING", EditAnywhere, BlueprintReadWrite)
-		FVector defaultCamOffset;
-	UPROPERTY(Category = "CameraTings", EditAnywhere, BlueprintReadWrite)
-		FVector nowCamOffset;
-
-
-	bool movingBacktoDefaultCamPos = false;
-	FVector lerpPos_;
-	FRotator lerpRot;
-	float lerpVal = 0.0f;
-
-
 	
-	UPROPERTY(Category = "TESTING", EditAnywhere, BlueprintReadWrite)
-	float camMoveSpeed = 250.0f;
-	UPROPERTY(Category = "TESTING", EditAnywhere, BlueprintReadWrite)
-	float CamOffsetFromMiddle = 400.0f;
-
-
-	void MoveShipForward_CamHandle(float AxisValue);
-	void MoveShipRight_CamHandle(float AxisValue);
-
-	void RotateShipUp_CamHandle(float AxisValue);
-
-	FVector speedCamOffset;
-
-	void initF();
 };

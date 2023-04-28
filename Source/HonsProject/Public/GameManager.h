@@ -23,18 +23,24 @@ public:
 		UTreeHandler* TreeHandler_ref;
 
 	UPROPERTY(Category = "AsteroidFieldSettings", EditAnywhere, BlueprintReadWrite)
-	float simulationRadius = 300.0f;
+		float simulationRadius = 5;
 	UPROPERTY(Category = "AsteroidFieldSettings", EditAnywhere, BlueprintReadWrite)
-	float SpawnMaxSpeed = 80.0f;
+		float SpawnMaxSpeed = 40;
 	UPROPERTY(Category = "AsteroidFieldSettings", EditAnywhere, BlueprintReadWrite)
-	float SpawnMaxMass = 100.0f;
+		float SpawnMaxMass = 60;
+	UPROPERTY(Category = "AsteroidFieldSettings", EditAnywhere, BlueprintReadWrite)
+		int SimulationDesiredBodies = 400;
+	
 	int gradualSpawnerIndex = 0;
+	int OverallSpawnerIndex = 0;
 	bool spawningBodies = false;
 	int bodiesToSpawn;
-	bool useTreeCodes = false;
-	APawn* playerRef;
-	float timeMultiplier = 1.0f;
+	AActor* playerRef;
 
+	float timeMultiplier = 1.0f;
+	bool useTreeCodes = false;
+
+	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -46,7 +52,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "PlanetSpawn")
 		void spawnAsteroidAt(FVector position_, FVector velocity_, double mass_, FVector4 colour_);
 
+	void spawnAsteroidToGame();
+
 	void graduallySpawnBodies(int spawnsPerFrame = 1);
+
+	void deleteDestroyedBodies();
+	void inGameAsteroidHandle();
 
 	UFUNCTION(BlueprintCallable, Category = "PlanetSpawn")
 	void startSpawning(int amount, float extent, float MaxVelocity_, double MaxMass_) {

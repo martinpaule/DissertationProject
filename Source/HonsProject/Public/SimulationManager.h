@@ -22,7 +22,8 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
+private:
+	bool PlanetOutOfBounds = false;
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -59,6 +60,7 @@ public:
 		void spawnSolarSystem(FVector SunPosition_);
 	void spawnTestPlanets();
 	void graduallySpawnBodies(int spawnsPerFrame = 1);
+	void deleteDestroyedBodies();
 	
 	UFUNCTION(BlueprintCallable, Category = "PlanetSpawn")
 		void startSpawning(int amount, FVector centre, float extent, float MaxVelocity_, double MaxMass_) {

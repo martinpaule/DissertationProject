@@ -77,8 +77,8 @@ void APlayerShip::BeginPlay()
 	//create Nbody handler
 	camHandleComp = Cast<UCameraHandlingComponent>(this->AddComponentByClass(UCameraHandlingComponent::StaticClass(), false, tr, true));
 	camHandleComp->RegisterComponent();
-	camHandleComp->shipRef = this;
-	camHandleComp->initF();
+	//camHandleComp->shipRef = this;
+	//camHandleComp->initF();
 
 	//create Nbody handler
 	playerMovementComponent = Cast<UPlayerMovement>(this->AddComponentByClass(UPlayerMovement::StaticClass(), false, tr, true));
@@ -176,7 +176,7 @@ void APlayerShip::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 void APlayerShip::MoveShipForward(float AxisValue) {
 
 	playerMovementComponent->MoveForward(AxisValue);
-	camHandleComp->MoveShipForward_CamHandle(AxisValue);
+	//camHandleComp->MoveShipForward_CamHandle(AxisValue);
 
 	//launch drive
 	if (playerMovementComponent->warpStrength > 1.0f && AxisValue) {
@@ -196,13 +196,13 @@ void APlayerShip::MoveShipForward(float AxisValue) {
 void APlayerShip::MoveShipRight(float AxisValue) {
 
 	playerMovementComponent->MoveRight(AxisValue);
-	camHandleComp->MoveShipRight_CamHandle(AxisValue);
+	//camHandleComp->MoveShipRight_CamHandle(AxisValue);
 
 }
 
 void APlayerShip::RotateShipUp(float AxisValue) {
 	playerMovementComponent->RotateUp(AxisValue);
-	camHandleComp->RotateShipUp_CamHandle(AxisValue);
+	//camHandleComp->RotateShipUp_CamHandle(AxisValue);
 }
 
 void APlayerShip::RotateShipRight(float AxisValue) {

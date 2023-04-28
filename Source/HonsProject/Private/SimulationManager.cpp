@@ -134,6 +134,63 @@ void ASimulationManager::BeginPlay()
 
 }
 
+void ASimulationManager::deleteDestroyedBodies() {
+	for (int i = 0; i < BodyHandler_ref->myGravBodies.Num(); i++)
+	{
+
+		UGravBodyComponent* CompIT = BodyHandler_ref->myGravBodies[i];
+
+		if (CompIT->toBeDestroyed) {
+
+			deletePlanetInHandler(CompIT, useTreeCodes);
+			BodyHandler_ref->myGravBodies.RemoveAt(i);
+			i--;
+		}
+
+		//check if a planet is within is own leaf and fix tree if its not
+		if (useTreeCodes && newTrees) {
+
+			//if the planet is still in its last recorded leaf position
+			if (CompIT->leaf_ref->isInExtent(CompIT->position)) {
+				CompIT->leaf_ref->Node_CentreOMass = CompIT->position;
+			}
+			else {//planet moved from its leaf pos but still in the tree
+				if (TreeHandler_ref->treeNodeRoot->isInExtent(CompIT->position)) {
+
+					CompIT->leaf_ref->bodies.Remove(CompIT);
+					TreeHandler_ref->mergeEmptiesAboveMe(CompIT->leaf_ref);
+
+
+					TreeNode* ref_tn = TreeHandler_ref->getLowestSectorOfPos(CompIT->position);
+					ref_tn->bodies.Add(CompIT);
+
+					TreeHandler_ref->partitionTree(ref_tn);
+				}
+				else {//planet went out of bounds of the max bounds
+					PlanetOutOfBounds = true;
+				}
+			}
+
+		}
+
+
+	}
+
+	if (ghostSim_ref) {
+		for (int i = 0; i < ghostSim_ref->myGravBodies.Num(); i++)
+		{
+			if (ghostSim_ref->myGravBodies[i]->toBeDestroyed) {
+
+
+				deletePlanetInHandler(ghostSim_ref->myGravBodies[i], false);
+				ghostSim_ref->myGravBodies.RemoveAt(i);
+				i--;
+			}
+		}
+	}
+}
+
+
 // Called every frame
 void ASimulationManager::Tick(float DeltaTime)
 {
@@ -147,62 +204,13 @@ void ASimulationManager::Tick(float DeltaTime)
 
 		if (elapsedFrameTime >= fixedFrameTime) {
 
-			bool PlanetOutOfBounds = false;
+			PlanetOutOfBounds = false;
+			
 			//step 0: destroy overlapping bodies from previous step - must be done before force calculation otherwise the current step will be inaccurate
-			for (int i = 0; i < BodyHandler_ref->myGravBodies.Num(); i++)
-			{
-
-				UGravBodyComponent* CompIT = BodyHandler_ref->myGravBodies[i];
-
-				if (CompIT->toBeDestroyed) {
-
-					deletePlanetInHandler(CompIT,useTreeCodes);
-					BodyHandler_ref->myGravBodies.RemoveAt(i);
-					i--;
-				}
-				
-				//check if a planet is within is own leaf and fix tree if its not
-				if (useTreeCodes && newTrees) {
-
-					//if the planet is still in its last recorded leaf position
-					if (CompIT->leaf_ref->isInExtent(CompIT->position)) {
-						CompIT->leaf_ref->Node_CentreOMass = CompIT->position;
-					}
-					else {//planet moved from its leaf pos but still in the tree
-						if (TreeHandler_ref->treeNodeRoot->isInExtent(CompIT->position)) {
-
-							CompIT->leaf_ref->bodies.Remove(CompIT);
-							TreeHandler_ref->mergeEmptiesAboveMe(CompIT->leaf_ref);
+			deleteDestroyedBodies();
 
 
-							TreeNode* ref_tn = TreeHandler_ref->getLowestSectorOfPos(CompIT->position);
-							ref_tn->bodies.Add(CompIT);
-
-							TreeHandler_ref->partitionTree(ref_tn);
-						}
-						else {//planet went out of bounds of the max bounds
-							PlanetOutOfBounds = true;
-						}
-					}
-
-				}
-
-
-			}
-
-
-			if (ghostSim_ref) {
-				for (int i = 0; i < ghostSim_ref->myGravBodies.Num(); i++)
-				{
-					if (ghostSim_ref->myGravBodies[i]->toBeDestroyed) {
-
-
-						deletePlanetInHandler(ghostSim_ref->myGravBodies[i], false);
-						ghostSim_ref->myGravBodies.RemoveAt(i);
-						i--;
-					}
-				}
-			}
+			
 
 			bodiesInSimulation = BodyHandler_ref->myGravBodies.Num();
 			
