@@ -23,7 +23,7 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 private:
-	bool PlanetOutOfBounds = false;
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -51,11 +51,6 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "PlanetSpawn")
 		void spawnPlanetAt(FVector position_, FVector velocity_, double mass_, FVector4 colour_, FString name_, float radius_, UNBodyHandler * handlerToAddInto);
-
-
-	////spawning
-	//UFUNCTION(BlueprintCallable, Category = "PlanetSpawn")
-	//	void spawnBodyAt(FVector position_, FVector velocity_, double mass_, FVector4 colour_, FString name_ = "GravBody", float radius_ = 0.0f);
 	UFUNCTION(BlueprintCallable, Category = "PlanetSpawn")
 		void spawnSolarSystem(FVector SunPosition_);
 	void spawnTestPlanets();
@@ -87,7 +82,7 @@ public:
 
 	//simulation dependant variables
 	UPROPERTY(Category = "SimulationType", EditAnywhere, BlueprintReadWrite)
-		bool useTreeCodes = true;
+		bool useTreeCodes = false;
 	UPROPERTY(Category = "SimulationType", EditAnywhere, BlueprintReadWrite)
 		bool shouldSpawnSolarSystem = false;
 	UPROPERTY(Category = "SimulationType", EditAnywhere, BlueprintReadWrite)
@@ -143,7 +138,8 @@ public:
 		bool doFrameCalc = false;
 
 
-	bool newTrees = false;
+	bool newTrees = true;
+	bool PlanetOutOfBounds = false;
 
 
 

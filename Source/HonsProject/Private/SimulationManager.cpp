@@ -135,6 +135,7 @@ void ASimulationManager::BeginPlay()
 }
 
 void ASimulationManager::deleteDestroyedBodies() {
+	
 	for (int i = 0; i < BodyHandler_ref->myGravBodies.Num(); i++)
 	{
 
@@ -146,9 +147,8 @@ void ASimulationManager::deleteDestroyedBodies() {
 			BodyHandler_ref->myGravBodies.RemoveAt(i);
 			i--;
 		}
+		else if (useTreeCodes && newTrees) {		//check if a planet is within is own leaf and fix tree if its not
 
-		//check if a planet is within is own leaf and fix tree if its not
-		if (useTreeCodes && newTrees) {
 
 			//if the planet is still in its last recorded leaf position
 			if (CompIT->leaf_ref->isInExtent(CompIT->position)) {
@@ -159,6 +159,16 @@ void ASimulationManager::deleteDestroyedBodies() {
 
 					CompIT->leaf_ref->bodies.Remove(CompIT);
 					TreeHandler_ref->mergeEmptiesAboveMe(CompIT->leaf_ref);
+
+					//reacalculate 
+					CompIT->leaf_ref->Node_CombinedMass = 0.0f;
+					//assign all relevant bodies into this child node, handling their mass and position to calculate their avg pos and comb mass
+					//for (int m = 0; m < CompIT->leaf_ref->bodies.Num(); m++) {
+					//
+					//	CompIT->leaf_ref->Node_CombinedMass += CompIT->leaf_ref->bodies[m]->mass;
+					//	
+					//}
+					//CompIT->leaf_ref->Node_CentreOMass /= CompIT->leaf_ref->Node_CombinedMass;
 
 
 					TreeNode* ref_tn = TreeHandler_ref->getLowestSectorOfPos(CompIT->position);

@@ -253,7 +253,7 @@ TreeNode * UTreeHandler::getLowestSectorOfPos(FVector position) {
 
 TreeNode* UTreeHandler::searchLowestSectorRecursive(FVector position, TreeNode* nowTInree) {
 
-	if (nowTInree->branch_nodes.Num() == 0) {
+	if (nowTInree->isLeaf && nowTInree->isInExtent(position)) {
 		return nowTInree;
 	}
 	for (int j = 0; j < 8; j++) {
@@ -272,9 +272,8 @@ void UTreeHandler::mergeEmptiesAboveMe(TreeNode* rootNode) {
 			rootNode->root_node->branch_nodes.Empty();
 			mergeEmptiesAboveMe(rootNode->root_node);
 		}
-
-		if (rootNode->root_node->branch_nodes[i]->bodies.Num() > 0) {
-			return;
+		else if (rootNode->root_node->branch_nodes[i]->bodies.Num() > 0) {
+			break;
 		}
 	}
 	return;
