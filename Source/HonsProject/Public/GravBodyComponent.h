@@ -41,5 +41,5 @@ public:
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 		FVector4 myCol;
 
-	TreeNode * leaf_ref;
+	TreeNode * leaf_ref = NULL;
 };

@@ -141,6 +141,8 @@ void ASimulationManager::deleteDestroyedBodies() {
 
 		UGravBodyComponent* CompIT = BodyHandler_ref->myGravBodies[i];
 
+		
+
 		if (CompIT->toBeDestroyed) {
 
 			deletePlanetInHandler(CompIT, useTreeCodes);
@@ -149,6 +151,13 @@ void ASimulationManager::deleteDestroyedBodies() {
 		}
 		else if (useTreeCodes && newTrees) {		//check if a planet is within is own leaf and fix tree if its not
 
+
+			//INVESTIGATE IF THISFIXED IT AND SEE IF IT WORKS BETTER
+			if (!CompIT->leaf_ref) {
+				TreeHandler_ref->RecalculatePartitioning();
+				GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "NULL IN LEAFREF from body " + CompIT->GetOwner()->GetActorLabel());
+				return;
+			}
 
 			//if the planet is still in its last recorded leaf position
 			if (CompIT->leaf_ref->isInExtent(CompIT->position)) {
@@ -537,6 +546,10 @@ void ASimulationManager::spawnSolarSystem(FVector SunPosition_) {
 		dir.Normalize();
 		FVector RightVel = UKismetMathLibrary::GetRightVector(dir.Rotation()) * YVel;
 		spawnPlanetAt(bodyTWO_pos + SunPosition_ / 1000.0f, RightVel, massTwo, planetColor, bodyTwoName_, bodyTwoScale,BodyHandler_ref);
+	}
+
+	if (useTreeCodes) {
+		TreeHandler_ref->RecalculatePartitioning();
 	}
 
 }
