@@ -19,6 +19,38 @@ public:
 	// Sets default values for this actor's properties
 	ASimulationManager();
 
+	// ----- UI called functions
+	UFUNCTION(BlueprintCallable, Category = "SimSpeed")
+		void raiseSimulationSpeed();
+	UFUNCTION(BlueprintCallable, Category = "SimSpeed")
+		void lowerSimulationSpeed();
+	UFUNCTION(BlueprintCallable, Category = "SimSpeed")
+		void pauseSimulation();
+	UFUNCTION(BlueprintCallable, Category = "ClearSim")
+		void ClearSimulation();
+
+	// ----- planet spawning functions
+	UFUNCTION(BlueprintCallable, Category = "PlanetSpawn")
+		void spawnPlanetAt(FVector position_, FVector velocity_, double mass_, FVector4 colour_, FString name_, float radius_, UNBodyHandler* handlerToAddInto);
+	UFUNCTION(BlueprintCallable, Category = "PlanetSpawn")
+		void spawnSolarSystem(FVector SunPosition_);
+	UFUNCTION(BlueprintCallable, Category = "PlanetSpawn")
+		void startSpawning(int amount, FVector centre, float extent, float MaxVelocity_, double MaxMass_);
+	void spawnTestPlanets();
+	void graduallySpawnBodies(int spawnsPerFrame = 1);
+	void deleteDestroyedBodies();
+	void deletePlanetInHandler(UGravBodyComponent* ref_, bool deleteLeafRef);
+
+	// ----- testing related functions
+	UFUNCTION(BlueprintCallable, Category = "TESTING")
+		void addGhostSim();
+	UFUNCTION(BlueprintCallable, Category = "TESTING")
+		void removeGhostSim();
+	void createSimComponents();
+	void recordFinalPositions();//<- move to accuracy class
+	void handleAveragePosError();
+
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -29,7 +61,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 
-
+	// ----- Functionality components
 	UPROPERTY(Category = "UI_references", EditAnywhere, BlueprintReadWrite)
 	UNBodyHandler* BodyHandler_ref;
 	UPROPERTY(Category = "UI_references", EditAnywhere, BlueprintReadWrite)
@@ -39,55 +71,28 @@ public:
 	UPROPERTY(Category = "UI_references", EditAnywhere, BlueprintReadWrite)
 	UTreeHandler* TreeHandler_ref;
 
-	//UI called functions
-	UFUNCTION(BlueprintCallable, Category = "SimSpeed")
-		void raiseSimulationSpeed();
-	UFUNCTION(BlueprintCallable, Category = "SimSpeed")
-		void lowerSimulationSpeed();
-	UFUNCTION(BlueprintCallable, Category = "SimSpeed")
-		void pauseSimulation();
-	UFUNCTION(BlueprintCallable, Category = "ClearSim")
-		void ClearSimulation();
-	
-	UFUNCTION(BlueprintCallable, Category = "PlanetSpawn")
-		void spawnPlanetAt(FVector position_, FVector velocity_, double mass_, FVector4 colour_, FString name_, float radius_, UNBodyHandler * handlerToAddInto);
-	UFUNCTION(BlueprintCallable, Category = "PlanetSpawn")
-		void spawnSolarSystem(FVector SunPosition_);
-	void spawnTestPlanets();
-	void graduallySpawnBodies(int spawnsPerFrame = 1);
-	void deleteDestroyedBodies();
-	
-	UFUNCTION(BlueprintCallable, Category = "PlanetSpawn")
-		void startSpawning(int amount, FVector centre, float extent, float MaxVelocity_, double MaxMass_) {
-		spawningBodies = true;
-		bodiesToSpawn = amount;
-		InitialSpawnCentre = centre;
-		SpawnLocationBounds = extent;
-		SpawnInitialMaxSpeed = MaxVelocity_;
-		SpawnInitialMaxMass = MaxMass_;
-		gradualSpawnerIndex = 0;
-	}
-
-
-	UFUNCTION(BlueprintCallable, Category = "TESTING")
-	void addGhostSim();
-
-	UFUNCTION(BlueprintCallable, Category = "TESTING")
-		void removeGhostSim();
-
-	void createSimComponents();
-	void recordFinalPositions();//<- move to accuracy class
-
-	void deletePlanetInHandler(UGravBodyComponent * ref_, bool deleteLeafRef);
-
-	//simulation dependant variables
+	// ----- simulation dependant variables
 	UPROPERTY(Category = "SimulationType", EditAnywhere, BlueprintReadWrite)
-		bool useTreeCodes = false;
+		bool useTreeCodes = false; //<- can move into nbody handler since 
+	UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite, EditAnywhere)
+		float fixedFrameTime = 0.1f;
+		float elapsedFrameTime = 0.0f;
+	UPROPERTY(Category = "Testing", BlueprintReadWrite, EditAnywhere)
+		bool Paused = false;
+	UPROPERTY(Category = "forUI", BlueprintReadWrite)
+		float simulationElapsedTime = 0.0f;
+	UPROPERTY(Category = "forUI", BlueprintReadWrite, EditAnywhere)
+		int bodiesInSimulation = 0;
+	UPROPERTY(Category = "forUI", BlueprintReadWrite, EditAnywhere)
+		float timeMultiplier = 1.0f;
+	double bigG = 39.4784f; //when using SolarMass, AU and Years
+
+
+	// ----- spawning relevant variables
 	UPROPERTY(Category = "SimulationType", EditAnywhere, BlueprintReadWrite)
 		bool shouldSpawnSolarSystem = false;
 	UPROPERTY(Category = "SimulationType", EditAnywhere, BlueprintReadWrite)
 		bool ShouldSpawnTestPlanets = false;
-
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 		int bodiesToSpawn = 100;
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
@@ -100,36 +105,18 @@ public:
 		float SpawnInitialMaxSpeed = 10;
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 		float SpawnInitialMaxMass = 2;
+	int gradualSpawnerIndex = 0;
+	bool spawningBodies = false;
 
-
-	UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite, EditAnywhere)
-		float fixedFrameTime = 0.1f;
-	float elapsedFrameTime = 0.0f;
-
+	// ----- testing related variables - move into accuracy tester
 	UPROPERTY(Category = "Testing", BlueprintReadWrite, EditAnywhere)
 		bool ShouldReset = false;
 	UPROPERTY(Category = "Testing", BlueprintReadWrite, EditAnywhere)
 		float resetTime = 1.0f;
 	UPROPERTY(Category = "Testing", BlueprintReadWrite, EditAnywhere)
 		bool shouldGhostAccuracy = false;
-
-	UPROPERTY(Category = "Testing", BlueprintReadWrite, EditAnywhere)
-		bool Paused = false;
-	
-	//UI variables
-	UPROPERTY(Category = "forUI", BlueprintReadWrite)
-		float simulationElapsedTime = 0.0f;
-	UPROPERTY(Category = "forUI", BlueprintReadWrite, EditAnywhere)
-		int bodiesInSimulation = 0;
-	UPROPERTY(Category = "forUI", BlueprintReadWrite, EditAnywhere)
-		float timeMultiplier = 1.0f;
-
-
-
 	UPROPERTY(Category = "Testing", BlueprintReadWrite, EditAnywhere)
 		float averagePosError = 0.0f;
-
-	void handleAveragePosError();
 	UPROPERTY(Category = "Testing", BlueprintReadWrite, EditAnywhere)
 		bool showGhosPlanetErrors = false;
 	UPROPERTY(Category = "Testing", BlueprintReadWrite, EditAnywhere)
@@ -137,16 +124,11 @@ public:
 	UPROPERTY(Category = "Testing", BlueprintReadWrite)
 		bool doFrameCalc = false;
 
-
+	
+	//EXPERIMENTAL
 	bool newTrees = true;
 	bool PlanetOutOfBounds = false;
 
-
-
-	//double bigG = 0.000000000066743f; //when using kg,m and s
-	double bigG = 39.4784f; //when using SolarMass, AU and Years
-	int gradualSpawnerIndex = 0;
-	bool spawningBodies = false;
 	
 };
 

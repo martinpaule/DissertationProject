@@ -42,6 +42,16 @@ void ASimulationManager::removeGhostSim() {
 	}
 }
 
+void ASimulationManager::startSpawning(int amount, FVector centre, float extent, float MaxVelocity_, double MaxMass_) {
+	spawningBodies = true;
+	bodiesToSpawn = amount;
+	InitialSpawnCentre = centre;
+	SpawnLocationBounds = extent;
+	SpawnInitialMaxSpeed = MaxVelocity_;
+	SpawnInitialMaxMass = MaxMass_;
+	gradualSpawnerIndex = 0;
+}
+
 void ASimulationManager::addGhostSim() {
 
 	FTransform tr;
@@ -108,13 +118,6 @@ void ASimulationManager::createSimComponents() {
 	//setup Nbody handler
 	BodyHandler_ref->useTreeCodes_ = useTreeCodes;
 
-
-	//create accuracy tester
-	accuracyTester_ref = Cast<UAccuracyModule>(this->AddComponentByClass(UAccuracyModule::StaticClass(), false, tr, true));
-	accuracyTester_ref->RegisterComponent();
-	accuracyTester_ref->resetTime = resetTime;
-	accuracyTester_ref->shouldResetTest = ShouldReset;
-
 	//create tree code handler
 	TreeHandler_ref = Cast<UTreeHandler>(this->AddComponentByClass(UTreeHandler::StaticClass(), false, tr, true));
 	TreeHandler_ref->RegisterComponent();
@@ -122,6 +125,13 @@ void ASimulationManager::createSimComponents() {
 
 	//assign tree code handler
 	BodyHandler_ref->treeHandlerRef = TreeHandler_ref;
+
+	//create accuracy tester
+	accuracyTester_ref = Cast<UAccuracyModule>(this->AddComponentByClass(UAccuracyModule::StaticClass(), false, tr, true));
+	accuracyTester_ref->RegisterComponent();
+	accuracyTester_ref->resetTime = resetTime;
+	accuracyTester_ref->shouldResetTest = ShouldReset;
+
 }
 
 // Called when the game starts or when spawned
