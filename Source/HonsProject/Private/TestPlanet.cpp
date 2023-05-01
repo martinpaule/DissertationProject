@@ -102,10 +102,22 @@ void ATestPlanet::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyC
 //m1*v1 + m2*v2 =m1*v_1 + m2*v_2
 //v_ = (m1*v1 + m2*v2)/(m1 + m2)
 void ATestPlanet::combineCollisionBody(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) {
+	
+	
 
-	//perfectly inelastic collision
+
+	//perfectly ine	lastic collision
 	ATestPlanet* otherBody = Cast<ATestPlanet>(OtherActor);
 
+	//error failsafe
+	if (!GravComp || !otherBody->GravComp) {
+		//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "Super Rare Error ??? - had to remove TP ");
+		////add into above name like  + std::string(TCHAR_TO_UTF8(*this->GetActorLabel()))
+		//this->Destroy();
+		return;
+	}
+
+	
 	if (otherBody)
 	{
 
@@ -133,7 +145,7 @@ void ATestPlanet::combineCollisionBody(UPrimitiveComponent* OverlappedComponent,
 
 			//print message with timestamp, development feature, remove at the end
 			if (true) {
-				FDateTime nowTime = FDateTime::Now();
+				FDateTime nowTime = FDateTime::Now(); 
 				std::string printStr = "(";
 				FString myName = this->GetActorLabel();
 				FString otherName = otherBody->GetActorLabel();
@@ -141,7 +153,7 @@ void ATestPlanet::combineCollisionBody(UPrimitiveComponent* OverlappedComponent,
 				names += " and ";
 				names += std::string(TCHAR_TO_UTF8(*otherName));
 				printStr += std::to_string(nowTime.GetHour()) + ":" + std::to_string(nowTime.GetMinute()) + ":" + std::to_string(nowTime.GetSecond()) + "." + std::to_string(nowTime.GetMillisecond()) + "Merged Bodies " + names;
-				GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, printStr.c_str());
+				GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow, printStr.c_str());
 			}
 
 		}

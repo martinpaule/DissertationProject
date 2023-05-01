@@ -17,8 +17,10 @@ public:
 	// Sets default values for this actor's properties
 	AMainMenuNBODYmanager();
 	UFUNCTION(BlueprintCallable, Category = "PlanetSpawn")
-		void spawnPlanetAt(FVector position_, FVector velocity_, double mass_, FVector4 colour_, FString name_, float radius_, UNBodyHandler* handlerToAddInto);
+		ATestPlanet* spawnPlanetAt(FVector position_, FVector velocity_, double mass_, FVector4 colour_, FString name_, float radius_, UNBodyHandler* handlerToAddInto);
 	void deleteDestroyedBodies();
+	UFUNCTION(BlueprintCallable, Category = "PlanetSpawn")
+	void spawnEdgePlanet();
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -31,6 +33,8 @@ public:
 	UPROPERTY(Category = "UI_references", EditAnywhere, BlueprintReadWrite)
 		UNBodyHandler* BodyHandler_ref;
 	UPROPERTY(Category = "UI_references", EditAnywhere, BlueprintReadWrite)
+		float maxMMPlanetSpeed = 50.0f;
+	UPROPERTY(Category = "UI_references", EditAnywhere, BlueprintReadWrite)
 		UTreeHandler* TreeHandler_ref;
 
 	// ----- spawning relevant variables
@@ -38,9 +42,18 @@ public:
 		float SpawnInitialMaxSpeed = 10;
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 		float SpawnInitialMaxMass = 2;
-
-	float timeMultiplier = 10.0f;
+	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
+		float despawnRadiusRW = 1500;
+	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
+		FVector simCentre = FVector(4000, 0, 0);
+	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
+		float CursorPlanetMass = 20.0f;
+	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
+		int planetsToSimulate = 20;
+	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
+		float timeMultiplier = 1.0f;
 	double bigG = 39.4784f; //when using SolarMass, AU and Years
 
 	int overallPlanets = 0;
+
 };
