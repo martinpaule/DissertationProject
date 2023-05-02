@@ -59,15 +59,8 @@ void AGameManager::deleteDestroyedBodies() {
 
 		UGravBodyComponent* CompIT = BodyHandler_ref->myGravBodies[i];
 
-		if ((CompIT->position - (playerRef->GetActorLocation() / 1000.0f)).Length() > simulationRadius) {
-			CompIT->toBeDestroyed = true;
-			GEngine->AddOnScreenDebugMessage(-1, 0.4f, FColor::Red, "asteroid out of bounds");
-			DrawDebugSphere(GetWorld(), CompIT->position*1000, 100, 50, FColor::Green, false, 5.0f);
-
-		}
-
-
-		if (CompIT->toBeDestroyed) {
+		//sets tobedestriotyed to true if something is out of bounds - add to argyument of if below
+		if (CompIT->toBeDestroyed || (CompIT->position - (playerRef->GetActorLocation() / 1000.0f)).Length() > simulationRadius) {
 
 			CompIT->GetOwner()->Destroy();
 			BodyHandler_ref->myGravBodies[i]->DestroyComponent();
@@ -81,7 +74,7 @@ void AGameManager::deleteDestroyedBodies() {
 void AGameManager::inGameAsteroidHandle()
 {
 
-	while (BodyHandler_ref->myGravBodies.Num() < SimulationDesiredBodies) {
+	if (BodyHandler_ref->myGravBodies.Num() < SimulationDesiredBodies) {
 		spawnAsteroidToGame();
 		GEngine->AddOnScreenDebugMessage(-1, 0.4f, FColor::Green, "added new asteroid");
 
@@ -99,8 +92,7 @@ void AGameManager::Tick(float DeltaTime)
 
 	if (!spawningBodies) {
 
-		DrawDebugSphere(GetWorld(), playerRef->GetActorLocation(), simulationRadius * 1000, 50, FColor::Green,false, 0.0f);
-		//GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Green, playerRef->GetActorLocation().ToString());
+		DrawDebugSphere(GetWorld(), playerRef->GetActorLocation(), simulationRadius * 1000, 10, FColor::Green,false, 0.0f);
 
 
 		//step 0: destroy overlapping bodies from previous step - must be done before force calculation otherwise the current step will be inaccurate
@@ -134,15 +126,15 @@ void AGameManager::Tick(float DeltaTime)
 	}
 
 
-
-	if (TreeHandler_ref->showTreeBoxes) {
-
-		if (!useTreeCodes) {
-			TreeHandler_ref->RecalculatePartitioning();
-		}
-
-		TreeHandler_ref->DisplaySectors(TreeHandler_ref->treeNodeRoot);
-	}
+	//
+	//if (TreeHandler_ref->showTreeBoxes) {
+	//
+	//	if (!useTreeCodes) {
+	//		TreeHandler_ref->RecalculatePartitioning();
+	//	}
+	//
+	//	TreeHandler_ref->DisplaySectors(TreeHandler_ref->treeNodeRoot);
+	//}
 }
 
 

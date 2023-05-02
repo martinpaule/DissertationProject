@@ -144,74 +144,26 @@ void ASimulationManager::BeginPlay()
 
 }
 
+//clearup of to-be-removed bodies
 void ASimulationManager::deleteDestroyedBodies() {
 	
 	for (int i = 0; i < BodyHandler_ref->myGravBodies.Num(); i++)
 	{
-
 		UGravBodyComponent* CompIT = BodyHandler_ref->myGravBodies[i];
-
-		
-
 		if (CompIT->toBeDestroyed) {
 
 			deletePlanetInHandler(CompIT, useTreeCodes);
 			BodyHandler_ref->myGravBodies.RemoveAt(i);
 			i--;
 		}
-		else if (useTreeCodes && newTrees) {		//check if a planet is within is own leaf and fix tree if its not
-
-
-			//INVESTIGATE IF THISFIXED IT AND SEE IF IT WORKS BETTER
-			if (!CompIT->leaf_ref) {
-				TreeHandler_ref->RecalculatePartitioning();
-				GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "NULL IN LEAFREF from body " + CompIT->GetOwner()->GetActorLabel());
-				return;
-			}
-
-			//if the planet is still in its last recorded leaf position
-			if (CompIT->leaf_ref->isInExtent(CompIT->position)) {
-				CompIT->leaf_ref->Node_CentreOMass = CompIT->position;
-			}
-			else {//planet moved from its leaf pos but still in the tree
-				if (TreeHandler_ref->treeNodeRoot->isInExtent(CompIT->position)) {
-
-					CompIT->leaf_ref->bodies.Remove(CompIT);
-					TreeHandler_ref->mergeEmptiesAboveMe(CompIT->leaf_ref);
-
-					//reacalculate 
-					CompIT->leaf_ref->Node_CombinedMass = 0.0f;
-					//assign all relevant bodies into this child node, handling their mass and position to calculate their avg pos and comb mass
-					//for (int m = 0; m < CompIT->leaf_ref->bodies.Num(); m++) {
-					//
-					//	CompIT->leaf_ref->Node_CombinedMass += CompIT->leaf_ref->bodies[m]->mass;
-					//	
-					//}
-					//CompIT->leaf_ref->Node_CentreOMass /= CompIT->leaf_ref->Node_CombinedMass;
-
-
-					TreeNode* ref_tn = TreeHandler_ref->getLowestSectorOfPos(CompIT->position);
-					ref_tn->bodies.Add(CompIT);
-
-					TreeHandler_ref->partitionTree(ref_tn);
-				}
-				else {//planet went out of bounds of the max bounds
-					PlanetOutOfBounds = true;
-				}
-			}
-
-		}
-
-
 	}
 
 	if (ghostSim_ref) {
 		for (int i = 0; i < ghostSim_ref->myGravBodies.Num(); i++)
 		{
-			if (ghostSim_ref->myGravBodies[i]->toBeDestroyed) {
-
-
-				deletePlanetInHandler(ghostSim_ref->myGravBodies[i], false);
+			UGravBodyComponent* CompIT_ = ghostSim_ref->myGravBodies[i];
+			if (CompIT_->toBeDestroyed) {
+				deletePlanetInHandler(CompIT_, false);
 				ghostSim_ref->myGravBodies.RemoveAt(i);
 				i--;
 			}
@@ -232,8 +184,6 @@ void ASimulationManager::Tick(float DeltaTime)
 		elapsedFrameTime += DeltaTime;
 
 		if (elapsedFrameTime >= fixedFrameTime) {
-
-			PlanetOutOfBounds = false;
 			
 			//step 0: destroy overlapping bodies from previous step - must be done before force calculation otherwise the current step will be inaccurate
 			deleteDestroyedBodies();
@@ -243,9 +193,19 @@ void ASimulationManager::Tick(float DeltaTime)
 
 			bodiesInSimulation = BodyHandler_ref->myGravBodies.Num();
 			
-			if (PlanetOutOfBounds && newTrees) {
-				TreeHandler_ref->RecalculatePartitioning();
-			}
+
+			//step 0.5 recalculate partitioning
+			//TreeHandler_ref->RecalculatePartitioning(newTrees);
+
+
+			//if (PlanetOutOfBounds && newTrees) {
+			//	TreeHandler_ref->RecalculatePartitioning();
+			//	GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Orange, "planet went out of max boundary");
+			//}
+			//else if(newTrees) {
+			//	GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Orange, "inner recalcs");
+			//
+			//}
 
 			//step 1: Gravitational calculations using fixed time updates
 
@@ -267,19 +227,16 @@ void ASimulationManager::Tick(float DeltaTime)
 					
 				}
 				else {
-					//time taken code
-					//auto startDI = std::chrono::high_resolution_clock::now();
-					//auto stopDI = std::chrono::high_resolution_clock::now();
-					//float msTakenCALCTC = std::chrono::duration_cast<std::chrono::microseconds>(stopDI - startDI).count();
-
 					BodyHandler_ref->calculateWithTree(updatedDT,doFrameCalc, newTrees);
+					
+
+					//move testing ghost sim
 					if (ghostSim_ref) {
 						ghostSim_ref->calculateAllVelocityChanges(updatedDT);
 						ghostSim_ref->moveBodies(last, updatedDT);
 					}
-
 				}
-				//step 2: move bodies using their updated velocity, also destroy ones that 
+				//step 2: move bodies 
 				BodyHandler_ref->moveBodies(last, updatedDT);
 
 
@@ -295,6 +252,7 @@ void ASimulationManager::Tick(float DeltaTime)
 		graduallySpawnBodies(SpawnsPerFrame);
 	}
 
+	//testing
 	if (ghostSim_ref) {
 		handleAveragePosError();
 	}
@@ -302,7 +260,7 @@ void ASimulationManager::Tick(float DeltaTime)
 	if (TreeHandler_ref->showTreeBoxes) {
 
 		if (!useTreeCodes) {
-			TreeHandler_ref->RecalculatePartitioning();
+			TreeHandler_ref->RecalculatePartitioning(false);
 		}
 
 		TreeHandler_ref->DisplaySectors(TreeHandler_ref->treeNodeRoot);
@@ -559,7 +517,7 @@ void ASimulationManager::spawnSolarSystem(FVector SunPosition_) {
 	}
 
 	if (useTreeCodes) {
-		TreeHandler_ref->RecalculatePartitioning();
+		TreeHandler_ref->RecalculatePartitioning(false);
 	}
 
 }

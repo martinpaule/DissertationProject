@@ -20,7 +20,9 @@ public:
 		ATestPlanet* spawnPlanetAt(FVector position_, FVector velocity_, double mass_, FVector4 colour_, FString name_, float radius_, UNBodyHandler* handlerToAddInto);
 	void deleteDestroyedBodies();
 	UFUNCTION(BlueprintCallable, Category = "PlanetSpawn")
-	void spawnEdgePlanet();
+		ATestPlanet* spawnEdgePlanet();
+	UFUNCTION(BlueprintCallable, Category = "CursorSpawn")
+	void spawnCursor();
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

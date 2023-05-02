@@ -47,4 +47,8 @@ public:
 
 	UPROPERTY(Category = "BasicComponents", VisibleAnywhere, BlueprintReadWrite)
 	UGravBodyComponent* GravComp;
+
+
+	float myRotateSpeed;
+	FRotator myRot;
 };

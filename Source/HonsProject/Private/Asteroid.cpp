@@ -65,8 +65,12 @@ AAsteroid::AAsteroid()
 	StaticMeshComponent->SetMaterial(0, myMat);
 
 
+	myRot = FRotator(0,0,0);
+	myRot.Yaw = FMath::RandRange(-1.0f, 1.0f);
+	myRot.Pitch = FMath::RandRange(-1.0f, 1.0f);
+	myRot.Roll = FMath::RandRange(-1.0f, 1.0f);
 
-	
+	myRotateSpeed = FMath::RandRange(50.0f, 150.0f);
 }
 
 
@@ -76,6 +80,7 @@ AAsteroid::AAsteroid()
 void AAsteroid::BeginPlay()
 {
 	Super::BeginPlay();
+
 
 	//FTransform tr;
 	//tr.SetIdentity();
@@ -93,5 +98,9 @@ void AAsteroid::BeginPlay()
 void AAsteroid::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	AddActorWorldRotation(myRot * myRotateSpeed * GravComp->myLocalTimeEditor * DeltaTime);
+
+	//this->AddActorLocalRotation()
 }
 

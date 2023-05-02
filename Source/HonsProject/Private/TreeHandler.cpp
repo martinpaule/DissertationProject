@@ -31,79 +31,134 @@ void UTreeHandler::TickComponent(float DeltaTime, ELevelTick TickType, FActorCom
 
 
 
-void UTreeHandler::RecalculatePartitioning() {
+void UTreeHandler::RecalculatePartitioning(bool newTrees) {
 	
-	//reset root
-	delete treeNodeRoot;
 
-	//also assign its combined mass and centre of mass
-	float combinedMass = 0.0f;
-	FVector centreOfMass = FVector(0.0f, 0.0f, 0.0f);
+	if (newTrees) {
+		for (int i = 0; i < bodyHandlerBodies->Num(); i++)
+		{
 
-	//find max and min on XYZ axis
-	FVector XYZ_min;
-	FVector XYZ_max;
-	for (int i = 0; i < bodyHandlerBodies->Num(); i++) {
-		if (i == 0) {
-			XYZ_min = (*bodyHandlerBodies)[i]->position;
-			XYZ_max = (*bodyHandlerBodies)[i]->position;
+			UGravBodyComponent* CompIT = (*bodyHandlerBodies)[i];
+			if (newTrees) {		//check if a planet is within is own leaf and fix tree if its not
+
+
+				//INVESTIGATE IF THISFIXED IT AND SEE IF IT WORKS BETTER
+				if (!CompIT->leaf_ref) {
+					RecalculatePartitioning(false);
+					GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "NULL IN LEAFREF from body - BF RECALC" + CompIT->GetOwner()->GetActorLabel());
+					return;
+				}
+
+				//if the planet is still in its last recorded leaf position
+				if (CompIT->leaf_ref->isInExtent(CompIT->position)) {
+					CompIT->leaf_ref->Node_CentreOMass = CompIT->position;
+					GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Green, CompIT->GetOwner()->GetActorLabel() + " stayed IN");
+
+				}
+				else {//planet moved from its leaf pos but still in the tree
+					if (treeNodeRoot->isInExtent(CompIT->position)) {
+
+						//reacalculate 
+						CompIT->leaf_ref->bodies.Remove(CompIT);
+						CompIT->leaf_ref->Node_CombinedMass = 0.0f;
+						mergeEmptiesAboveMe(CompIT->leaf_ref);
+
+
+
+						TreeNode* ref_tn = getLowestSectorOfPos(CompIT->position);
+						ref_tn->bodies.Add(CompIT);
+
+						partitionTree(ref_tn);
+						GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Orange, CompIT->GetOwner()->GetActorLabel() + " movedWell");
+
+					}
+					else {//planet went out of bounds of the max bounds
+
+						RecalculatePartitioning(false);
+						GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "Out Of Global Bounds - BF RECALC " + CompIT->GetOwner()->GetActorLabel());
+						return;
+					}
+				}
+
+			}
+
+
 		}
-		else {
-			FVector bPos = (*bodyHandlerBodies)[i]->position;
+	}
+	else {
+		//reset root
+		delete treeNodeRoot;
 
-			if (bPos.X < XYZ_min.X) {
-				XYZ_min.X = bPos.X;
+		//also assign its combined mass and centre of mass
+		float combinedMass = 0.0f;
+		FVector centreOfMass = FVector(0.0f, 0.0f, 0.0f);
+
+		//find max and min on XYZ axis
+		FVector XYZ_min;
+		FVector XYZ_max;
+		for (int i = 0; i < bodyHandlerBodies->Num(); i++) {
+			if (i == 0) {
+				XYZ_min = (*bodyHandlerBodies)[i]->position;
+				XYZ_max = (*bodyHandlerBodies)[i]->position;
 			}
-			if (bPos.Y < XYZ_min.Y) {
-				XYZ_min.Y = bPos.Y;
-			}
-			if (bPos.Z < XYZ_min.Z) {
-				XYZ_min.Z = bPos.Z;
+			else {
+				FVector bPos = (*bodyHandlerBodies)[i]->position;
+
+				if (bPos.X < XYZ_min.X) {
+					XYZ_min.X = bPos.X;
+				}
+				if (bPos.Y < XYZ_min.Y) {
+					XYZ_min.Y = bPos.Y;
+				}
+				if (bPos.Z < XYZ_min.Z) {
+					XYZ_min.Z = bPos.Z;
+				}
+
+				if (bPos.X > XYZ_max.X) {
+					XYZ_max.X = bPos.X;
+				}
+				if (bPos.Y > XYZ_max.Y) {
+					XYZ_max.Y = bPos.Y;
+				}
+				if (bPos.Z > XYZ_max.Z) {
+					XYZ_max.Z = bPos.Z;
+				}
 			}
 
-			if (bPos.X > XYZ_max.X) {
-				XYZ_max.X = bPos.X;
-			}
-			if (bPos.Y > XYZ_max.Y) {
-				XYZ_max.Y = bPos.Y;
-			}
-			if (bPos.Z > XYZ_max.Z) {
-				XYZ_max.Z = bPos.Z;
-			}
+			combinedMass += (*bodyHandlerBodies)[i]->mass;
+			centreOfMass += (*bodyHandlerBodies)[i]->position * (*bodyHandlerBodies)[i]->mass;
+
 		}
+
+		centreOfMass /= combinedMass;
+
+
+		//find a CUBE that is JUST enveloping the planets
+		float extent = XYZ_max.X - XYZ_min.X;
+		if (XYZ_max.Y - XYZ_min.Y > extent) {
+			extent = XYZ_max.Y - XYZ_min.Y;
+		}
+		if (XYZ_max.Z - XYZ_min.Z > extent) {
+			extent = XYZ_max.Z - XYZ_min.Z;
+		}
+		extent /= 2.0f;
+
+
+		//create new root and set its variables
+		treeNodeRoot = new TreeNode;
+		treeNodeRoot->position = (XYZ_min + XYZ_max) / 2.0f;
+		treeNodeRoot->level = 1;
+		treeNodeRoot->extent = extent;
+		treeNodeRoot->bodies = *bodyHandlerBodies;
+
+
+		treeNodeRoot->Node_CentreOMass = centreOfMass;
+		treeNodeRoot->Node_CombinedMass = combinedMass;
+
+		//recursively partition the tree
+		partitionTree(treeNodeRoot);
+	}
 	
-		combinedMass += (*bodyHandlerBodies)[i]->mass;
-		centreOfMass += (*bodyHandlerBodies)[i]->position * (*bodyHandlerBodies)[i]->mass;
-
-	}
-
-	centreOfMass /= combinedMass;
-
-
-	//find a CUBE that is JUST enveloping the planets
-	float extent = XYZ_max.X - XYZ_min.X;
-	if (XYZ_max.Y - XYZ_min.Y > extent) {
-		extent = XYZ_max.Y - XYZ_min.Y;
-	}
-	if (XYZ_max.Z - XYZ_min.Z > extent) {
-		extent = XYZ_max.Z - XYZ_min.Z;
-	}
-	extent /= 2.0f;
-
-
-	//create new root and set its variables
-	treeNodeRoot = new TreeNode;
-	treeNodeRoot->position = (XYZ_min + XYZ_max) / 2.0f;
-	treeNodeRoot->level = 1;
-	treeNodeRoot->extent = extent;
-	treeNodeRoot->bodies = *bodyHandlerBodies;
-	
-
-	treeNodeRoot->Node_CentreOMass = centreOfMass;
-	treeNodeRoot->Node_CombinedMass = combinedMass;
-
-	//recursively partition the tree
-	partitionTree(treeNodeRoot);
 }
 
 void UTreeHandler::DisplaySectors(TreeNode* rootNode) {

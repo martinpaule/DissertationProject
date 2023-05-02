@@ -38,7 +38,7 @@ public:
 	AActor* playerRef;
 
 	float timeMultiplier = 1.0f;
-	bool useTreeCodes = false;
+	bool useTreeCodes = true;
 
 	
 protected:

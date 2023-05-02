@@ -121,13 +121,15 @@ public:
 		bool showGhosPlanetErrors = false;
 	UPROPERTY(Category = "Testing", BlueprintReadWrite, EditAnywhere)
 		bool calcAveragePosError = false;
-	UPROPERTY(Category = "Testing", BlueprintReadWrite)
+	UPROPERTY(Category = "Testing", BlueprintReadWrite, EditAnywhere)
 		bool doFrameCalc = false;
 
 	
 	//EXPERIMENTAL
-	bool newTrees = true;
-	bool PlanetOutOfBounds = false;
+	UPROPERTY(Category = "Testing", BlueprintReadWrite, EditAnywhere)
+	bool newTrees = false;
+	//bool PlanetOutOfBounds = false;
+
 
 	
 };

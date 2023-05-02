@@ -71,7 +71,7 @@ void UNBodyHandler::calculateAllVelocityChanges(double dt) {
 		}
 
 		//apply change in velocity to body I
-		deltaVelocity = dt* sumOfForces;
+		deltaVelocity = myGravBodies[i]->myLocalTimeEditor* dt* sumOfForces;
 		myGravBodies[i]->velocity += deltaVelocity;
 
 	}
@@ -81,10 +81,20 @@ void UNBodyHandler::calculateAllVelocityChanges(double dt) {
 //tree code calculations of gravitational dynamics
 void UNBodyHandler::calculateWithTree(double dt, bool calculateError, bool newTrees) {
 
+	////time taken code
+	//auto startDI = std::chrono::high_resolution_clock::now();
+	treeHandlerRef->RecalculatePartitioning(newTrees);
+	//auto stopDI = std::chrono::high_resolution_clock::now();
+	//float msTakenCALCTC = std::chrono::duration_cast<std::chrono::microseconds>(stopDI - startDI).count();
+	//
+	//timeTakenTotal += msTakenCALCTC;
+	//totalFramesPassed += 1.0f;
+	//
+	//std::string printStr = "Average Time taken to recalculate tree with NewTrees(" + std::to_string(newTrees) + ") = " + std::to_string(timeTakenTotal / totalFramesPassed);;
+	//
+	//GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Orange, printStr.c_str());
 
-	if (!newTrees) {
-		treeHandlerRef->RecalculatePartitioning();
-	}
+
 
 	treeHandlerRef->gravCalcs = 0;
 
@@ -106,7 +116,7 @@ void UNBodyHandler::calculateWithTree(double dt, bool calculateError, bool newTr
 
 		//apply change in velocity to body I
 		TreeSumOfForces = treeHandlerRef->getApproxForce(myGravBodies[i],treeHandlerRef->treeNodeRoot);
-		myGravBodies[i]->velocity += dt * TreeSumOfForces;
+		myGravBodies[i]->velocity += myGravBodies[i]->myLocalTimeEditor * dt * TreeSumOfForces;
 
 		if (calculateError) {
 			//calulate combined forces acting on body I
@@ -157,7 +167,7 @@ void UNBodyHandler::moveBodies(bool alsoMoveActor, double updated_dt) {
 	for (int i = 0; i < myGravBodies.Num(); i++) {
 		//GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, "moving");
 
-		myGravBodies[i]->position += updated_dt * myGravBodies[i]->velocity;
+		myGravBodies[i]->position += myGravBodies[i]->myLocalTimeEditor * updated_dt * myGravBodies[i]->velocity;
 
 		if (alsoMoveActor) {
 			myGravBodies[i]->GetOwner()->SetActorLocation(myGravBodies[i]->position * 1000.0f);

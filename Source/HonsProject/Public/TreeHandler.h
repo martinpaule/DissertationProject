@@ -59,7 +59,7 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	UFUNCTION(BlueprintCallable, Category = "TreeTings")
-	void RecalculatePartitioning();
+	void RecalculatePartitioning(bool newTrees);
 	void DisplaySectors(TreeNode* rootNode);
 	void partitionTree(TreeNode* rootNode);
 

@@ -42,4 +42,7 @@ public:
 		FVector4 myCol;
 
 	TreeNode * leaf_ref = NULL;
+	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
+		float myLocalTimeEditor = 1.0f;
+
 };

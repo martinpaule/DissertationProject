@@ -74,4 +74,10 @@ public:
 	UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite, EditAnywhere)
 		float fixedFrameTime = 0.1f;
 	float elapsedFrameTime = 0.0f;
+
+
+
+
+	float timeTakenTotal = 0.0f;
+	float totalFramesPassed = 0.0f;
 };

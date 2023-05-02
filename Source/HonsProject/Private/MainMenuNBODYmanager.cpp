@@ -35,44 +35,52 @@ void AMainMenuNBODYmanager::BeginPlay()
 	BodyHandler_ref->treeHandlerRef = TreeHandler_ref;
 
 
-	if(true){
-		//spawn cursor planet
-		FVector CursorPlanetPos = FVector(0, 0, 0);
-		FVector CursorPlanetSpeed = FVector(0, 0, 0);
-		FString CursorPlanetbodName = "CursorPlanet";
-			
+	
+}
 
-		 ATestPlanet* AsTP = spawnPlanetAt(CursorPlanetPos, CursorPlanetSpeed, CursorPlanetMass, FVector4(1.0f, 0.0f, 1.0f, 1.0f), CursorPlanetbodName, 0, BodyHandler_ref);
+void AMainMenuNBODYmanager::spawnCursor() {
+	//spawn cursor planet
+	FVector CursorPlanetPos = FVector(0, 0, 0);
+	FVector CursorPlanetSpeed = FVector(0, 0, 0);
+	FString CursorPlanetbodName = "CursorPlanet";
 
-		 if (AsTP) {
-			 AsTP->SphereCollider->SetGenerateOverlapEvents(false);
-		 }
 
-		for (int i = 0; i < planetsToSimulate; i++) {
+	ATestPlanet* AsTP = spawnPlanetAt(CursorPlanetPos, CursorPlanetSpeed, CursorPlanetMass, FVector4(1.0f, 0.0f, 1.0f, 1.0f), CursorPlanetbodName, 0, BodyHandler_ref);
 
-			spawnEdgePlanet();
-		}
+	if (AsTP) {
+		AsTP->SphereCollider->SetGenerateOverlapEvents(true);
 	}
 }
 
-void AMainMenuNBODYmanager::spawnEdgePlanet() {
+ATestPlanet * AMainMenuNBODYmanager::spawnEdgePlanet() {
 
 	//random speed
-	FVector speed_ = FVector(0.0f, -SpawnInitialMaxSpeed / 2, -SpawnInitialMaxSpeed / 2);
-	speed_.Y += FMath::FRandRange(0, SpawnInitialMaxSpeed);
-	speed_.Z += FMath::FRandRange(0, SpawnInitialMaxSpeed);
+	FVector speed_ = FVector(0.0f, 0.0f,0.0f);
+	speed_.Y += FMath::FRandRange(-1.0f, 1.0f);
+	speed_.Z += FMath::FRandRange(-1.0f, 1.0f);
 	speed_.Normalize();
 
 	FVector myLoc = simCentre;
 	myLoc += -speed_ * despawnRadiusRW * 0.8f;
 
-	//speed_.RotateAngleAxis(FMath::FRandRange(-30.0f, 30.0f),FVector(1,0,0));
+
+	float magnitude = FMath::FRandRange(0.0f, SpawnInitialMaxSpeed);
+	//speed_ *= magnitude;
+	speed_ *= SpawnInitialMaxSpeed;
+
+	float sideRot = FMath::FRandRange(20.0f, 40.0f);
+	if (FMath::FRandRange(0.0f, 1.0f) > 0.5f) {
+		sideRot *= -1.0f;
+	}
+	speed_ = speed_.RotateAngleAxis(sideRot, FVector(1, 0, 0));
+
+	//speed_.rota
 
 	//random mass
 	float mass_ = 0.001f;
 	mass_ += FMath::FRandRange(0.0f, SpawnInitialMaxMass);
 
-	FString bodName = "Body ";
+	FString bodName = "Body_";
 	bodName.Append(std::to_string(overallPlanets).c_str());
 
 	FVector4 randColor = FVector4(1.0f, 1.0f, 1.0f, 1.0f);
@@ -80,18 +88,9 @@ void AMainMenuNBODYmanager::spawnEdgePlanet() {
 	randColor.Y -= FMath::FRandRange(0, 1.0f);
 	randColor.Z -= FMath::FRandRange(0, 1.0f);
 
-	spawnPlanetAt(myLoc / 1000.0f, speed_, mass_, randColor, bodName, 0, BodyHandler_ref);
+	return spawnPlanetAt(myLoc / 1000.0f, speed_, mass_, randColor, bodName, 0, BodyHandler_ref);
 
-	//// Create the Niagara component and attach it to the Actor
-	//UNiagaraComponent* NiagaraComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(
-	//	LoadObject<UNiagaraSystem>(nullptr, TEXT("/Game/MyContent/Graphics/PlanetRelated/p_Trail.p_Trail")), // Replace with your Niagara effect path
-	//	BodyHandler_ref->myGravBodies.Last()->GetOwner()->GetRootComponent(),
-	//	NAME_None,
-	//	FVector::ZeroVector,
-	//	FRotator::ZeroRotator,
-	//	EAttachLocation::KeepRelativeOffset,
-	//	true // Auto destroy
-	//);
+
 
 }
 
@@ -151,7 +150,6 @@ void AMainMenuNBODYmanager::deleteDestroyedBodies() {
 
 		UGravBodyComponent* CompIT = BodyHandler_ref->myGravBodies[i];
 
-		CompIT->velocity = CompIT->velocity.GetClampedToMaxSize(maxMMPlanetSpeed);
 
 		if ((CompIT->position*1000.0f - simCentre).Length() > despawnRadiusRW || CompIT->toBeDestroyed) {
 
@@ -187,24 +185,28 @@ void AMainMenuNBODYmanager::Tick(float DeltaTime)
 
 	}
 
+	//reset velocity of cursor 
 	BodyHandler_ref->myGravBodies[0]->velocity = FVector(0, 0, 0);
 
+	//cap velocity
+	if(true){
 
-	for (int i = 1; i < BodyHandler_ref->myGravBodies.Num(); i++)
-	{
-		UGravBodyComponent * CompIT = BodyHandler_ref->myGravBodies[i];
+		for (int i = 1; i < BodyHandler_ref->myGravBodies.Num(); i++)
+		{
+			UGravBodyComponent* CompIT = BodyHandler_ref->myGravBodies[i];
+
+			CompIT->velocity = CompIT->velocity.GetClampedToMaxSize(maxMMPlanetSpeed);
 
 
-		
+			//float distanceBasedMaxVel = (CompIT->GetOwner()->GetActorLocation() - simCentre).Length();
+			//if (CompIT->velocity.Length() > distanceBasedMaxVel) {
+			//	CompIT->velocity = CompIT->velocity.GetSafeNormal() * distanceBasedMaxVel;
+			//}
 
-		float distanceBasedMaxVel =  (CompIT->GetOwner()->GetActorLocation() - simCentre).Length();
 
-		if (CompIT->velocity.Length() > distanceBasedMaxVel) {
-			CompIT->velocity = CompIT->velocity.GetSafeNormal() * distanceBasedMaxVel;
 		}
-
-
 	}
+	
 
 	//step 2: move bodies using their updated velocity, also destroy ones that 
 	BodyHandler_ref->moveBodies(true, updatedDT);
