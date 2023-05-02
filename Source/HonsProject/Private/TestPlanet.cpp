@@ -111,7 +111,7 @@ void ATestPlanet::combineCollisionBody(UPrimitiveComponent* OverlappedComponent,
 
 	//error failsafe
 	if (!GravComp || !otherBody->GravComp) {
-		//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "Super Rare Error ??? - had to remove TP ");
+		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "Super Rare Error ??? - had to remove TP ");
 		////add into above name like  + std::string(TCHAR_TO_UTF8(*this->GetActorLabel()))
 		//this->Destroy();
 		return;
@@ -120,9 +120,6 @@ void ATestPlanet::combineCollisionBody(UPrimitiveComponent* OverlappedComponent,
 	
 	if (otherBody)
 	{
-
-
-
 
 		if (handlerID != otherBody->handlerID) {
 			return;

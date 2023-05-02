@@ -153,7 +153,7 @@ void AMainMenuNBODYmanager::deleteDestroyedBodies() {
 
 		CompIT->velocity = CompIT->velocity.GetClampedToMaxSize(maxMMPlanetSpeed);
 
-		if ((CompIT->position*1000.0f - simCentre).Length() > despawnRadiusRW) {
+		if ((CompIT->position*1000.0f - simCentre).Length() > despawnRadiusRW || CompIT->toBeDestroyed) {
 
 			ATestPlanet* asTP = Cast<ATestPlanet>(CompIT->GetOwner());
 			CompIT->GetOwner()->Destroy();
