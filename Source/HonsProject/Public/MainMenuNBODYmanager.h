@@ -57,8 +57,6 @@ public:
 	double bigG = 39.4784f; //when using SolarMass, AU and Years
 	int overallPlanets = 0;
 
-
-
 	// ----- Cursor relevant variables
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 		float CursorPlanetMass = 20.0f;
