@@ -188,7 +188,7 @@ void AMainMenuNBODYmanager::Tick(float DeltaTime)
 
 	//reset velocity of cursor, clamp its size and change scale
 	BodyHandler_ref->myGravBodies[0]->velocity = FVector(0, 0, 0);
-	BodyHandler_ref->myGravBodies[0]->mass = FMath::Clamp(BodyHandler_ref->myGravBodies[0]->mass, 0.0f, 505.0f);
+	BodyHandler_ref->myGravBodies[0]->mass = FMath::Clamp(BodyHandler_ref->myGravBodies[0]->mass, 0.0f, CursorMaxMass + 5.0f);
 	BodyHandler_ref->myGravBodies[0]->GetOwner()->SetActorScale3D(FVector(1.0f, 1.0f, 1.0f)*FMath::Lerp(2.0f,4.0f, lerpVal));
 
 	//cap velocity

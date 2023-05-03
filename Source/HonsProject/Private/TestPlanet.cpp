@@ -143,7 +143,7 @@ void ATestPlanet::combineCollisionBody(UPrimitiveComponent* OverlappedComponent,
 		GravComp->toBeDestroyed = true;
 
 		//print message with timestamp, development feature, remove at the end
-		if (true) {
+		if (false) {
 			FDateTime nowTime = FDateTime::Now();
 			std::string printStr = "(";
 			FString myName = this->GetActorLabel();
