@@ -108,53 +108,56 @@ void ATestPlanet::combineCollisionBody(UPrimitiveComponent* OverlappedComponent,
 
 	//perfectly ine	lastic collision
 	ATestPlanet* otherBody = Cast<ATestPlanet>(OtherActor);
+	
+	//if other is not test planet
+	if (!otherBody) {
+		return;
+	}
+
 
 	//error failsafe
 	if (!GravComp || !otherBody->GravComp) {
-		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "Super Rare Error ??? - had to remove TP ");
+		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Red, "Rare error - one gravcomp was missing!");
 		////add into above name like  + std::string(TCHAR_TO_UTF8(*this->GetActorLabel()))
 		//this->Destroy();
 		return;
 	}
 
-	
-	if (otherBody)
-	{
+	if (handlerID != otherBody->handlerID) {
+		return;
+	}
 
-		if (handlerID != otherBody->handlerID) {
-			return;
+	float massA = GravComp->mass;
+	float massB = otherBody->GravComp->mass;
+	FVector velocityA = GravComp->velocity;
+	FVector velocityB = otherBody->GravComp->velocity;
+	FVector finalVelocity = (massA * velocityA + massB * velocityB) / (massA + massB);
+
+	//add the smaller body's mass and speed to the larger one
+	if (otherBody->GravComp->mass >= GravComp->mass) {
+		otherBody->GravComp->velocity = finalVelocity;
+		otherBody->GravComp->mass += GravComp->mass;
+		float scale_ = otherBody->GetActorScale3D().X;
+		scale_ += this->GetActorScale3D().X / 15.0f;
+		otherBody->SetActorScale3D(FVector(scale_, scale_, scale_));
+		GravComp->toBeDestroyed = true;
+
+		//print message with timestamp, development feature, remove at the end
+		if (true) {
+			FDateTime nowTime = FDateTime::Now();
+			std::string printStr = "(";
+			FString myName = this->GetActorLabel();
+			FString otherName = otherBody->GetActorLabel();
+			std::string names = std::string(TCHAR_TO_UTF8(*myName));
+			names += " and ";
+			names += std::string(TCHAR_TO_UTF8(*otherName));
+			printStr += std::to_string(nowTime.GetHour()) + ":" + std::to_string(nowTime.GetMinute()) + ":" + std::to_string(nowTime.GetSecond()) + "." + std::to_string(nowTime.GetMillisecond()) + "Merged Bodies " + names;
+			GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow, printStr.c_str());
 		}
-
-		float massA = GravComp->mass;
-		float massB = otherBody->GravComp->mass;
-		FVector velocityA = GravComp->velocity;
-		FVector velocityB = otherBody->GravComp->velocity;
-		FVector finalVelocity = (massA * velocityA + massB * velocityB) / (massA + massB);
-
-		//add the smaller body's mass and speed to the larger one
-		if (otherBody->GravComp->mass >= GravComp->mass) {
-			otherBody->GravComp->velocity = finalVelocity;
-			otherBody->GravComp->mass += GravComp->mass;
-			float scale_ = otherBody->GetActorScale3D().X;
-			scale_ += this->GetActorScale3D().X / 15.0f;
-			otherBody->SetActorScale3D(FVector(scale_, scale_, scale_));
-			GravComp->toBeDestroyed = true;
-
-			//print message with timestamp, development feature, remove at the end
-			if (true) {
-				FDateTime nowTime = FDateTime::Now(); 
-				std::string printStr = "(";
-				FString myName = this->GetActorLabel();
-				FString otherName = otherBody->GetActorLabel();
-				std::string names = std::string(TCHAR_TO_UTF8(*myName));
-				names += " and ";
-				names += std::string(TCHAR_TO_UTF8(*otherName));
-				printStr += std::to_string(nowTime.GetHour()) + ":" + std::to_string(nowTime.GetMinute()) + ":" + std::to_string(nowTime.GetSecond()) + "." + std::to_string(nowTime.GetMillisecond()) + "Merged Bodies " + names;
-				GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow, printStr.c_str());
-			}
-
-		}
-
 
 	}
+		
+
+
+	
 }

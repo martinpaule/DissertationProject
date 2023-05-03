@@ -16,13 +16,13 @@ class HONSPROJECT_API AMainMenuNBODYmanager : public AActor
 public:	
 	// Sets default values for this actor's properties
 	AMainMenuNBODYmanager();
+	void deleteDestroyedBodies();
 	UFUNCTION(BlueprintCallable, Category = "PlanetSpawn")
 		ATestPlanet* spawnPlanetAt(FVector position_, FVector velocity_, double mass_, FVector4 colour_, FString name_, float radius_, UNBodyHandler* handlerToAddInto);
-	void deleteDestroyedBodies();
 	UFUNCTION(BlueprintCallable, Category = "PlanetSpawn")
 		ATestPlanet* spawnEdgePlanet();
 	UFUNCTION(BlueprintCallable, Category = "CursorSpawn")
-	void spawnCursor();
+		 void spawnCursor();
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -48,14 +48,20 @@ public:
 		float despawnRadiusRW = 1500;
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 		FVector simCentre = FVector(4000, 0, 0);
-	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-		float CursorPlanetMass = 20.0f;
+	
+	// ----- Simulation relevant variables
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 		int planetsToSimulate = 20;
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 		float timeMultiplier = 1.0f;
 	double bigG = 39.4784f; //when using SolarMass, AU and Years
-
 	int overallPlanets = 0;
 
+
+
+	// ----- Cursor relevant variables
+	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
+		float CursorPlanetMass = 20.0f;
+	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
+		float CursorMaxMass = 500.0f;
 };
