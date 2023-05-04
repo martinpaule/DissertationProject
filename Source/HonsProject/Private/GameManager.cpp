@@ -57,6 +57,12 @@ void AGameManager::deleteDestroyedBodies() {
 	for (int i = 0; i < BodyHandler_ref->myGravBodies.Num(); i++)
 	{
 
+		//nullptr fix - actor mightv'e been deleted thru BP's
+		if (!BodyHandler_ref->myGravBodies[i]) {
+			BodyHandler_ref->myGravBodies.RemoveAt(i);
+			i--;
+		}
+
 		UGravBodyComponent* CompIT = BodyHandler_ref->myGravBodies[i];
 
 		//sets tobedestriotyed to true if something is out of bounds - add to argyument of if below
@@ -92,7 +98,7 @@ void AGameManager::Tick(float DeltaTime)
 
 	if (!spawningBodies) {
 
-		DrawDebugSphere(GetWorld(), playerRef->GetActorLocation(), simulationRadius * 1000, 10, FColor::Green,false, 0.0f);
+		//DrawDebugSphere(GetWorld(), playerRef->GetActorLocation(), simulationRadius * 1000, 10, FColor::Green,false, 0.0f);
 
 
 		//step 0: destroy overlapping bodies from previous step - must be done before force calculation otherwise the current step will be inaccurate
@@ -108,11 +114,6 @@ void AGameManager::Tick(float DeltaTime)
 
 		}
 		else {
-			//time taken code
-			//auto startDI = std::chrono::high_resolution_clock::now();
-			//auto stopDI = std::chrono::high_resolution_clock::now();
-			//float msTakenCALCTC = std::chrono::duration_cast<std::chrono::microseconds>(stopDI - startDI).count();
-
 			BodyHandler_ref->calculateWithTree(updatedDT, false, false);
 
 		}
@@ -125,16 +126,6 @@ void AGameManager::Tick(float DeltaTime)
 		graduallySpawnBodies(5);
 	}
 
-
-	//
-	//if (TreeHandler_ref->showTreeBoxes) {
-	//
-	//	if (!useTreeCodes) {
-	//		TreeHandler_ref->RecalculatePartitioning();
-	//	}
-	//
-	//	TreeHandler_ref->DisplaySectors(TreeHandler_ref->treeNodeRoot);
-	//}
 }
 
 
