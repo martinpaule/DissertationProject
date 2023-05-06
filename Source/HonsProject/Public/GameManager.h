@@ -68,4 +68,6 @@ public:
 		SpawnMaxMass = MaxMass_;
 		gradualSpawnerIndex = 0;
 	}
+
+	bool drawDebugs = true;
 };

@@ -53,36 +53,43 @@ void AGameManager::BeginPlay()
 	startSpawning(SimulationDesiredBodies, simulationRadius, SpawnMaxSpeed, SpawnMaxMass);
 }
 
+//clears up bodies from the simulation
 void AGameManager::deleteDestroyedBodies() {
+
+	// 1 0
+	// 1 0
 	for (int i = 0; i < BodyHandler_ref->myGravBodies.Num(); i++)
 	{
-
-		//nullptr fix - actor mightv'e been deleted thru BP's
-		if (!BodyHandler_ref->myGravBodies[i]) {
-			BodyHandler_ref->myGravBodies.RemoveAt(i);
-			i--;
-		}
-
 		UGravBodyComponent* CompIT = BodyHandler_ref->myGravBodies[i];
 
-		//sets tobedestriotyed to true if something is out of bounds - add to argyument of if below
+		//nullptr fix - actor mightv'e been deleted thru BP's
+		if (!CompIT) {
+			BodyHandler_ref->myGravBodies.RemoveAt(i);
+			if(drawDebugs)GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, "DeleteDestroyed Exited Cause of NullPTR");
+			return;
+		}
+
+
+		//destroy body if it's out of bounds or it's supposed to be destroyed
 		if (CompIT->toBeDestroyed || (CompIT->position - (playerRef->GetActorLocation() / 1000.0f)).Length() > simulationRadius) {
 
 			CompIT->GetOwner()->Destroy();
 			BodyHandler_ref->myGravBodies[i]->DestroyComponent();
 			BodyHandler_ref->myGravBodies.RemoveAt(i);
 			i--;
+			//return;
 		}
 
 	}
 }
 
+//ensures that there's always the desired amount of asteroids in the simulation
 void AGameManager::inGameAsteroidHandle()
 {
 
 	if (BodyHandler_ref->myGravBodies.Num() < SimulationDesiredBodies) {
 		spawnAsteroidToGame();
-		GEngine->AddOnScreenDebugMessage(-1, 0.4f, FColor::Green, "added new asteroid");
+		if (drawDebugs)GEngine->AddOnScreenDebugMessage(-1, 0.4f, FColor::Green, "added new asteroid");
 
 	}
 
@@ -202,6 +209,7 @@ void AGameManager::spawnAsteroidAt(FVector position_, FVector velocity_, double 
 
 }
 
+//spawns asteroid to the simulation following the defined scene logic 
 void AGameManager::spawnAsteroidToGame()
 {
 	//random location
