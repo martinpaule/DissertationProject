@@ -42,13 +42,11 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		USphereComponent* SphereCollider;
 	
-
-	
-
+	//gravity 
 	UPROPERTY(Category = "BasicComponents", VisibleAnywhere, BlueprintReadWrite)
 	UGravBodyComponent* GravComp;
 
-
+	//visual rotation
 	float myRotateSpeed;
 	FRotator myRot;
 };

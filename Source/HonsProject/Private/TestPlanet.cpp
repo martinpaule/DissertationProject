@@ -134,7 +134,7 @@ void ATestPlanet::combineCollisionBody(UPrimitiveComponent* OverlappedComponent,
 	FVector finalVelocity = (massA * velocityA + massB * velocityB) / (massA + massB);
 
 	//add the smaller body's mass and speed to the larger one
-	if (otherBody->GravComp->mass >= GravComp->mass) {
+	if ((otherBody->GravComp->mass >= GravComp->mass && this->GetActorLabel() != "CursorPlanet") || otherBody->GetActorLabel() == "CursorPlanet") {
 		otherBody->GravComp->velocity = finalVelocity;
 		otherBody->GravComp->mass += GravComp->mass;
 		float scale_ = otherBody->GetActorScale3D().X;

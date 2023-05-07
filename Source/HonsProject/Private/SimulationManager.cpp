@@ -14,21 +14,25 @@ ASimulationManager::ASimulationManager()
 }
 
 
+void ASimulationManager::recordFinalPositions(bool writeToTXT) {
 
-void ASimulationManager::recordFinalPositions() {
+	//create a new array of planets in the 2D array of recordings
+	TArray<planet> newRecording;
+	accuracyTester_ref->planets.Add(newRecording);
 
-	TArray<planet> a;
-	accuracyTester_ref->planets.Add(a);
-
+	//note every single body into the TXT file
 	for (int i = 0; i < BodyHandler_ref->myGravBodies.Num(); i++) {
 		std::string name_ = std::string(TCHAR_TO_UTF8(*BodyHandler_ref->myGravBodies[i]->GetOwner()->GetActorLabel()));
 		accuracyTester_ref->notePlanet(name_, BodyHandler_ref->myGravBodies[i]->position, BodyHandler_ref->myGravBodies[i]->velocity, BodyHandler_ref->myGravBodies[i]->mass);
 	}
 
-	accuracyTester_ref->printResultToTXT();
+	//optionaly note the results into a text document
+	if (writeToTXT) {
+		accuracyTester_ref->printResultToTXT();
+	}
 }
 
-
+//clear out the second ghost simulation
 void ASimulationManager::removeGhostSim() {
 	if (ghostSim_ref) {
 		while (!ghostSim_ref->myGravBodies.IsEmpty())
@@ -42,6 +46,7 @@ void ASimulationManager::removeGhostSim() {
 	}
 }
 
+//begin gradual spawning 
 void ASimulationManager::startSpawning(int amount, FVector centre, float extent, float MaxVelocity_, double MaxMass_) {
 	spawningBodies = true;
 	bodiesToSpawn = amount;
@@ -52,14 +57,15 @@ void ASimulationManager::startSpawning(int amount, FVector centre, float extent,
 	gradualSpawnerIndex = 0;
 }
 
+//add a ghost simulation by copying over the current simulation
 void ASimulationManager::addGhostSim() {
+
+	if(debugging)GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, "Added Ghost Sim");
 
 	FTransform tr;
 	tr.SetIdentity();
 
-	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, "Added Ghost Sim");
-
-
+	//if the ghost sim already exists, ensure that it is clear
 	if (ghostSim_ref) {
 		while (!ghostSim_ref->myGravBodies.IsEmpty())
 		{
@@ -70,8 +76,7 @@ void ASimulationManager::addGhostSim() {
 
 
 	}
-	else {
-		//create & assign ghost Nbody handler
+	else {//if no ghost sim exists, create & assign a new ghost Nbody handler
 		ghostSim_ref = Cast<UNBodyHandler>(this->AddComponentByClass(UNBodyHandler::StaticClass(), false, tr, true));
 		ghostSim_ref->RegisterComponent();
 	}
@@ -82,7 +87,6 @@ void ASimulationManager::addGhostSim() {
 	//copy over bodies from main Nbody
 	for (int i = 0; i < BodyHandler_ref->myGravBodies.Num(); i++)
 	{
-		//BodyHandler_ref->myGravBodies[i]->GetOwner()->SetActorEnableCollision(false);
 		
 		//create ghost's planet name
 		FString name_ = BodyHandler_ref->myGravBodies[i]->GetOwner()->GetActorLabel();
@@ -99,15 +103,12 @@ void ASimulationManager::addGhostSim() {
 		//assign reference to ghost
 		Cast<ATestPlanet>(BodyHandler_ref->myGravBodies[i]->GetOwner())->ghostRef = asTP;
 
-
-		//BodyHandler_ref->myGravBodies[i]->GetOwner()->SetActorEnableCollision(true);
-
-
 	}
 }
 
-
+//initializing function that sets up all the necessary components of the simulation
 void ASimulationManager::createSimComponents() {
+
 	FTransform tr;
 	tr.SetIdentity();
 

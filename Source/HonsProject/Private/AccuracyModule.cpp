@@ -24,11 +24,9 @@ void UAccuracyModule::TickComponent(float DeltaTime, ELevelTick TickType, FActor
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 
-
-
 }
 
-
+//add a new planet
 void UAccuracyModule::notePlanet(std::string name_, FVector pos_, FVector vel_, float mass_) {
 	planet a;
 
@@ -39,10 +37,6 @@ void UAccuracyModule::notePlanet(std::string name_, FVector pos_, FVector vel_, 
 
 	planets.Last().Add(a);
 }
-
-
-
-
 
 
 void UAccuracyModule::printResultToTXT() {
@@ -151,3 +145,9 @@ void UAccuracyModule::printResultToTXT() {
 	}
 }
 
+bool UAccuracyModule::planetsEqual(planet a, planet b) {
+	if (a.mass == b.mass && a.name == b.name && a.pos == b.pos && a.vel == b.vel) {
+		return true;
+	}
+	return false;
+}

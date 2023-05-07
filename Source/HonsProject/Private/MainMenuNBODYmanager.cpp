@@ -37,7 +37,8 @@ void AMainMenuNBODYmanager::BeginPlay()
 	
 }
 
-void AMainMenuNBODYmanager::spawnCursor() {
+//spawn cursor logic
+ATestPlanet* AMainMenuNBODYmanager::spawnCursor() {
 	//spawn cursor planet
 	FVector CursorPlanetPos = FVector(0, 0, 0);
 	FVector CursorPlanetSpeed = FVector(0, 0, 0);
@@ -46,11 +47,13 @@ void AMainMenuNBODYmanager::spawnCursor() {
 
 	ATestPlanet* AsTP = spawnPlanetAt(CursorPlanetPos, CursorPlanetSpeed, CursorPlanetMass, FVector4(1.0f, 0.0f, 1.0f, 1.0f), CursorPlanetbodName, 0, BodyHandler_ref);
 
-	if (AsTP) {
-		AsTP->SphereCollider->SetGenerateOverlapEvents(true);
-	}
+	return AsTP;
+	//if (AsTP) {
+	//	AsTP->SphereCollider->SetGenerateOverlapEvents(true);
+	//}
 }
 
+//spawns a planet at the edge of the screen, just out the range of the defined range (camera)
 ATestPlanet * AMainMenuNBODYmanager::spawnEdgePlanet() {
 
 	//random speed
@@ -59,37 +62,33 @@ ATestPlanet * AMainMenuNBODYmanager::spawnEdgePlanet() {
 	speed_.Z += FMath::FRandRange(-1.0f, 1.0f);
 	speed_.Normalize();
 
+	//location is opposite of the planet's initial speed
 	FVector myLoc = simCentre;
-	myLoc += -speed_ * despawnRadiusRW * 0.8f;
+	myLoc += -speed_ * despawnRadiusRW * 0.9f;
+	speed_ *= FMath::FRandRange(0.0f, SpawnInitialMaxSpeed);
 
-
-	float magnitude = FMath::FRandRange(0.0f, SpawnInitialMaxSpeed);
-	//speed_ *= magnitude;
-	speed_ *= SpawnInitialMaxSpeed;
-
+	//random direction and rotation
 	float sideRot = FMath::FRandRange(20.0f, 40.0f);
 	if (FMath::FRandRange(0.0f, 1.0f) > 0.5f) {
 		sideRot *= -1.0f;
 	}
 	speed_ = speed_.RotateAngleAxis(sideRot, FVector(1, 0, 0));
 
-	//speed_.rota
-
 	//random mass
 	float mass_ = 0.001f;
 	mass_ += FMath::FRandRange(0.0f, SpawnInitialMaxMass);
 
+	//define name
 	FString bodName = "Body_";
 	bodName.Append(std::to_string(overallPlanets).c_str());
 
+	//random colour
 	FVector4 randColor = FVector4(1.0f, 1.0f, 1.0f, 1.0f);
 	randColor.X -= FMath::FRandRange(0, 1.0f);
 	randColor.Y -= FMath::FRandRange(0, 1.0f);
 	randColor.Z -= FMath::FRandRange(0, 1.0f);
 
 	return spawnPlanetAt(myLoc / 1000.0f, speed_, mass_, randColor, bodName, 0, BodyHandler_ref);
-
-
 
 }
 
@@ -192,7 +191,7 @@ void AMainMenuNBODYmanager::Tick(float DeltaTime)
 	BodyHandler_ref->myGravBodies[0]->GetOwner()->SetActorScale3D(FVector(1.0f, 1.0f, 1.0f)*FMath::Lerp(2.0f,4.0f, lerpVal));
 
 	//cap velocity
-	if(true){
+	if(clampVelocity){
 
 		for (int i = 1; i < BodyHandler_ref->myGravBodies.Num(); i++)
 		{

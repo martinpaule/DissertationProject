@@ -22,7 +22,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "PlanetSpawn")
 		ATestPlanet* spawnEdgePlanet();
 	UFUNCTION(BlueprintCallable, Category = "CursorSpawn")
-		 void spawnCursor();
+		ATestPlanet* spawnCursor();
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -31,7 +31,7 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	bool useTreeCodes = true;
-	
+	bool clampVelocity = true;
 	UPROPERTY(Category = "UI_references", EditAnywhere, BlueprintReadWrite)
 		UNBodyHandler* BodyHandler_ref;
 	UPROPERTY(Category = "UI_references", EditAnywhere, BlueprintReadWrite)

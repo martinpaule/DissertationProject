@@ -9,7 +9,7 @@
 #include <string>
 #include "AccuracyModule.generated.h"
 
-
+//simple struct holding all the relevant data of a gravitational body
 struct planet {
 public:
 	std::string name;
@@ -26,14 +26,8 @@ class HONSPROJECT_API UAccuracyModule : public UActorComponent
 
 public:
 
-
-
-
 	// Sets default values for this actor's properties
 	UAccuracyModule();
-
-
-
 
 protected:
 	// Called when the game starts or when spawned
@@ -43,22 +37,17 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+	//TODO: make a pointer to the gravbodycomps from sim manager and move recording func into here
+
+	//likely unnecessary? - REMOVE
 	TArray<AGravBody*> mainBodies;
 	TArray<AGravBody*> ghostBodies;
 
-	
-
-
-	bool planetsEqual(planet a, planet b) {
-		if (a.mass == b.mass && a.name == b.name && a.pos == b.pos && a.vel == b.vel) {
-			return true;
-		}
-		return false;
-	}
-
+	//actually used for storing
 	TArray<TArray<planet>> planets;
+
+	bool planetsEqual(planet a, planet b);
 	void notePlanet(std::string name_, FVector pos_, FVector vel_, float mass_);
-	
 	void printResultToTXT();
 
 	bool shouldResetTest = false;

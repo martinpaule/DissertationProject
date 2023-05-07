@@ -41,6 +41,7 @@ public:
 
 
 
+	// ----- Cursor relevant variables
 	void moveBodies(bool alsoMoveActor, double updated_dt);
 
 	//direct integration of gravitational calculations
@@ -48,36 +49,26 @@ public:
 	//tree codes calculaton
 	void calculateWithTree(double dt, bool calculateError, bool newTrees);
 
-	
-
-	
-
-	UPROPERTY(Category = "forUI", BlueprintReadWrite)
-	int gravCalculations = 0;
-
-
-
 	//double bigG = 0.000000000066743f; //when using kg,m and s
 	double bigG = 39.4784f; //when using SolarMass, AU and Years
 
-	
-
 	UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite)
-	bool useTreeCodes_ = false;
+		bool useTreeCodes_ = false;
 
+	//calculate average error of change in velocity
 	UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite)
-	float VelCalcAverageError = 0.0f;
+		float VelCalcAverageError = 0.0f;
 	
-
 	int handlerID = 0;
 
+	//fixed frame time logic
 	UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite, EditAnywhere)
 		float fixedFrameTime = 0.1f;
 	float elapsedFrameTime = 0.0f;
 
-
-
-
+	//simulation data incrementors
 	float timeTakenTotal = 0.0f;
 	float totalFramesPassed = 0.0f;
+	UPROPERTY(Category = "forUI", BlueprintReadWrite)
+		int gravCalculations = 0;
 };

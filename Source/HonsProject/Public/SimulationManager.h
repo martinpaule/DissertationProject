@@ -29,7 +29,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "ClearSim")
 		void ClearSimulation();
 
-	// ----- planet spawning functions
+	// ----- planet spawning & destroyingfunctions
 	UFUNCTION(BlueprintCallable, Category = "PlanetSpawn")
 		void spawnPlanetAt(FVector position_, FVector velocity_, double mass_, FVector4 colour_, FString name_, float radius_, UNBodyHandler* handlerToAddInto);
 	UFUNCTION(BlueprintCallable, Category = "PlanetSpawn")
@@ -47,7 +47,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "TESTING")
 		void removeGhostSim();
 	void createSimComponents();
-	void recordFinalPositions();//<- move to accuracy class
+	void recordFinalPositions(bool writeToTXT);//<- move to accuracy class
 	void handleAveragePosError();
 
 
@@ -60,6 +60,7 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	bool debugging = true;
 
 	// ----- Functionality components
 	UPROPERTY(Category = "UI_references", EditAnywhere, BlueprintReadWrite)
@@ -127,8 +128,7 @@ public:
 	
 	//EXPERIMENTAL
 	UPROPERTY(Category = "Testing", BlueprintReadWrite, EditAnywhere)
-	bool newTrees = false;
-	//bool PlanetOutOfBounds = false;
+		bool newTrees = false;
 
 
 	
