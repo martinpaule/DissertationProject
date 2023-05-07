@@ -163,7 +163,7 @@ void AGameManager::graduallySpawnBodies(int spawnsPerFrame) {
 
 
 // setup function for spawning bodies - creates a new body with specified parameters
-void AGameManager::spawnAsteroidAt(FVector position_, FVector velocity_, double mass_, FVector4 colour_)
+void AGameManager::spawnAsteroidAt(FVector position_, FVector velocity_, double mass_)
 {
 
 	FActorSpawnParameters SpawnInfo;
@@ -195,12 +195,8 @@ void AGameManager::spawnAsteroidAt(FVector position_, FVector velocity_, double 
 	//currently more for display purposes
 	newBody->SetActorScale3D(FVector(scale_, scale_, scale_));
 
-	//option to set colour too
-	colour_.X = FMath::FRandRange(0.3f, 1.0f);
-	colour_.Y = FMath::FRandRange(0.3f, 1.0f);
-	colour_.Z = FMath::FRandRange(0.3f, 1.0f);
-	newBody->myMat->SetVectorParameterValue(TEXT("Colour"), colour_);
-	newBody->GravComp->myCol = colour_;
+	
+
 
 	BodyHandler_ref->myGravBodies.Add(newBody->GravComp);
 
@@ -231,6 +227,6 @@ void AGameManager::spawnAsteroidToGame()
 
 	FString bodName = "Body ";
 	bodName.Append(std::to_string(OverallSpawnerIndex).c_str());
-	spawnAsteroidAt(myLoc, speed_, mass_, FVector4(1.0f, 0.0f, 1.0f, 1.0f));
+	spawnAsteroidAt(myLoc, speed_, mass_);
 	OverallSpawnerIndex++;
 }

@@ -50,7 +50,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION(BlueprintCallable, Category = "PlanetSpawn")
-		void spawnAsteroidAt(FVector position_, FVector velocity_, double mass_, FVector4 colour_);
+		void spawnAsteroidAt(FVector position_, FVector velocity_, double mass_);
 
 	void spawnAsteroidToGame();
 
@@ -69,5 +69,5 @@ public:
 		gradualSpawnerIndex = 0;
 	}
 
-	bool drawDebugs = true;
+	bool drawDebugs = false;
 };

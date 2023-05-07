@@ -64,13 +64,23 @@ AAsteroid::AAsteroid()
 	myMat = UMaterialInstanceDynamic::Create(Mat_o, NULL);
 	StaticMeshComponent->SetMaterial(0, myMat);
 
-
 	myRot = FRotator(0,0,0);
 	myRot.Yaw = FMath::RandRange(-1.0f, 1.0f);
 	myRot.Pitch = FMath::RandRange(-1.0f, 1.0f);
 	myRot.Roll = FMath::RandRange(-1.0f, 1.0f);
 
 	myRotateSpeed = FMath::RandRange(50.0f, 150.0f);
+
+
+	FVector4 colour_;
+
+	//option to set colour too
+	colour_.X = FMath::RandRange(0.0f, 1.0f);
+	colour_.Y = FMath::RandRange(0.0f, 1.0f);
+	colour_.Z = FMath::RandRange(0.0f, 1.0f);
+	//colour_.W = 1.0f;
+	//GravComp->myCol = colour_;
+	myMat->SetVectorParameterValue(TEXT("OreColour"), colour_);
 }
 
 
@@ -88,7 +98,6 @@ void AAsteroid::BeginPlay()
 	//create Nbody handler
 	//GravComp = Cast<UGravBodyComponent>(this->AddComponentByClass(UGravBodyComponent::StaticClass(), false, tr, true));
 	//GravComp->RegisterComponent();
-	//myMat->SetVectorParameterValue(TEXT("OreColour"), GravComp->myCol);
 
 	
 	
@@ -99,7 +108,9 @@ void AAsteroid::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	AddActorWorldRotation(myRot * myRotateSpeed * GravComp->myLocalTimeEditor * DeltaTime);
+	if (GravComp) {
+		AddActorWorldRotation(myRot * myRotateSpeed * GravComp->myLocalTimeEditor * DeltaTime);
+	}
 
 	//this->AddActorLocalRotation()
 }
