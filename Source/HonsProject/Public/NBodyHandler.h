@@ -20,7 +20,8 @@ class HONSPROJECT_API UNBodyHandler : public UActorComponent
 public:	
 	// Sets default values for this actor's properties
 	UNBodyHandler();
-
+	UFUNCTION(BlueprintCallable, Category = "Debugging")
+		TArray<FVector> getThrowLine(FVector startingPos, FVector velocity, int segments = 50, float timeStep = 1.0f);
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -38,7 +39,6 @@ public:
 	//tree code handler reference
 	UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite)
 	UTreeHandler* treeHandlerRef;
-
 
 
 	// ----- Cursor relevant variables

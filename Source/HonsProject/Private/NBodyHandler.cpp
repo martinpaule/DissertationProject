@@ -19,6 +19,63 @@ UNBodyHandler::UNBodyHandler()
 	
 }
 
+TArray<FVector> UNBodyHandler::getThrowLine(FVector startingPos, FVector velocity, int segments, float timeStep)
+{
+	TArray<FVector> returnArray;
+	
+
+	FVector Pos_now = startingPos;
+	FVector Vel_now = velocity;
+
+	returnArray.Add(Pos_now);
+
+
+	//declarations
+	double distance = 0.0f;
+	double distanceCubed = 0.0f;
+	FVector direction = FVector(0.0f, 0.0f, 0.0f);
+	FVector iteratedBodyForce = FVector(0.0f, 0.0f, 0.0f);
+	FVector sumOfForces = FVector(0.0f, 0.0f, 0.0f);
+	FVector deltaVelocity = FVector(0.0f, 0.0f, 0.0f);
+	FVector deltaDist = FVector(0.0f, 0.0f, 0.0f);
+
+
+	for (int i = 0; i < segments; i++) {
+
+
+		
+		sumOfForces = FVector(0.0f, 0.0f, 0.0f);
+
+		//calulate combined forces acting on body I
+		for (int j = 0; j < myGravBodies.Num(); j++)
+		{
+			direction = myGravBodies[j]->position - Pos_now;
+			distance = direction.Length();
+			distanceCubed = distance * distance * distance;
+			iteratedBodyForce = direction * bigG * myGravBodies[j]->mass;
+			iteratedBodyForce /= distanceCubed;
+
+			//add this to the sum of forces acting on body I
+			sumOfForces += iteratedBodyForce;
+			gravCalculations++;
+		}
+
+		//apply change in velocity to body I
+		deltaVelocity = timeStep * sumOfForces;
+		Vel_now += deltaVelocity;
+
+
+
+		//apply imagined time step and add to array
+		deltaDist = timeStep * Vel_now;
+		Pos_now += deltaDist;
+		returnArray.Add(Pos_now);
+
+	}
+
+	return returnArray;
+}
+
 
 
 

@@ -37,7 +37,7 @@ public:
 	int bodiesToSpawn;
 	AActor* playerRef;
 
-	float timeMultiplier = 1.0f;
+	float timeMultiplier = 0.7f;
 	bool useTreeCodes = true;
 
 	
