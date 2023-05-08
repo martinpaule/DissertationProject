@@ -5,9 +5,8 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include <fstream>
-#include "GravBody.h"
 #include <string>
-#include "AccuracyModule.generated.h"
+#include "Accuracy_Handler.generated.h"
 
 //simple struct holding all the relevant data of a gravitational body
 struct planet {
@@ -39,9 +38,9 @@ public:
 
 	//TODO: make a pointer to the gravbodycomps from sim manager and move recording func into here
 
-	//likely unnecessary? - REMOVE
-	TArray<AGravBody*> mainBodies;
-	TArray<AGravBody*> ghostBodies;
+	////likely unnecessary? - REMOVE
+	//TArray<AGravBody*> mainBodies;
+	//TArray<AGravBody*> ghostBodies;
 
 	//actually used for storing
 	TArray<TArray<planet>> planets;

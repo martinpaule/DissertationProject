@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "NBodyHandler.h"
+#include "NBody_Handler.h"
 #include <Kismet/GameplayStatics.h>
 #include "Misc/DateTime.h"
 #include "GameFramework/DefaultPawn.h"

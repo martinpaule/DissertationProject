@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "GravBodyComponent.h"
+#include "GravBody_Component.h"
 
 // Sets default values for this component's properties
 UGravBodyComponent::UGravBodyComponent()

@@ -4,9 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "NBodyHandler.h"
+#include "NBody_Handler.h"
 
-#include "MainMenuNBODYmanager.generated.h"
+#include "MainMenu_Manager.generated.h"
 
 UCLASS()
 class HONSPROJECT_API AMainMenuNBODYmanager : public AActor

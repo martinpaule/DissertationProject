@@ -4,8 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "GravBodyComponent.h"
-#include "TreeHandler.generated.h"
+#include "GravBody_Component.h"
+#include "Tree_Handler.generated.h"
 
 //struct TreeNode;
 struct TreeNode {

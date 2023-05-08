@@ -5,8 +5,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/Pawn.h"
-#include "NBodyHandler.h"
-#include "GameManager.generated.h"
+#include "NBody_Handler.h"
+#include "Game_Manager.generated.h"
 
 UCLASS()
 class HONSPROJECT_API AGameManager : public AActor

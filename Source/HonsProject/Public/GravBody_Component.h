@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "GravBodyComponent.generated.h"
+#include "GravBody_Component.generated.h"
 
 struct TreeNode;
 

@@ -6,10 +6,10 @@
 #include "Components/ActorComponent.h"
 #include "UObject/ConstructorHelpers.h"
 #include <string>
-#include "TreeHandler.h"
+#include "Tree_Handler.h"
 #include "TestPlanet.h"
 #include <chrono>
-#include "NBodyHandler.generated.h"
+#include "NBody_Handler.generated.h"
 
 
 UCLASS()

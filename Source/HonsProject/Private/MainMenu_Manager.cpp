@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "MainMenuNBODYmanager.h"
+#include "MainMenu_Manager.h"
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
 // Sets default values

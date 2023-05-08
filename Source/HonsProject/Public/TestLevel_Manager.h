@@ -4,11 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "NBodyHandler.h"
-#include "AccuracyModule.h"
+#include "NBody_Handler.h"
+#include "Accuracy_Handler.h"
 
 
-#include "SimulationManager.generated.h"
+#include "TestLevel_Manager.generated.h"
 
 UCLASS()
 class HONSPROJECT_API ASimulationManager : public AActor

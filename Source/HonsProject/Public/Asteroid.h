@@ -7,7 +7,7 @@
 #include "Components/PrimitiveComponent.h"
 #include "Components/SphereComponent.h"
 #include "GameFramework/Actor.h"
-#include "GravBodyComponent.h"
+#include "GravBody_Component.h"
 
 #include "Asteroid.generated.h"
 
