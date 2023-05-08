@@ -25,18 +25,17 @@ public:
 	UPROPERTY(Category = "AsteroidFieldSettings", EditAnywhere, BlueprintReadWrite)
 		float simulationRadius = 5;
 	UPROPERTY(Category = "AsteroidFieldSettings", EditAnywhere, BlueprintReadWrite)
-		float SpawnMaxSpeed = 40;
+		FVector2D SpawnSpeed = 40;
 	UPROPERTY(Category = "AsteroidFieldSettings", EditAnywhere, BlueprintReadWrite)
-		float SpawnMaxMass = 60;
+		FVector SimulationCentre = FVector(0.0f, 0.0f, 0.0f);
 	UPROPERTY(Category = "AsteroidFieldSettings", EditAnywhere, BlueprintReadWrite)
-		int SimulationDesiredBodies = 400;
+		FVector2D SpawnMass = 60;
+	UPROPERTY(Category = "AsteroidFieldSettings", EditAnywhere, BlueprintReadWrite)
+		int SimulationDesiredBodies = 100;
 	
-	int gradualSpawnerIndex = 0;
 	int OverallSpawnerIndex = 0;
-	bool spawningBodies = false;
-	int bodiesToSpawn;
 	AActor* playerRef;
-
+	UPROPERTY(Category = "AsteroidFieldSettings", EditAnywhere, BlueprintReadWrite)
 	float timeMultiplier = 0.7f;
 	bool useTreeCodes = true;
 
@@ -54,20 +53,9 @@ public:
 
 	void spawnAsteroidToGame();
 
-	void graduallySpawnBodies(int spawnsPerFrame = 1);
-
-	void deleteDestroyedBodies();
+	void handleDestroyingAsteroids();
 	void inGameAsteroidHandle();
 
-	UFUNCTION(BlueprintCallable, Category = "PlanetSpawn")
-	void startSpawning(int amount, float extent, float MaxVelocity_, double MaxMass_) {
-		spawningBodies = true;
-		bodiesToSpawn = amount;
-		simulationRadius = extent;
-		SpawnMaxSpeed = MaxVelocity_;
-		SpawnMaxMass = MaxMass_;
-		gradualSpawnerIndex = 0;
-	}
-
-	bool drawDebugs = false;
+	UPROPERTY(Category = "Debugging", EditAnywhere, BlueprintReadWrite)
+	bool drawDebugs = true;
 };

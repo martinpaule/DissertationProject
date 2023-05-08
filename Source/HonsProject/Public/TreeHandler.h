@@ -48,7 +48,16 @@ public:
 	TArray<UGravBodyComponent*> * bodyHandlerBodies;
 	TreeNode * treeNodeRoot;
 
+	//visualise oct trees
+	UPROPERTY(Category = "VisualisationRelevant", EditAnywhere, BlueprintReadWrite)
+		bool showTreeBoxes = false;
 
+	//total gravitational calculations done
+	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
+		int gravCalcs = 0;
+
+	double bigG = 39.4784f; //when using SolarMass, AU and Years
+	bool drawDebugs = true;
 
 protected:
 	// Called when the game starts or when spawned
@@ -58,26 +67,25 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	UFUNCTION(BlueprintCallable, Category = "TreeTings")
-	void RecalculatePartitioning(bool newTrees);
+	//debug
 	void DisplaySectors(TreeNode* rootNode);
-	void partitionTree(TreeNode* rootNode);
 
+	//recalculating types
+	UFUNCTION(BlueprintCallable, Category = "TreeTings")
+		void RecalculatePartitioning(bool newTrees);
+	void originalTreeRecalculate();
+	void newTreeRecalculate();
+
+	//helper functions for recalculating the tree
+	FVector getApproxForce(UGravBodyComponent* body, TreeNode* rootNode);
 	TreeNode* getLowestSectorOfPos(FVector position);
 	TreeNode* searchLowestSectorRecursive (FVector position, TreeNode * nowTInree);
-	
 	void mergeEmptiesAboveMe(TreeNode* rootNode);
+	void partitionTree(TreeNode* rootNode);
+	void updateMyCombMassAndAvgPos(TreeNode* rootNode);
 
-	//recursive function to get force acting on a given 1 body
-	FVector getApproxForce(UGravBodyComponent* body, TreeNode* rootNode);
+	//manual setup of the tree
+	void setManualTreeRoot(FVector midPos, float cubeExtent);
 
-	//visualise oct trees
-	UPROPERTY(Category = "VisualisationRelevant", EditAnywhere, BlueprintReadWrite)
-		bool showTreeBoxes = false;
-
-	//total gravitational calculations done
-	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-	int gravCalcs = 0;
-	double bigG = 39.4784f; //when using SolarMass, AU and Years
-
+	void updateAvgPosCombMassOfAllSectorsContaining(UGravBodyComponent* body);//delete cleanup function
 };

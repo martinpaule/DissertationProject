@@ -71,4 +71,5 @@ public:
 	float totalFramesPassed = 0.0f;
 	UPROPERTY(Category = "forUI", BlueprintReadWrite)
 		int gravCalculations = 0;
+	bool drawDebugs = true;
 };

@@ -29,7 +29,7 @@ void AGameManager::BeginPlay()
 	for (int i = 0; i < FoundActors.Num(); i++) {
 		if (FoundActors[i]->GetActorLabel().Contains("PlayerPawn"))
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 0.4f, FColor::Green, "FOUND PAWN");
+			if (drawDebugs)GEngine->AddOnScreenDebugMessage(-1, 0.4f, FColor::Green, "FOUND PAWN");
 			playerRef = FoundActors[i];
 		}
 	}
@@ -41,23 +41,30 @@ void AGameManager::BeginPlay()
 
 	//setup Nbody handler
 	BodyHandler_ref->useTreeCodes_ = useTreeCodes;
+	BodyHandler_ref->drawDebugs = drawDebugs;
+
 
 	//create tree code handler
 	TreeHandler_ref = Cast<UTreeHandler>(this->AddComponentByClass(UTreeHandler::StaticClass(), false, tr, true));
 	TreeHandler_ref->RegisterComponent();
 	TreeHandler_ref->bodyHandlerBodies = &BodyHandler_ref->myGravBodies;
-
+	TreeHandler_ref->drawDebugs = drawDebugs;
 	//assign tree code handler
 	BodyHandler_ref->treeHandlerRef = TreeHandler_ref;
 
-	startSpawning(SimulationDesiredBodies, simulationRadius, SpawnMaxSpeed, SpawnMaxMass);
+	//spawnAsteroidToGame();
+	//spawnAsteroidToGame();
+	//spawnAsteroidToGame();
+
+
+	TreeHandler_ref->setManualTreeRoot(SimulationCentre, simulationRadius*1.2f);
 }
 
 //clears up bodies from the simulation
-void AGameManager::deleteDestroyedBodies() {
+void AGameManager::handleDestroyingAsteroids() {
 
-	// 1 0
-	// 1 0
+	bool somethingChanged = false;
+
 	for (int i = 0; i < BodyHandler_ref->myGravBodies.Num(); i++)
 	{
 		UGravBodyComponent* CompIT = BodyHandler_ref->myGravBodies[i];
@@ -65,21 +72,35 @@ void AGameManager::deleteDestroyedBodies() {
 		//nullptr fix - actor mightv'e been deleted thru BP's
 		if (!CompIT) {
 			BodyHandler_ref->myGravBodies.RemoveAt(i);
-			if(drawDebugs)GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, "DeleteDestroyed Exited Cause of NullPTR");
-			return;
+			if(drawDebugs)GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, "Destroyed GravBodyComponent Cause of NullPTR");
+			somethingChanged = true;
+			break;
 		}
 
 
 		//destroy body if it's out of bounds or it's supposed to be destroyed
-		if (CompIT->toBeDestroyed || (CompIT->position - (playerRef->GetActorLocation() / 1000.0f)).Length() > simulationRadius) {
+		//if (CompIT->toBeDestroyed || (CompIT->position - (playerRef->GetActorLocation() / 1000.0f)).Length() > simulationRadius) {
+		if (CompIT->toBeDestroyed || (CompIT->position - SimulationCentre).Length() > simulationRadius) {
+
+			if (drawDebugs)GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Orange, "Destroyed GravBodyComponent Cause OutOfBounds or ToBeDestroyed");
+			
+			//TreeHandler_ref->updateAvgPosCombMassOfAllSectorsContaining(BodyHandler_ref->myGravBodies[i]);//delete cleanup function
+
+
 
 			CompIT->GetOwner()->Destroy();
 			BodyHandler_ref->myGravBodies[i]->DestroyComponent();
 			BodyHandler_ref->myGravBodies.RemoveAt(i);
+			somethingChanged = true;
 			i--;
-			//return;
+			
 		}
 
+	}
+
+	if (somethingChanged) {
+		TreeHandler_ref->setManualTreeRoot(SimulationCentre, simulationRadius * 1.2f);
+		if (drawDebugs)GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Orange, "Had To Manually recalculate");
 	}
 }
 
@@ -89,7 +110,7 @@ void AGameManager::inGameAsteroidHandle()
 
 	if (BodyHandler_ref->myGravBodies.Num() < SimulationDesiredBodies) {
 		spawnAsteroidToGame();
-		if (drawDebugs)GEngine->AddOnScreenDebugMessage(-1, 0.4f, FColor::Green, "added new asteroid");
+		//if (drawDebugs)GEngine->AddOnScreenDebugMessage(-1, 0.4f, FColor::Green, "added new asteroid");
 
 	}
 
@@ -102,64 +123,31 @@ void AGameManager::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 
-
-	if (!spawningBodies) {
-
-		//DrawDebugSphere(GetWorld(), playerRef->GetActorLocation(), simulationRadius * 1000, 10, FColor::Green,false, 0.0f);
+	if (drawDebugs)DrawDebugSphere(GetWorld(), SimulationCentre*1000.0f, simulationRadius * 1000, 10, FColor::Green,false, 0.0f);
 
 
-		//step 0: destroy overlapping bodies from previous step - must be done before force calculation otherwise the current step will be inaccurate
-		deleteDestroyedBodies();
-		inGameAsteroidHandle();
+	//step 0: destroy overlapping bodies from previous step - must be done before force calculation otherwise the current step will be inaccurate
+	handleDestroyingAsteroids();
+	inGameAsteroidHandle();
 
-		//step 1: Gravitational calculations using fixed time updates
-		//dt influenced by simulation time scale 
-		double updatedDT = DeltaTime * timeMultiplier * 0.027f; //0.027 makes the time as 10 days/s		
+	//step 1: Gravitational calculations using fixed time updates
+	//dt influenced by simulation time scale 
+	double updatedDT = DeltaTime * timeMultiplier;	
 
-		if (!useTreeCodes) {
-			BodyHandler_ref->calculateAllVelocityChanges(updatedDT);
+	BodyHandler_ref->calculateWithTree(updatedDT, false, true);
 
-		}
-		else {
-			BodyHandler_ref->calculateWithTree(updatedDT, false, false);
-
-		}
-		//step 2: move bodies using their updated velocity, also destroy ones that 
-		BodyHandler_ref->moveBodies(true, updatedDT);
+	//step 2: move bodies using their updated velocity, also destroy ones that 
+	BodyHandler_ref->moveBodies(true, updatedDT);
 
 		
-	}
-	else{
-		graduallySpawnBodies(5);
-	}
+
+		
+	
+
 
 }
 
 
-
-
-//function that allows gradual spawn of initial bodies rather than all at once, avoiding a big lag spike when handlingodies
-void AGameManager::graduallySpawnBodies(int spawnsPerFrame) {
-
-
-	for (int s = 0; s < spawnsPerFrame; s++) { // spawn all the bodies for this frame
-
-		//Exi the spawning loop
-		if (gradualSpawnerIndex >= bodiesToSpawn) {
-
-			spawningBodies = false;
-			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, "Spawned all desired bodies");
-
-			return;
-		}
-
-		spawnAsteroidToGame();
-		gradualSpawnerIndex++;
-
-	}
-
-	return;
-}
 
 
 // setup function for spawning bodies - creates a new body with specified parameters
@@ -183,24 +171,21 @@ void AGameManager::spawnAsteroidAt(FVector position_, FVector velocity_, double 
 	newBody->GravComp->position = position_;
 	newBody->GravComp->velocity = velocity_;
 	newBody->GravComp->mass = mass_;
-	//newBody->SetActorLabel(name_);
 
-
-	//if (radius_ == 0.0f) {
-	//	radius_ = cbrt(mass_);
-	//}
 
 	float scale_ = cbrt(mass_);
-	scale_ /= 2.5f;
+	scale_ /= 3.0f;
 	//currently more for display purposes
 	newBody->SetActorScale3D(FVector(scale_, scale_, scale_));
 
 	
 
-
 	BodyHandler_ref->myGravBodies.Add(newBody->GravComp);
 
-
+	//find the lowest existing sector of the tree, assign it there and update its partitioning
+	//TreeNode* ref_tn = TreeHandler_ref->getLowestSectorOfPos(position_);
+	//ref_tn->bodies.Add(newBody->GravComp);
+	//TreeHandler_ref->partitionTree(ref_tn);
 
 
 }
@@ -213,17 +198,21 @@ void AGameManager::spawnAsteroidToGame()
 	myLoc.X += FMath::FRandRange(-simulationRadius, simulationRadius);
 	myLoc.Y += FMath::FRandRange(-simulationRadius, simulationRadius);
 	myLoc.Z += FMath::FRandRange(-simulationRadius, simulationRadius);
+	myLoc *= 0.9f;
 	myLoc += playerRef->GetActorLocation() / 1000.0f; //translate it to desired spawn centre
 
 	//random speed
 	FVector speed_ = FVector(0, 0, 0);
-	speed_.X += FMath::FRandRange(-SpawnMaxSpeed, SpawnMaxSpeed);
-	speed_.Y += FMath::FRandRange(-SpawnMaxSpeed, SpawnMaxSpeed);
-	speed_.Z += FMath::FRandRange(-SpawnMaxSpeed, SpawnMaxSpeed);
+	speed_.X += FMath::FRandRange(-1.0f, 1.0f);
+	speed_.Y += FMath::FRandRange(-1.0f, 1.0f);
+	speed_.Z += FMath::FRandRange(-1.0f, 1.0f);
 
+	speed_.Normalize();
+	speed_ *= FMath::FRandRange(SpawnSpeed.X,SpawnSpeed.Y);
+	
 	//random mass
 	float mass_ = 0.001f;
-	mass_ += FMath::FRandRange(0.0f, SpawnMaxMass);
+	mass_ += FMath::FRandRange(SpawnMass.X, SpawnMass.Y);
 
 	FString bodName = "Body ";
 	bodName.Append(std::to_string(OverallSpawnerIndex).c_str());
