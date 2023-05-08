@@ -22,6 +22,12 @@ public:
 	UNBodyHandler();
 	UFUNCTION(BlueprintCallable, Category = "Debugging")
 		TArray<FVector> getThrowLine(FVector startingPos, FVector velocity, int segments = 50, float timeStep = 1.0f);
+
+	UFUNCTION(BlueprintCallable, Category = "Debugging")
+		void constructTreeHandler();
+	UFUNCTION(BlueprintCallable, Category = "AddBody")
+		UGravBodyComponent * addGravCompAt(FVector position, FVector velocity, double mass, AActor * gravCompOwner);
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -38,7 +44,7 @@ public:
 
 	//tree code handler reference
 	UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite)
-	UTreeHandler* treeHandlerRef;
+	UTreeHandler* treeHandler;
 
 
 	// ----- Cursor relevant variables

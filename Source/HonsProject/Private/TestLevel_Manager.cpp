@@ -119,13 +119,15 @@ void ASimulationManager::createSimComponents() {
 	//setup Nbody handler
 	BodyHandler_ref->useTreeCodes_ = useTreeCodes;
 
-	//create tree code handler
-	TreeHandler_ref = Cast<UTreeHandler>(this->AddComponentByClass(UTreeHandler::StaticClass(), false, tr, true));
-	TreeHandler_ref->RegisterComponent();
-	TreeHandler_ref->bodyHandlerBodies = &BodyHandler_ref->myGravBodies;
+	BodyHandler_ref->constructTreeHandler();
 
-	//assign tree code handler
-	BodyHandler_ref->treeHandlerRef = TreeHandler_ref;
+	////create tree code handler
+	//TreeHandler_ref = Cast<UTreeHandler>(this->AddComponentByClass(UTreeHandler::StaticClass(), false, tr, true));
+	//TreeHandler_ref->RegisterComponent();
+	//TreeHandler_ref->bodyHandlerBodies = &BodyHandler_ref->myGravBodies;
+	//
+	////assign tree code handler
+	//BodyHandler_ref->treeHandlerRef = TreeHandler_ref;
 
 	//create accuracy tester
 	accuracyTester_ref = Cast<UAccuracyModule>(this->AddComponentByClass(UAccuracyModule::StaticClass(), false, tr, true));
@@ -258,13 +260,13 @@ void ASimulationManager::Tick(float DeltaTime)
 		handleAveragePosError();
 	}
 
-	if (TreeHandler_ref->showTreeBoxes) {
+	if (BodyHandler_ref->treeHandler->showTreeBoxes) {
 
 		if (!useTreeCodes) {
-			TreeHandler_ref->RecalculatePartitioning(false);
+			BodyHandler_ref->treeHandler->RecalculatePartitioning(false);
 		}
 
-		TreeHandler_ref->DisplaySectors(TreeHandler_ref->treeNodeRoot);
+		BodyHandler_ref->treeHandler->DisplaySectors(BodyHandler_ref->treeHandler->treeNodeRoot);
 	}
 }
 
@@ -381,19 +383,10 @@ void ASimulationManager::spawnPlanetAt(FVector position_, FVector velocity_, dou
 	//newBody->SetActorEnableCollision(true);
 
 
-	FTransform tr;
-	tr.SetIdentity();
-
+	
 	//create Nbody handler
-	newBody->GravComp = Cast<UGravBodyComponent>(newBody->AddComponentByClass(UGravBodyComponent::StaticClass(), true, tr, true));
-	newBody->GravComp->RegisterComponent();
+	newBody->GravComp = BodyHandler_ref->addGravCompAt(position_, velocity_, mass_, newBody);
 
-
-	newBody->GravComp->toBeDestroyed = false;
-	newBody->GravComp->position = position_;
-	newBody->GravComp->velocity = velocity_;
-	newBody->GravComp->radius = radius_;
-	newBody->GravComp->mass = mass_;
 	newBody->SetActorLabel(name_);
 
 
@@ -518,7 +511,7 @@ void ASimulationManager::spawnSolarSystem(FVector SunPosition_) {
 	}
 
 	if (useTreeCodes) {
-		TreeHandler_ref->RecalculatePartitioning(false);
+		BodyHandler_ref->treeHandler->RecalculatePartitioning(false);
 	}
 
 }

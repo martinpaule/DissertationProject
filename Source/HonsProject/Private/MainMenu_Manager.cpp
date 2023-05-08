@@ -24,15 +24,9 @@ void AMainMenuNBODYmanager::BeginPlay()
 	BodyHandler_ref = Cast<UNBodyHandler>(this->AddComponentByClass(UNBodyHandler::StaticClass(), false, tr, true));
 	BodyHandler_ref->RegisterComponent();
 
-	//setup Nbody handler
+	//setup Nbody handler & create tree code handler
 	BodyHandler_ref->useTreeCodes_ = useTreeCodes;
-	//create tree code handler
-	TreeHandler_ref = Cast<UTreeHandler>(this->AddComponentByClass(UTreeHandler::StaticClass(), false, tr, true));
-	TreeHandler_ref->RegisterComponent();
-	TreeHandler_ref->bodyHandlerBodies = &BodyHandler_ref->myGravBodies;
-
-	//assign tree code handler
-	BodyHandler_ref->treeHandlerRef = TreeHandler_ref;
+	BodyHandler_ref->constructTreeHandler();
 
 	
 }

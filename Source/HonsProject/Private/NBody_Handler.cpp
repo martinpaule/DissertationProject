@@ -87,8 +87,43 @@ void UNBodyHandler::BeginPlay()
 
 	
 	
+	
 
 	
+}
+
+void UNBodyHandler::constructTreeHandler() {
+
+
+	FTransform tr;
+	tr.SetIdentity();
+	//create tree code handler
+	treeHandler = Cast<UTreeHandler>(GetOwner()->AddComponentByClass(UTreeHandler::StaticClass(), false, tr, true));
+	treeHandler->RegisterComponent();
+	treeHandler->bodyHandlerBodies = &myGravBodies;
+	treeHandler->drawDebugs = drawDebugs;
+
+}
+
+UGravBodyComponent * UNBodyHandler::addGravCompAt(FVector position, FVector velocity, double mass, AActor * gravCompOwner)
+{
+
+	FTransform tr;
+	tr.SetIdentity();
+
+	//create Nbody handler
+	UGravBodyComponent* GravComp = Cast<UGravBodyComponent>(gravCompOwner->AddComponentByClass(UGravBodyComponent::StaticClass(), true, tr, true));
+	GravComp->RegisterComponent();
+
+	GravComp->toBeDestroyed = false;
+	GravComp->position = position;
+	GravComp->velocity = velocity;
+	GravComp->mass = mass;
+
+	myGravBodies.Add(GravComp);
+
+	return GravComp;
+
 }
 
 //direct integration of gravitational dynamics using Newtonian formulae
@@ -140,7 +175,7 @@ void UNBodyHandler::calculateWithTree(double dt, bool calculateError, bool newTr
 
 	////time taken code
 	//auto startDI = std::chrono::high_resolution_clock::now();
-	treeHandlerRef->RecalculatePartitioning(newTrees);
+	treeHandler->RecalculatePartitioning(newTrees);
 	//auto stopDI = std::chrono::high_resolution_clock::now();
 	//float msTakenCALCTC = std::chrono::duration_cast<std::chrono::microseconds>(stopDI - startDI).count();
 	//
@@ -153,7 +188,7 @@ void UNBodyHandler::calculateWithTree(double dt, bool calculateError, bool newTr
 
 
 
-	treeHandlerRef->gravCalcs = 0;
+	treeHandler->gravCalcs = 0;
 
 	FVector TreeSumOfForces = FVector(0.0f, 0.0f, 0.0f);
 	FVector RealSumOfForces = FVector(0.0f, 0.0f, 0.0f);
@@ -172,7 +207,7 @@ void UNBodyHandler::calculateWithTree(double dt, bool calculateError, bool newTr
 		
 
 		//apply change in velocity to body I
-		TreeSumOfForces = treeHandlerRef->getApproxForce(myGravBodies[i],treeHandlerRef->treeNodeRoot);
+		TreeSumOfForces = treeHandler->getApproxForce(myGravBodies[i], treeHandler->treeNodeRoot);
 		myGravBodies[i]->velocity += myGravBodies[i]->myLocalTimeEditor * dt * TreeSumOfForces;
 
 		if (calculateError) {

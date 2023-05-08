@@ -69,8 +69,6 @@ public:
 	UNBodyHandler* ghostSim_ref;
 	UPROPERTY(Category = "UI_references", EditAnywhere, BlueprintReadWrite)
 	UAccuracyModule* accuracyTester_ref;
-	UPROPERTY(Category = "UI_references", EditAnywhere, BlueprintReadWrite)
-	UTreeHandler* TreeHandler_ref;
 
 	// ----- simulation dependant variables
 	UPROPERTY(Category = "SimulationType", EditAnywhere, BlueprintReadWrite)

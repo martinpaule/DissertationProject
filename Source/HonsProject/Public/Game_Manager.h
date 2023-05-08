@@ -19,8 +19,8 @@ public:
 
 	UPROPERTY(Category = "references", EditAnywhere, BlueprintReadWrite)
 		UNBodyHandler* BodyHandler_ref;
-	UPROPERTY(Category = "references", EditAnywhere, BlueprintReadWrite)
-		UTreeHandler* TreeHandler_ref;
+	//UPROPERTY(Category = "references", EditAnywhere, BlueprintReadWrite)
+	//	UTreeHandler* TreeHandler_ref;
 
 	UPROPERTY(Category = "AsteroidFieldSettings", EditAnywhere, BlueprintReadWrite)
 		float simulationRadius = 5;
@@ -47,9 +47,6 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
-	UFUNCTION(BlueprintCallable, Category = "PlanetSpawn")
-		void spawnAsteroidAt(FVector position_, FVector velocity_, double mass_);
 
 	void spawnAsteroidToGame();
 

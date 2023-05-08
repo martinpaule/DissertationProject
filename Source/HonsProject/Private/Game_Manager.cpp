@@ -44,20 +44,10 @@ void AGameManager::BeginPlay()
 	BodyHandler_ref->drawDebugs = drawDebugs;
 
 
-	//create tree code handler
-	TreeHandler_ref = Cast<UTreeHandler>(this->AddComponentByClass(UTreeHandler::StaticClass(), false, tr, true));
-	TreeHandler_ref->RegisterComponent();
-	TreeHandler_ref->bodyHandlerBodies = &BodyHandler_ref->myGravBodies;
-	TreeHandler_ref->drawDebugs = drawDebugs;
-	//assign tree code handler
-	BodyHandler_ref->treeHandlerRef = TreeHandler_ref;
-
-	//spawnAsteroidToGame();
-	//spawnAsteroidToGame();
-	//spawnAsteroidToGame();
+	BodyHandler_ref->constructTreeHandler();
 
 
-	TreeHandler_ref->setManualTreeRoot(SimulationCentre, simulationRadius*1.2f);
+	BodyHandler_ref->treeHandler->setManualTreeRoot(SimulationCentre, simulationRadius*1.2f);
 }
 
 //clears up bodies from the simulation
@@ -99,7 +89,7 @@ void AGameManager::handleDestroyingAsteroids() {
 	}
 
 	if (somethingChanged) {
-		TreeHandler_ref->setManualTreeRoot(SimulationCentre, simulationRadius * 1.2f);
+		BodyHandler_ref->treeHandler->setManualTreeRoot(SimulationCentre, simulationRadius * 1.2f);
 		if (drawDebugs)GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Orange, "Had To Manually recalculate");
 	}
 }
@@ -148,51 +138,14 @@ void AGameManager::Tick(float DeltaTime)
 }
 
 
-
-
-// setup function for spawning bodies - creates a new body with specified parameters
-void AGameManager::spawnAsteroidAt(FVector position_, FVector velocity_, double mass_)
-{
-
-	FActorSpawnParameters SpawnInfo;
-	FRotator myRot(0, 0, 0);
-
-	//assign body's variables
-	AAsteroid* newBody = GetWorld()->SpawnActor<AAsteroid>(position_ * 1000.0f, myRot, SpawnInfo);
-
-	FTransform tr;
-	tr.SetIdentity();
-
-	//create Nbody handler
-	newBody->GravComp = Cast<UGravBodyComponent>(newBody->AddComponentByClass(UGravBodyComponent::StaticClass(), true, tr, true));
-	newBody->GravComp->RegisterComponent();
-
-	newBody->GravComp->toBeDestroyed = false;
-	newBody->GravComp->position = position_;
-	newBody->GravComp->velocity = velocity_;
-	newBody->GravComp->mass = mass_;
-
-
-	float scale_ = cbrt(mass_);
-	scale_ /= 3.0f;
-	//currently more for display purposes
-	newBody->SetActorScale3D(FVector(scale_, scale_, scale_));
-
-	
-
-	BodyHandler_ref->myGravBodies.Add(newBody->GravComp);
-
-	//find the lowest existing sector of the tree, assign it there and update its partitioning
-	//TreeNode* ref_tn = TreeHandler_ref->getLowestSectorOfPos(position_);
-	//ref_tn->bodies.Add(newBody->GravComp);
-	//TreeHandler_ref->partitionTree(ref_tn);
-
-
-}
-
 //spawns asteroid to the simulation following the defined scene logic 
 void AGameManager::spawnAsteroidToGame()
 {
+	FActorSpawnParameters SpawnInfo;
+	FRotator myRot(0, 0, 0);
+
+
+
 	//random location
 	FVector myLoc(0, 0, 0);
 	myLoc.X += FMath::FRandRange(-simulationRadius, simulationRadius);
@@ -214,8 +167,21 @@ void AGameManager::spawnAsteroidToGame()
 	float mass_ = 0.001f;
 	mass_ += FMath::FRandRange(SpawnMass.X, SpawnMass.Y);
 
+	//name
 	FString bodName = "Body ";
 	bodName.Append(std::to_string(OverallSpawnerIndex).c_str());
-	spawnAsteroidAt(myLoc, speed_, mass_);
+
+
+
+	//assign body's variables
+	AAsteroid* newBody = GetWorld()->SpawnActor<AAsteroid>(myLoc * 1000.0f, myRot, SpawnInfo);
+	newBody->GravComp = BodyHandler_ref->addGravCompAt(myLoc, speed_, mass_, newBody);
+
+	float scale_ = cbrt(mass_);
+	scale_ /= 3.0f;
+	//currently more for display purposes
+	newBody->SetActorScale3D(FVector(scale_, scale_, scale_));
+	
+	
 	OverallSpawnerIndex++;
 }
