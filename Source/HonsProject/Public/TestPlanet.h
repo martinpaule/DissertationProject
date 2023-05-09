@@ -32,8 +32,14 @@ public:
 		UMaterialInstanceDynamic* myMat;
 	UPROPERTY(Category = "BasicComponents", VisibleAnywhere, BlueprintReadWrite)
 		UGravBodyComponent* GravComp;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+		USphereComponent* SphereCollider;
 
-
+	//further variables
+	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
+		int handlerID = 0;
+	bool universalDensity = true;
+	ATestPlanet* ghostRef = NULL;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -50,20 +56,6 @@ public:
 	//collision function
 	UFUNCTION(BlueprintCallable, Category = "collision")
 	void combineCollisionBody(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
-
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-		USphereComponent* SphereCollider;
-
-
-	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-		int handlerID = 0;
-
-
-	bool universalDensity = true;
-
-	ATestPlanet* ghostRef = NULL;
 
 
 

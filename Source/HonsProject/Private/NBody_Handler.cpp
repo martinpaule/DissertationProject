@@ -19,64 +19,6 @@ UNBodyHandler::UNBodyHandler()
 	
 }
 
-TArray<FVector> UNBodyHandler::getThrowLine(FVector startingPos, FVector velocity, int segments, float timeStep)
-{
-	TArray<FVector> returnArray;
-	
-
-	FVector Pos_now = startingPos;
-	FVector Vel_now = velocity;
-
-	returnArray.Add(Pos_now);
-
-
-	//declarations
-	double distance = 0.0f;
-	double distanceCubed = 0.0f;
-	FVector direction = FVector(0.0f, 0.0f, 0.0f);
-	FVector iteratedBodyForce = FVector(0.0f, 0.0f, 0.0f);
-	FVector sumOfForces = FVector(0.0f, 0.0f, 0.0f);
-	FVector deltaVelocity = FVector(0.0f, 0.0f, 0.0f);
-	FVector deltaDist = FVector(0.0f, 0.0f, 0.0f);
-
-
-	for (int i = 0; i < segments; i++) {
-
-
-		
-		sumOfForces = FVector(0.0f, 0.0f, 0.0f);
-
-		//calulate combined forces acting on body I
-		for (int j = 0; j < myGravBodies.Num(); j++)
-		{
-			direction = myGravBodies[j]->position - Pos_now;
-			distance = direction.Length();
-			distanceCubed = distance * distance * distance;
-			iteratedBodyForce = direction * bigG * myGravBodies[j]->mass;
-			iteratedBodyForce /= distanceCubed;
-
-			//add this to the sum of forces acting on body I
-			sumOfForces += iteratedBodyForce;
-			gravCalculations++;
-		}
-
-		//apply change in velocity to body I
-		deltaVelocity = timeStep * sumOfForces;
-		Vel_now += deltaVelocity;
-
-
-
-		//apply imagined time step and add to array
-		deltaDist = timeStep * Vel_now;
-		Pos_now += deltaDist;
-		returnArray.Add(Pos_now);
-
-	}
-
-	return returnArray;
-}
-
-
 
 
 // Called when the game starts or when spawned
@@ -92,6 +34,7 @@ void UNBodyHandler::BeginPlay()
 	
 }
 
+//initialize function for TH to register as component
 void UNBodyHandler::constructTreeHandler() {
 
 
@@ -105,6 +48,7 @@ void UNBodyHandler::constructTreeHandler() {
 
 }
 
+//add a new body into the handler
 UGravBodyComponent * UNBodyHandler::addGravCompAt(FVector position, FVector velocity, double mass, AActor * gravCompOwner)
 {
 
@@ -190,25 +134,11 @@ void UNBodyHandler::calculateWithTree(double dt) {
 
 	treeHandler->gravCalcs = 0;
 
-	FVector TreeSumOfForces = FVector(0.0f, 0.0f, 0.0f);
-	//FVector RealSumOfForces = FVector(0.0f, 0.0f, 0.0f);
-
-	//VelCalcAverageError = 0.0f;
-
-
-	//declarations
-	double distance = 0.0f;
-	double distanceCubed = 0.0f;
-	FVector direction = FVector(0.0f, 0.0f, 0.0f);
-	FVector iteratedBodyForce = FVector(0.0f, 0.0f, 0.0f);
 
 	for (int i = 0; i < myGravBodies.Num(); i++)
 	{
 		
-
-		//apply change in velocity to body I
-		TreeSumOfForces = treeHandler->getApproxForce(myGravBodies[i], treeHandler->treeNodeRoot);
-		myGravBodies[i]->velocity += myGravBodies[i]->myLocalTimeEditor * dt * TreeSumOfForces;
+		myGravBodies[i]->velocity += myGravBodies[i]->myLocalTimeEditor * dt * treeHandler->getApproxForce(myGravBodies[i], treeHandler->treeNodeRoot);
 
 	}
 
@@ -227,6 +157,7 @@ void UNBodyHandler::TickComponent(float DeltaTime, ELevelTick TickType, FActorCo
 
 }
 
+//apply new velocity to bodies
 void UNBodyHandler::moveBodies(bool alsoMoveActor, double updated_dt) {
 
 	for (int i = 0; i < myGravBodies.Num(); i++) {
@@ -236,7 +167,6 @@ void UNBodyHandler::moveBodies(bool alsoMoveActor, double updated_dt) {
 
 		if (alsoMoveActor) {
 			myGravBodies[i]->GetOwner()->SetActorLocation(myGravBodies[i]->position * 1000.0f);
-				//SetActorLocation(myGravBodies[i]->position * 1000.0f);
 		}
 	}
 

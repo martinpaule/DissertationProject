@@ -163,12 +163,7 @@ void ASimulationManager::Tick(float DeltaTime)
 
 			std::chrono::steady_clock::time_point startPoint;
 
-
-			if (doTimingCalculations)startPoint = std::chrono::high_resolution_clock::now();
-			//step 0: destroy overlapping bodies from previous step - must be done before force calculation otherwise the current step will be inaccurate
 			deleteDestroyedBodies();
-			if (doTimingCalculations)DestroyBodies_TimeTaken.Add(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - startPoint).count());
-
 
 
 			bodiesInSimulation = BodyHandler_ref->myGravBodies.Num();
@@ -177,9 +172,7 @@ void ASimulationManager::Tick(float DeltaTime)
 			//step 0.5 recalculate partitioning
 			if (useTreeCodes) {
 				//step 0.5 recalculate partitioning
-				if (doTimingCalculations)startPoint = std::chrono::high_resolution_clock::now();
 				BodyHandler_ref->treeHandler->RecalculatePartitioning(newTrees);
-				if (doTimingCalculations)RecalculateTree_TimeTaken.Add(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - startPoint).count());
 
 			}
 
@@ -202,7 +195,6 @@ void ASimulationManager::Tick(float DeltaTime)
 					last = true;
 				}
 
-				if (doTimingCalculations)startPoint = std::chrono::high_resolution_clock::now();
 				if (useTreeCodes) {
 					BodyHandler_ref->calculateWithTree(updatedDT);
 
@@ -217,12 +209,8 @@ void ASimulationManager::Tick(float DeltaTime)
 					BodyHandler_ref->calculateAllVelocityChanges(updatedDT);
 
 				}
-				if (doTimingCalculations)ForceCalculation_TimeTaken.Add(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - startPoint).count());
-
-				if (doTimingCalculations)startPoint = std::chrono::high_resolution_clock::now();
 				//step 2: move bodies 
 				BodyHandler_ref->moveBodies(last, updatedDT);
-				if (doTimingCalculations)moveBodies_TimeTaken.Add(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - startPoint).count());
 
 
 
@@ -251,87 +239,30 @@ void ASimulationManager::Tick(float DeltaTime)
 		BodyHandler_ref->treeHandler->DisplaySectors(BodyHandler_ref->treeHandler->treeNodeRoot);
 	}
 
-	if (doTimingCalculations) {
-		std::string destrStr = "Destroy Bodies Time Taken: ";
-		std::string RecalcStr = "Recalculate Tree Time Taken: ";
-		std::string ForceCStr = "Force Calculations Time Taken: ";
-		std::string MoveBStr = "Move Bodies Time Taken: ";
-
-		int framesToRecord = 10;
-		//cleanup
-		if (DestroyBodies_TimeTaken.Num() > framesToRecord) {
-			DestroyBodies_TimeTaken.RemoveAt(framesToRecord);
-		}
-		if (ForceCalculation_TimeTaken.Num() > framesToRecord) {
-			ForceCalculation_TimeTaken.RemoveAt(framesToRecord);
-		}
-		if (moveBodies_TimeTaken.Num() > framesToRecord) {
-			moveBodies_TimeTaken.RemoveAt(framesToRecord);
-		}
-		if (useTreeCodes) {
-			if (RecalculateTree_TimeTaken.Num() > framesToRecord) {
-				RecalculateTree_TimeTaken.RemoveAt(framesToRecord);
-			}
-			if (RecalculateTree_TimeTaken.Num() == framesToRecord) {
-				float sum_ = 0.0f;
-				for (int i = 0; i < framesToRecord; i++) {
-					sum_ += RecalculateTree_TimeTaken[i];
-				}
-				GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Green, RecalcStr.append(std::to_string(sum_)).c_str());
-
-			}
-		}
-
-		if (DestroyBodies_TimeTaken.Num() == framesToRecord) {
-			float sum_ = 0.0f;
-			for(int i = 0; i < framesToRecord; i++) {
-				sum_ += DestroyBodies_TimeTaken[i];
-			}
-			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Green, destrStr.append(std::to_string(sum_)).c_str());
-
-		}
-
-		if (ForceCalculation_TimeTaken.Num() == framesToRecord) {
-			float sum_ = 0.0f;
-			for (int i = 0; i < framesToRecord; i++) {
-				sum_ += ForceCalculation_TimeTaken[i];
-			}
-			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Green, ForceCStr.append(std::to_string(sum_)).c_str());
-
-		}
-
-		if (moveBodies_TimeTaken.Num() == framesToRecord) {
-			float sum_ = 0.0f;
-			for (int i = 0; i < framesToRecord; i++) {
-				sum_ += moveBodies_TimeTaken[i];
-			}
-			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Green, MoveBStr.append(std::to_string(sum_)).c_str());
-
-		}
-		
-	}
 
 	
 }
 
-
+// pause simulation time
 void ASimulationManager::pauseSimulation() {
 	Paused = !Paused;
 }
 
+// raise speed of simulation time
 void ASimulationManager::raiseSimulationSpeed()
 {
 	timeMultiplier *= 2.0f;
 	Paused = false;
 }
 
-
+// lower speed of simulation time
 void ASimulationManager::lowerSimulationSpeed()
 {
 	timeMultiplier /= 2.0f;
 	Paused = false;
 }
 
+// clear simulation
 void ASimulationManager::ClearSimulation() {
 
 	simulationElapsedTime = 0.0f;
@@ -339,7 +270,7 @@ void ASimulationManager::ClearSimulation() {
 	
 	bodiesInSimulation = 0;
 	gradualSpawnerIndex = 0;
-	spawningBodies = true;
+	//spawningBodies = true;
 
 
 	while (!BodyHandler_ref->myGravBodies.IsEmpty())
@@ -360,7 +291,7 @@ void ASimulationManager::ClearSimulation() {
 	}
 }
 
-
+// testing function
 void ASimulationManager::handleAveragePosError(){
 
 
@@ -412,8 +343,6 @@ void ASimulationManager::handleAveragePosError(){
 	averagePosError /= BodyHandler_ref->myGravBodies.Num();
 }
 
-
-
 // setup function for spawning bodies - creates a new body with specified parameters
 void ASimulationManager::spawnPlanetAt(FVector position_, FVector velocity_, double mass_, FVector4 colour_, FString name_, float radius_, UNBodyHandler* handlerToAddInto)
 {
@@ -441,19 +370,15 @@ void ASimulationManager::spawnPlanetAt(FVector position_, FVector velocity_, dou
 	newBody->SetActorScale3D(FVector(radius_, radius_, radius_));
 
 	//option to set colour too
-	if (colour_ != FVector4(1.0f, 0.0f, 1.0f, 1.0f)) {
-		newBody->myMat->SetVectorParameterValue(TEXT("Colour"), colour_);
-		newBody->GravComp->myCol = colour_;
-	}
-	//handlerToAddInto->myGravBodies.Add(newBody->GravComp);
+	newBody->myMat->SetVectorParameterValue(TEXT("Colour"), colour_);
+	newBody->GravComp->myCol = colour_;
 
 
 
 
 }
 
-
-
+//spawn solar system given a desired position
 void ASimulationManager::spawnSolarSystem(FVector SunPosition_) {
 
 
@@ -559,6 +484,7 @@ void ASimulationManager::spawnSolarSystem(FVector SunPosition_) {
 
 }
 
+//spawn a pre-determined cluster of test planets
 void ASimulationManager::spawnTestPlanets()
 {
 	//20,20,2
@@ -574,7 +500,6 @@ void ASimulationManager::spawnTestPlanets()
 	}
 
 }
-
 
 //function that allows gradual spawn of initial bodies rather than all at once, avoiding a big lag spike when handlingodies
 void ASimulationManager::graduallySpawnBodies(int spawnsPerFrame) {
@@ -611,7 +536,13 @@ void ASimulationManager::graduallySpawnBodies(int spawnsPerFrame) {
 
 		FString bodName = "Body ";
 		bodName.Append(std::to_string(gradualSpawnerIndex).c_str());
-		spawnPlanetAt(myLoc, speed_, mass_, FVector4(1.0f, 0.0f, 1.0f, 1.0f), bodName, 0 ,BodyHandler_ref);
+
+		FVector4 randomColour = FVector4(0.0f, 0.0f, 0.0f, 1.0f);
+		randomColour.X += FMath::FRandRange(0.0f, 1.0f);
+		randomColour.Y += FMath::FRandRange(0.0f, 1.0f);
+		randomColour.Z += FMath::FRandRange(0.0f, 1.0f);
+
+		spawnPlanetAt(myLoc, speed_, mass_, randomColour, bodName, 0 ,BodyHandler_ref);
 		gradualSpawnerIndex++;
 
 	}
@@ -619,6 +550,7 @@ void ASimulationManager::graduallySpawnBodies(int spawnsPerFrame) {
 	return;
 }
 
+//planet deleting function
 void ASimulationManager::deletePlanetInHandler(UGravBodyComponent* ref_, bool deleteLeafRef) {
 
 	ATestPlanet* asTP = Cast<ATestPlanet>(ref_->GetOwner());

@@ -14,23 +14,10 @@ class HONSPROJECT_API AMainMenuNBODYmanager : public AActor
 	GENERATED_BODY()
 	
 public:	
-	// Sets default values for this actor's properties
+	// ----- Sets default values for this actor's properties
 	AMainMenuNBODYmanager();
-	void deleteDestroyedBodies();
-	UFUNCTION(BlueprintCallable, Category = "PlanetSpawn")
-		ATestPlanet* spawnPlanetAt(FVector position_, FVector velocity_, double mass_, FVector4 colour_, FString name_, float radius_);
-	UFUNCTION(BlueprintCallable, Category = "PlanetSpawn")
-		ATestPlanet* spawnEdgePlanet();
-	UFUNCTION(BlueprintCallable, Category = "CursorSpawn")
-		ATestPlanet* spawnCursor();
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
 
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-	bool useTreeCodes = true;
+	// ----- necessary gravitational calc logic
 	bool clampVelocity = true;
 	UPROPERTY(Category = "UI_references", EditAnywhere, BlueprintReadWrite)
 		UNBodyHandler* BodyHandler_ref;
@@ -48,7 +35,7 @@ public:
 		float despawnRadiusRW = 1500;
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 		FVector simCentre = FVector(4000, 0, 0);
-	
+
 	// ----- Simulation relevant variables
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 		int planetsToSimulate = 20;
@@ -62,4 +49,20 @@ public:
 		float CursorPlanetMass = 20.0f;
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 		float CursorMaxMass = 500.0f;
+protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
+public:	
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
+	
+	// ----- necessary functions
+	void deleteDestroyedBodies();
+	UFUNCTION(BlueprintCallable, Category = "PlanetSpawn")
+		ATestPlanet* spawnPlanetAt(FVector position_, FVector velocity_, double mass_, FVector4 colour_, FString name_, float radius_);
+	UFUNCTION(BlueprintCallable, Category = "PlanetSpawn")
+		ATestPlanet* spawnEdgePlanet();
+	UFUNCTION(BlueprintCallable, Category = "CursorSpawn")
+		ATestPlanet* spawnCursor();
 };

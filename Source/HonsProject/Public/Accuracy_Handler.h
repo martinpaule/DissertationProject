@@ -7,7 +7,6 @@
 #include <fstream>
 #include "TestPlanet.h"
 #include <string>
-#include <chrono>
 
 #include "Accuracy_Handler.generated.h"
 
@@ -31,6 +30,15 @@ public:
 	// Sets default values for this actor's properties
 	UAccuracyModule();
 
+	// ----- default vars
+	TArray<UGravBodyComponent*>* bodyHandlerBodies;
+	TArray<TArray<planet>> planets;
+	int outputIndex = 0;
+
+	// ----- testing
+	bool shouldResetTest = false;
+	float resetTime = 1.0f; //in years
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -38,25 +46,15 @@ protected:
 public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
-	//TODO: make a pointer to the gravbodycomps from sim manager and move recording func into here
-
-	TArray<UGravBodyComponent*>* bodyHandlerBodies;
-
-	planet getAverageDifference();
-	//actually used for storing
-	TArray<TArray<planet>> planets;
-
+	
+	
+	//Testing functions
+	UFUNCTION(BlueprintCallable, Category = "Recording")
+	void printResultToTXT();
+	UFUNCTION(BlueprintCallable, Category = "Recording")
 	void recordPositions();
 	bool planetsEqual(planet a, planet b);
 	void notePlanet(std::string name_, FVector pos_, FVector vel_, float mass_);
-	void printResultToTXT();
 
-	bool shouldResetTest = false;
-	float resetTime = 1.0f; //in years
-
-	//CHANGE TO ENUM! types: FrameAccuracy, LongAccuracy, 
-	FString accuracyTestType = FString("FrameAccuracy");
-
-	int outputIndex = 0;
+	
 };

@@ -59,6 +59,7 @@ void UTreeHandler::setManualTreeRoot(FVector midPos, float cubeExtent){
 	partitionTree(treeNodeRoot);
 }
 
+//update the node's combined mass and average position
 void UTreeHandler::updateMyCombMassAndAvgPos(TreeNode* rootNode) {
 
 	//also assign its combined mass and centre of mass
@@ -79,6 +80,7 @@ void UTreeHandler::updateMyCombMassAndAvgPos(TreeNode* rootNode) {
 	rootNode->Node_CombinedMass = combinedMass;
 }
 
+//original tree recalculating
 void UTreeHandler::originalTreeRecalculate() {
 	//reset root
 	delete treeNodeRoot;
@@ -153,53 +155,67 @@ void UTreeHandler::originalTreeRecalculate() {
 	partitionTree(treeNodeRoot);
 }
 
-//new method for recalculating the tree - instead of full recalc, check if each 
+//new method for recalculating the tree - instead of full recalc, check if each planet is still in its leaf
 void UTreeHandler::newTreeRecalculate() {
 	for (int i = 0; i < bodyHandlerBodies->Num(); i++)
 	{
 
 		UGravBodyComponent* CompIT = (*bodyHandlerBodies)[i];
+
 		//INVESTIGATE IF THISFIXED IT AND SEE IF IT WORKS BETTER
 
-
-		if (!CompIT->leaf_ref || !CompIT->GetOwner()) {
-			RecalculatePartitioning(true);
+		if (!CompIT->leaf_ref) {
 			if (drawDebugs)GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "NULL IN LEAFREF from body - BF RECALC" + CompIT->GetOwner()->GetActorLabel());
-			return;
-		}
-
-		//if the planet is still in its last recorded leaf position
-		if (CompIT->leaf_ref->isInExtent(CompIT->position)) {
-			CompIT->leaf_ref->Node_CentreOMass = CompIT->position;
-			if (drawDebugs)GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Green, CompIT->GetOwner()->GetActorLabel() + " stayed IN");
-
-		}
-		else {//planet moved from its leaf pos but still in the tree
-			if (treeNodeRoot->isInExtent(CompIT->position)) {
-
-				//remove the body from its last position
-				CompIT->leaf_ref->bodies.Remove(CompIT);
-				CompIT->leaf_ref->Node_CombinedMass = 0.0f;
-				mergeEmptiesAboveMe(CompIT->leaf_ref);
-
-
-				//find the lowest existing sector of the tree, assign it there and update its partitioning
-				TreeNode* ref_tn = getLowestSectorOfPos(CompIT->position);
+			//find the lowest existing sector of the tree, assign it there and update its partitioning
+			TreeNode* ref_tn = getLowestSectorOfPos(CompIT->position);
+			if (ref_tn) {
 				ref_tn->bodies.Add(CompIT);
 				partitionTree(ref_tn);
-
-				if (drawDebugs)GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Orange, CompIT->GetOwner()->GetActorLabel() + " movedWell");
-
-			}
-			else {//planet went out of bounds of the max bounds
-
-				//use old trees for getting the boundaries
-				//RecalculatePartitioning(false);
-				if(drawDebugs)GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "Out Of Global Bounds - Recalc Of Bounds Using OldTrees " + CompIT->GetOwner()->GetActorLabel());
-				//return;
 			}
 		}
+		//if (!CompIT->GetOwner()) {
+		//	if (drawDebugs)GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "NULL IN body OWNER" + CompIT->GetOwner()->GetActorLabel());
+		//	CompIT->DestroyComponent();
+		//	bodyHandlerBodies->RemoveAt(i);
+		//	i--;
+		//}
+		//else
+		if (CompIT->leaf_ref) {
+			if (CompIT->leaf_ref->isInExtent(CompIT->position)) {		//if the planet is still in its last recorded leaf position
+				CompIT->leaf_ref->Node_CentreOMass = CompIT->position;
+				//if (drawDebugs)GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Green, CompIT->GetOwner()->GetActorLabel() + " stayed IN");
 
+			}
+			else {//planet moved from its leaf pos but still in the tree
+				if (treeNodeRoot->isInExtent(CompIT->position)) {
+
+					//remove the body from its last position
+					CompIT->leaf_ref->bodies.Remove(CompIT);
+					CompIT->leaf_ref->Node_CombinedMass = 0.0f;
+					mergeEmptiesAboveMe(CompIT->leaf_ref);
+
+
+					//find the lowest existing sector of the tree, assign it there and update its partitioning
+					TreeNode* ref_tn = getLowestSectorOfPos(CompIT->position);
+					ref_tn->bodies.Add(CompIT);
+					partitionTree(ref_tn);
+
+					if (drawDebugs)GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Orange, CompIT->GetOwner()->GetActorLabel() + " movedWell");
+
+				}
+				else {//planet went out of bounds of the max bounds
+
+					//use old trees for getting the boundaries
+					//RecalculatePartitioning(false);
+					if (drawDebugs)GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "Out Of Global Bounds - Recalc Of Bounds Using OldTrees " + CompIT->GetOwner()->GetActorLabel());
+					//return;
+				}
+			}
+		}
+		else {
+			if (drawDebugs)GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "FOR SOME REASON THERE WAS NO LEAF REF " + CompIT->GetOwner()->GetActorLabel());
+
+		}
 
 	}
 }
@@ -218,11 +234,11 @@ void UTreeHandler::updateAvgPosCombMassOfAllSectorsContaining(UGravBodyComponent
 	}
 }
 
-
+//recalculate given a type
 void UTreeHandler::RecalculatePartitioning(bool newTrees) {
 	
 
-	if (false) {
+	if (newTrees) {
 		newTreeRecalculate();
 	}
 	else {
@@ -231,6 +247,7 @@ void UTreeHandler::RecalculatePartitioning(bool newTrees) {
 	
 }
 
+//debug partitioning
 void UTreeHandler::DisplaySectors(TreeNode* rootNode) {
 
 	if (rootNode->isLeaf) {
@@ -253,6 +270,7 @@ void UTreeHandler::DisplaySectors(TreeNode* rootNode) {
 	}
 }
 
+//subdivide all space under this node (call on root and recalculates the whole tree)
 void UTreeHandler::partitionTree(TreeNode* rootNode)
 {
 	//exitx if there is 1 or 0 children
@@ -363,7 +381,7 @@ FVector UTreeHandler::getApproxForce(UGravBodyComponent* body, TreeNode * rootNo
 	
 		return returnForce;
 	}
-	else if(!rootNode->isLeaf) {
+	else if(rootNode->branch_nodes.Num() > 0) {
 		for (int j = 0; j < 8; j++) {
 			combinedForces += getApproxForce(body, rootNode->branch_nodes[j]);
 		}
@@ -373,12 +391,14 @@ FVector UTreeHandler::getApproxForce(UGravBodyComponent* body, TreeNode * rootNo
 	return combinedForces;
 }
 
+//finds lowest existing sector where this position is inside
 TreeNode * UTreeHandler::getLowestSectorOfPos(FVector position) {
 
 	return  searchLowestSectorRecursive(position, treeNodeRoot);
 	
 }
 
+//search in tree for the lowest point that includes a position
 TreeNode* UTreeHandler::searchLowestSectorRecursive(FVector position, TreeNode* nowTInree) {
 
 	if (nowTInree->isLeaf && nowTInree->isInExtent(position)) {
@@ -392,6 +412,7 @@ TreeNode* UTreeHandler::searchLowestSectorRecursive(FVector position, TreeNode* 
 	return NULL;
 }
 
+//newTrees function for merging zones above the specified one
 void UTreeHandler::mergeEmptiesAboveMe(TreeNode* rootNode) {
 
 	for (int i = 0; i < 9; i++) {

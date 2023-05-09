@@ -86,6 +86,6 @@ public:
 
 	//manual setup of the tree
 	void setManualTreeRoot(FVector midPos, float cubeExtent);
+	void updateAvgPosCombMassOfAllSectorsContaining(UGravBodyComponent* body);//delete cleanup function for NT
 
-	void updateAvgPosCombMassOfAllSectorsContaining(UGravBodyComponent* body);//delete cleanup function
 };

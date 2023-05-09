@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/Pawn.h"
+
 #include "NBody_Handler.h"
 #include "Game_Manager.generated.h"
 
@@ -19,9 +20,8 @@ public:
 
 	UPROPERTY(Category = "references", EditAnywhere, BlueprintReadWrite)
 		UNBodyHandler* BodyHandler_ref;
-	//UPROPERTY(Category = "references", EditAnywhere, BlueprintReadWrite)
-	//	UTreeHandler* TreeHandler_ref;
 
+	// ----- Game Settings
 	UPROPERTY(Category = "AsteroidFieldSettings", EditAnywhere, BlueprintReadWrite)
 		float simulationRadius = 5;
 	UPROPERTY(Category = "AsteroidFieldSettings", EditAnywhere, BlueprintReadWrite)
@@ -32,14 +32,18 @@ public:
 		FVector2D SpawnMass = 60;
 	UPROPERTY(Category = "AsteroidFieldSettings", EditAnywhere, BlueprintReadWrite)
 		int SimulationDesiredBodies = 100;
-	
+	UPROPERTY(Category = "Debugging", EditAnywhere, BlueprintReadWrite)
+		bool drawDebugs = true;
+
+	// ----- Game defaults
 	int OverallSpawnerIndex = 0;
 	AActor* playerRef;
 	UPROPERTY(Category = "AsteroidFieldSettings", EditAnywhere, BlueprintReadWrite)
-	float timeMultiplier = 0.7f;
 	bool useTreeCodes = true;
+	UPROPERTY(Category = "Testing", EditAnywhere, BlueprintReadWrite)
+	bool newTrees = false;
+	float timeMultiplier = 0.7f;
 
-	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -53,6 +57,11 @@ public:
 	void handleDestroyingAsteroids();
 	void inGameAsteroidHandle();
 
-	UPROPERTY(Category = "Debugging", EditAnywhere, BlueprintReadWrite)
-	bool drawDebugs = true;
+
+	UFUNCTION(BlueprintCallable, Category = "AddBody")
+	void addAsteroid(UGravBodyComponent* ref);
+	UFUNCTION(BlueprintCallable, Category = "RemoveBody")
+	void removeAsteroid(UGravBodyComponent* ref);
+
+
 };

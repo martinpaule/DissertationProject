@@ -3,6 +3,7 @@
 
 #include "Game_Manager.h"
 #include "Asteroid.h"
+
 #include "Kismet/GameplayStatics.h"
 
 
@@ -12,6 +13,21 @@ AGameManager::AGameManager()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+}
+
+void AGameManager::addAsteroid(UGravBodyComponent * ref) {
+	BodyHandler_ref->myGravBodies.Add(ref);
+	if (newTrees) {
+		BodyHandler_ref->treeHandler->setManualTreeRoot(SimulationCentre, simulationRadius * 1.2f);
+
+	}
+}
+void AGameManager::removeAsteroid(UGravBodyComponent* ref) {
+	BodyHandler_ref->myGravBodies.Remove(ref);
+	if (newTrees) {
+		BodyHandler_ref->treeHandler->setManualTreeRoot(SimulationCentre, simulationRadius * 1.2f);
+
+	}
 }
 
 // Called when the game starts or when spawned
@@ -45,9 +61,12 @@ void AGameManager::BeginPlay()
 
 
 	BodyHandler_ref->constructTreeHandler();
+	BodyHandler_ref->treeHandler->drawDebugs = drawDebugs;
 
+	if (newTrees) {
+		BodyHandler_ref->treeHandler->setManualTreeRoot(SimulationCentre, simulationRadius * 1.2f);
 
-	BodyHandler_ref->treeHandler->setManualTreeRoot(SimulationCentre, simulationRadius*1.2f);
+	}
 }
 
 //clears up bodies from the simulation
@@ -64,17 +83,13 @@ void AGameManager::handleDestroyingAsteroids() {
 			BodyHandler_ref->myGravBodies.RemoveAt(i);
 			if(drawDebugs)GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, "Destroyed GravBodyComponent Cause of NullPTR");
 			somethingChanged = true;
-			break;
+			i--;
 		}
-
-
-		//destroy body if it's out of bounds or it's supposed to be destroyed
-		//if (CompIT->toBeDestroyed || (CompIT->position - (playerRef->GetActorLocation() / 1000.0f)).Length() > simulationRadius) {
-		if (CompIT->toBeDestroyed || (CompIT->position - SimulationCentre).Length() > simulationRadius) {
+		else if (CompIT->toBeDestroyed || (CompIT->position - SimulationCentre).Length() > simulationRadius) {
 
 			if (drawDebugs)GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Orange, "Destroyed GravBodyComponent Cause OutOfBounds or ToBeDestroyed");
 			
-			//TreeHandler_ref->updateAvgPosCombMassOfAllSectorsContaining(BodyHandler_ref->myGravBodies[i]);//delete cleanup function
+			//if (newTrees)BodyHandler_ref->treeHandler->updateAvgPosCombMassOfAllSectorsContaining(BodyHandler_ref->myGravBodies[i]);//delete cleanup function
 
 
 
@@ -88,7 +103,7 @@ void AGameManager::handleDestroyingAsteroids() {
 
 	}
 
-	if (somethingChanged) {
+	if (somethingChanged && newTrees) {
 		BodyHandler_ref->treeHandler->setManualTreeRoot(SimulationCentre, simulationRadius * 1.2f);
 		if (drawDebugs)GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Orange, "Had To Manually recalculate");
 	}
@@ -121,7 +136,7 @@ void AGameManager::Tick(float DeltaTime)
 	inGameAsteroidHandle();
 
 	//step 0.5 recalculate partitioning
-	BodyHandler_ref->treeHandler->RecalculatePartitioning(true);
+	BodyHandler_ref->treeHandler->RecalculatePartitioning(newTrees);
 
 
 	//step 1: Gravitational calculations using fixed time updates
@@ -186,6 +201,8 @@ void AGameManager::spawnAsteroidToGame()
 	//currently more for display purposes
 	newBody->SetActorScale3D(FVector(scale_, scale_, scale_));
 	
+	if(newTrees)BodyHandler_ref->treeHandler->setManualTreeRoot(SimulationCentre, simulationRadius * 1.2f);
+
 	
 	OverallSpawnerIndex++;
 }

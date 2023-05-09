@@ -113,6 +113,7 @@ ATestPlanet * AMainMenuNBODYmanager::spawnPlanetAt(FVector position_, FVector ve
 	return newBody;
 }
 
+//cleanup function
 void AMainMenuNBODYmanager::deleteDestroyedBodies() {
 
 	for (int i = 1; i < BodyHandler_ref->myGravBodies.Num(); i++)
