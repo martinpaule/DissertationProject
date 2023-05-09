@@ -18,6 +18,7 @@ class HONSPROJECT_API ASimulationManager : public AActor
 public:	
 	// Sets default values for this actor's properties
 	ASimulationManager();
+	void createSimComponents();
 
 	// ----- UI called functions
 	UFUNCTION(BlueprintCallable, Category = "SimSpeed")
@@ -41,13 +42,12 @@ public:
 	void deleteDestroyedBodies();
 	void deletePlanetInHandler(UGravBodyComponent* ref_, bool deleteLeafRef);
 
-	// ----- testing related functions
+	// ----- real-time testing related functions
 	UFUNCTION(BlueprintCallable, Category = "TESTING")
 		void addGhostSim();
 	UFUNCTION(BlueprintCallable, Category = "TESTING")
 		void removeGhostSim();
-	void createSimComponents();
-	void recordFinalPositions(bool writeToTXT);//<- move to accuracy class
+	//void recordFinalPositions(bool writeToTXT);//<- move to accuracy class
 	void handleAveragePosError();
 
 
@@ -107,28 +107,36 @@ public:
 	int gradualSpawnerIndex = 0;
 	bool spawningBodies = false;
 
-	// ----- testing related variables - move into accuracy tester
+	// ----- testing related variables
 	UPROPERTY(Category = "Testing", BlueprintReadWrite, EditAnywhere)
 		bool ShouldReset = false;
 	UPROPERTY(Category = "Testing", BlueprintReadWrite, EditAnywhere)
 		float resetTime = 1.0f;
+
 	UPROPERTY(Category = "Testing", BlueprintReadWrite, EditAnywhere)
 		bool shouldGhostAccuracy = false;
 	UPROPERTY(Category = "Testing", BlueprintReadWrite, EditAnywhere)
+		bool showGhosPlanetErrors = false;
+
+	UPROPERTY(Category = "Testing", BlueprintReadWrite, EditAnywhere)
 		float averagePosError = 0.0f;
 	UPROPERTY(Category = "Testing", BlueprintReadWrite, EditAnywhere)
-		bool showGhosPlanetErrors = false;
-	UPROPERTY(Category = "Testing", BlueprintReadWrite, EditAnywhere)
 		bool calcAveragePosError = false;
-	UPROPERTY(Category = "Testing", BlueprintReadWrite, EditAnywhere)
-		bool doFrameCalc = false;
+	//UPROPERTY(Category = "Testing", BlueprintReadWrite, EditAnywhere)
+	//	bool doFrameCalc = false;
 
 	
 	//EXPERIMENTAL
 	UPROPERTY(Category = "Testing", BlueprintReadWrite, EditAnywhere)
 		bool newTrees = false;
 
+	UPROPERTY(Category = "Testing", BlueprintReadWrite, EditAnywhere)
+		bool doTimingCalculations = false;
 
+	TArray<float> moveBodies_TimeTaken;
+	TArray<float> DestroyBodies_TimeTaken;
+	TArray<float> RecalculateTree_TimeTaken;
+	TArray<float> ForceCalculation_TimeTaken;
 	
 };
 

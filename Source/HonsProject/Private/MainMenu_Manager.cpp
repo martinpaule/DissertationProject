@@ -39,12 +39,10 @@ ATestPlanet* AMainMenuNBODYmanager::spawnCursor() {
 	FString CursorPlanetbodName = "CursorPlanet";
 
 
-	ATestPlanet* AsTP = spawnPlanetAt(CursorPlanetPos, CursorPlanetSpeed, CursorPlanetMass, FVector4(1.0f, 0.0f, 1.0f, 1.0f), CursorPlanetbodName, 0, BodyHandler_ref);
+	ATestPlanet* AsTP = spawnPlanetAt(CursorPlanetPos, CursorPlanetSpeed, CursorPlanetMass, FVector4(1.0f, 0.0f, 1.0f, 1.0f), CursorPlanetbodName, 0);
 
 	return AsTP;
-	//if (AsTP) {
-	//	AsTP->SphereCollider->SetGenerateOverlapEvents(true);
-	//}
+
 }
 
 //spawns a planet at the edge of the screen, just out the range of the defined range (camera)
@@ -82,12 +80,12 @@ ATestPlanet * AMainMenuNBODYmanager::spawnEdgePlanet() {
 	randColor.Y -= FMath::FRandRange(0, 1.0f);
 	randColor.Z -= FMath::FRandRange(0, 1.0f);
 
-	return spawnPlanetAt(myLoc / 1000.0f, speed_, mass_, randColor, bodName, 0, BodyHandler_ref);
+	return spawnPlanetAt(myLoc / 1000.0f, speed_, mass_, randColor, bodName, 0);
 
 }
 
 // setup function for spawning bodies - creates a new body with specified parameters
-ATestPlanet * AMainMenuNBODYmanager::spawnPlanetAt(FVector position_, FVector velocity_, double mass_, FVector4 colour_, FString name_, float radius_, UNBodyHandler* handlerToAddInto)
+ATestPlanet * AMainMenuNBODYmanager::spawnPlanetAt(FVector position_, FVector velocity_, double mass_, FVector4 colour_, FString name_, float radius_)
 {
 
 	FActorSpawnParameters SpawnInfo;
@@ -95,23 +93,7 @@ ATestPlanet * AMainMenuNBODYmanager::spawnPlanetAt(FVector position_, FVector ve
 
 	//assign body's variables
 	ATestPlanet* newBody = GetWorld()->SpawnActor<ATestPlanet>(position_ * 1000.0f, myRot, SpawnInfo);
-	//newBody->SetActorEnableCollision(true);
-
-
-	FTransform tr;
-	tr.SetIdentity();
-
-	//create Nbody handler
-	newBody->GravComp = Cast<UGravBodyComponent>(newBody->AddComponentByClass(UGravBodyComponent::StaticClass(), true, tr, true));
-	newBody->GravComp->RegisterComponent();
-
-
-	newBody->GravComp->toBeDestroyed = false;
-	newBody->GravComp->position = position_;
-	newBody->GravComp->velocity = velocity_;
-	newBody->GravComp->radius = radius_;
-	newBody->GravComp->mass = mass_;
-	//newBody->SphereCollider->SetGenerateOverlapEvents(false);
+	newBody->GravComp = BodyHandler_ref->addGravCompAt(position_, velocity_, mass_, newBody);
 	newBody->SetActorLabel(name_);
 
 
@@ -121,15 +103,11 @@ ATestPlanet * AMainMenuNBODYmanager::spawnPlanetAt(FVector position_, FVector ve
 
 	//currently more for display purposes
 	newBody->SetActorScale3D(FVector(radius_, radius_, radius_));
-
-
-
-
 	//option to set colour too
 	newBody->myMat->SetVectorParameterValue(TEXT("Colour"), colour_);
 	newBody->GravComp->myCol = colour_;
 
-	handlerToAddInto->myGravBodies.Add(newBody->GravComp);
+	//handlerToAddInto->myGravBodies.Add(newBody->GravComp);
 	overallPlanets++;
 
 	return newBody;
@@ -167,13 +145,14 @@ void AMainMenuNBODYmanager::Tick(float DeltaTime)
 	//step 0: destroy overlapping bodies from previous step - must be done before force calculation otherwise the current step will be inaccurate
 	deleteDestroyedBodies();
 
+	BodyHandler_ref->treeHandler->RecalculatePartitioning(false);
 
 	//step 1: Gravitational calculations using fixed time updates
 	//dt influenced by simulation time scale 
 	double updatedDT = DeltaTime * timeMultiplier * 0.027f; //0.027 makes the time as 10 days/s		
 
 	if (useTreeCodes) {
-		BodyHandler_ref->calculateWithTree(updatedDT, false, false);
+		BodyHandler_ref->calculateWithTree(updatedDT);
 
 	}
 

@@ -120,11 +120,15 @@ void AGameManager::Tick(float DeltaTime)
 	handleDestroyingAsteroids();
 	inGameAsteroidHandle();
 
+	//step 0.5 recalculate partitioning
+	BodyHandler_ref->treeHandler->RecalculatePartitioning(true);
+
+
 	//step 1: Gravitational calculations using fixed time updates
 	//dt influenced by simulation time scale 
 	double updatedDT = DeltaTime * timeMultiplier;	
 
-	BodyHandler_ref->calculateWithTree(updatedDT, false, true);
+	BodyHandler_ref->calculateWithTree(updatedDT);
 
 	//step 2: move bodies using their updated velocity, also destroy ones that 
 	BodyHandler_ref->moveBodies(true, updatedDT);

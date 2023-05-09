@@ -7,8 +7,7 @@
 #include "UObject/ConstructorHelpers.h"
 #include <string>
 #include "Tree_Handler.h"
-#include "TestPlanet.h"
-#include <chrono>
+#include "GravBody_Component.h"
 #include "NBody_Handler.generated.h"
 
 
@@ -53,7 +52,7 @@ public:
 	//direct integration of gravitational calculations
 	void calculateAllVelocityChanges(double dt);
 	//tree codes calculaton
-	void calculateWithTree(double dt, bool calculateError, bool newTrees);
+	void calculateWithTree(double dt);
 
 	//double bigG = 0.000000000066743f; //when using kg,m and s
 	double bigG = 39.4784f; //when using SolarMass, AU and Years
@@ -61,20 +60,20 @@ public:
 	UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite)
 		bool useTreeCodes_ = false;
 
-	//calculate average error of change in velocity
-	UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite)
-		float VelCalcAverageError = 0.0f;
+	////calculate average error of change in velocity
+	//UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite)
+	//	float VelCalcAverageError = 0.0f;
 	
 	int handlerID = 0;
 
 	//fixed frame time logic
-	UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite, EditAnywhere)
-		float fixedFrameTime = 0.1f;
-	float elapsedFrameTime = 0.0f;
+	//UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite, EditAnywhere)
+	//	float fixedFrameTime = 0.1f;
+	//float elapsedFrameTime = 0.0f;
 
 	//simulation data incrementors
-	float timeTakenTotal = 0.0f;
-	float totalFramesPassed = 0.0f;
+	//float timeTakenTotal = 0.0f;
+	//float totalFramesPassed = 0.0f;
 	UPROPERTY(Category = "forUI", BlueprintReadWrite)
 		int gravCalculations = 0;
 	bool drawDebugs = true;

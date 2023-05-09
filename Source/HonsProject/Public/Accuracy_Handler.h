@@ -5,7 +5,10 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include <fstream>
+#include "TestPlanet.h"
 #include <string>
+#include <chrono>
+
 #include "Accuracy_Handler.generated.h"
 
 //simple struct holding all the relevant data of a gravitational body
@@ -15,7 +18,7 @@ public:
 	FVector pos;
 	FVector vel;
 	float mass;
-	
+
 };
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
@@ -38,13 +41,13 @@ public:
 
 	//TODO: make a pointer to the gravbodycomps from sim manager and move recording func into here
 
-	////likely unnecessary? - REMOVE
-	//TArray<AGravBody*> mainBodies;
-	//TArray<AGravBody*> ghostBodies;
+	TArray<UGravBodyComponent*>* bodyHandlerBodies;
 
+	planet getAverageDifference();
 	//actually used for storing
 	TArray<TArray<planet>> planets;
 
+	void recordPositions();
 	bool planetsEqual(planet a, planet b);
 	void notePlanet(std::string name_, FVector pos_, FVector vel_, float mass_);
 	void printResultToTXT();
@@ -54,4 +57,6 @@ public:
 
 	//CHANGE TO ENUM! types: FrameAccuracy, LongAccuracy, 
 	FString accuracyTestType = FString("FrameAccuracy");
+
+	int outputIndex = 0;
 };

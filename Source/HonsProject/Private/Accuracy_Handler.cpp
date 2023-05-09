@@ -26,6 +26,21 @@ void UAccuracyModule::TickComponent(float DeltaTime, ELevelTick TickType, FActor
 
 }
 
+
+void UAccuracyModule::recordPositions() {
+
+	//create a new array of planets in the 2D array of recordings
+	TArray<planet> newRecording;
+	planets.Add(newRecording);
+
+	//note every single body into the TXT file
+	for (int i = 0; i < bodyHandlerBodies->Num(); i++) {
+		std::string name_ = std::string(TCHAR_TO_UTF8(*(*bodyHandlerBodies)[i]->GetOwner()->GetActorLabel()));
+		notePlanet(name_, (*bodyHandlerBodies)[i]->position, (*bodyHandlerBodies)[i]->velocity, (*bodyHandlerBodies)[i]->mass);
+	}
+
+}
+
 //add a new planet
 void UAccuracyModule::notePlanet(std::string name_, FVector pos_, FVector vel_, float mass_) {
 	planet a;
@@ -39,20 +54,25 @@ void UAccuracyModule::notePlanet(std::string name_, FVector pos_, FVector vel_, 
 }
 
 
-void UAccuracyModule::printResultToTXT() {
+planet UAccuracyModule::getAverageDifference() {
+
 
 	//accuracy calculation variables
+	planet AvgDifference;
+	bool avgDiffRelevance = true;
 	int positive_Comparisons = 0;
 	int negative_Comparisons = 0;
-	bool avgDiffRelevance = true;
-	planet AvgDifference;
 	int avgDiffIdx = 0;
 	AvgDifference.pos = FVector(0, 0, 0);
 	AvgDifference.vel = FVector(0, 0, 0);
 	AvgDifference.mass = 0.0f;
 
 
-	//accuracy Testing
+
+
+
+
+	//accuracy Testing - WIP
 	for (int i = 0; i < planets.Num(); i++) {
 		for (int j = i + 1; j < planets.Num(); j++) {
 
@@ -75,6 +95,7 @@ void UAccuracyModule::printResultToTXT() {
 					break;
 				case 1:
 					negative_Comparisons++;
+					avgDiffRelevance = false;
 					break;
 				case 2:
 					if (!planetsEqual(planets[i][k], planets[j][k])) {
@@ -87,7 +108,6 @@ void UAccuracyModule::printResultToTXT() {
 							AvgDifference.mass += abs(planets[i][k].mass - planets[j][k].mass);
 						}
 						else {
-							avgDiffRelevance = false;
 						}
 					}
 					else {
@@ -107,27 +127,35 @@ void UAccuracyModule::printResultToTXT() {
 		AvgDifference.pos /= avgDiffIdx;
 		AvgDifference.vel /= avgDiffIdx;
 		AvgDifference.mass /= avgDiffIdx;
+		AvgDifference.name = "Success";
 	}
+	else {
+		AvgDifference.name = "IncoherentIndexes";
+	}
+	return AvgDifference;
+}
+void UAccuracyModule::printResultToTXT() {
 
+	std::string filePath = std::string("D:\\Users\\User\\Documents\\GitHub\\DissertationProject\\Output_").append(std::to_string(outputIndex)).append(".txt");
 	//write into the file
-	std::ofstream myfile_w("D:\\LocalWorkDir\\1903300\\DissertationProject\\testOutputs.txt");
-	//std::ofstream myfile_w("D:\\Users\\User\\Documents\\GitHub\\DissertationProject\\testOutputs.txt");
+	//std::ofstream myfile_w("D:\\LocalWorkDir\\1903300\\DissertationProject\\testOutputs.txt");
+	std::ofstream myfile_w(filePath);
 
 	if (myfile_w.is_open())
 	{
 
-		myfile_w << "Overall Accuracy: " << float(positive_Comparisons) / float(positive_Comparisons + negative_Comparisons) * 100.0f << "%. (<- correct comparisons in AllwAll comps)" << "\n";
-		myfile_w << "Individual simulations: " << planets.Num() << "\n";
-		if (avgDiffRelevance) {
-			if (negative_Comparisons > 0) {
-				myfile_w << "All simulations ended with same amount of bodies. Average of error in; POS: (" << AvgDifference.pos.X << " " << AvgDifference.pos.Y << " " << AvgDifference.pos.Z << "),  VEL: (" << AvgDifference.vel.X << " " << AvgDifference.vel.Y << " " << AvgDifference.vel.Z << "),  MASS: " << AvgDifference.mass << "\n";
-			}
-		}
-		else {
-			myfile_w << "Simulations finished with an inconsistent number of planets" << "\n";
-		}
-
-		myfile_w << " " << "\n";
+		//myfile_w << "Overall Accuracy: " << float(positive_Comparisons) / float(positive_Comparisons + negative_Comparisons) * 100.0f << "%. (<- correct comparisons in AllwAll comps)" << "\n";
+		//myfile_w << "Individual simulations: " << planets.Num() << "\n";
+		//if (avgDiffRelevance) {
+		//	if (negative_Comparisons > 0) {
+		//		myfile_w << "All simulations ended with same amount of bodies. Average of error in; POS: (" << AvgDifference.pos.X << " " << AvgDifference.pos.Y << " " << AvgDifference.pos.Z << "),  VEL: (" << AvgDifference.vel.X << " " << AvgDifference.vel.Y << " " << AvgDifference.vel.Z << "),  MASS: " << AvgDifference.mass << "\n";
+		//	}
+		//}
+		//else {
+		//	myfile_w << "Simulations finished with an inconsistent number of planets" << "\n";
+		//}
+		//
+		//myfile_w << " " << "\n";
 		myfile_w << "NAME POSITION DIRECTION MASS " << "\n";
 
 		for (int i = 0; i < planets.Num(); i++)
@@ -139,9 +167,10 @@ void UAccuracyModule::printResultToTXT() {
 		}
 
 		myfile_w.close();
+		outputIndex++;
 	}
 	else {
-		GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Red, "couldnt openfile");
+		GEngine->AddOnScreenDebugMessage(-1, 50.0f, FColor::Red, "couldn't open file");
 	}
 }
 

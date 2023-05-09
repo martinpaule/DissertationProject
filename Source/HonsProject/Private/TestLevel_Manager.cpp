@@ -13,25 +13,6 @@ ASimulationManager::ASimulationManager()
 
 }
 
-
-void ASimulationManager::recordFinalPositions(bool writeToTXT) {
-
-	//create a new array of planets in the 2D array of recordings
-	TArray<planet> newRecording;
-	accuracyTester_ref->planets.Add(newRecording);
-
-	//note every single body into the TXT file
-	for (int i = 0; i < BodyHandler_ref->myGravBodies.Num(); i++) {
-		std::string name_ = std::string(TCHAR_TO_UTF8(*BodyHandler_ref->myGravBodies[i]->GetOwner()->GetActorLabel()));
-		accuracyTester_ref->notePlanet(name_, BodyHandler_ref->myGravBodies[i]->position, BodyHandler_ref->myGravBodies[i]->velocity, BodyHandler_ref->myGravBodies[i]->mass);
-	}
-
-	//optionaly note the results into a text document
-	if (writeToTXT) {
-		accuracyTester_ref->printResultToTXT();
-	}
-}
-
 //clear out the second ghost simulation
 void ASimulationManager::removeGhostSim() {
 	if (ghostSim_ref) {
@@ -121,20 +102,12 @@ void ASimulationManager::createSimComponents() {
 
 	BodyHandler_ref->constructTreeHandler();
 
-	////create tree code handler
-	//TreeHandler_ref = Cast<UTreeHandler>(this->AddComponentByClass(UTreeHandler::StaticClass(), false, tr, true));
-	//TreeHandler_ref->RegisterComponent();
-	//TreeHandler_ref->bodyHandlerBodies = &BodyHandler_ref->myGravBodies;
-	//
-	////assign tree code handler
-	//BodyHandler_ref->treeHandlerRef = TreeHandler_ref;
-
 	//create accuracy tester
 	accuracyTester_ref = Cast<UAccuracyModule>(this->AddComponentByClass(UAccuracyModule::StaticClass(), false, tr, true));
 	accuracyTester_ref->RegisterComponent();
 	accuracyTester_ref->resetTime = resetTime;
 	accuracyTester_ref->shouldResetTest = ShouldReset;
-
+	accuracyTester_ref->bodyHandlerBodies = &BodyHandler_ref->myGravBodies;
 }
 
 // Called when the game starts or when spawned
@@ -180,35 +153,38 @@ void ASimulationManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	
+
 
 	if (!Paused && !spawningBodies) {
 
 		elapsedFrameTime += DeltaTime;
 
 		if (elapsedFrameTime >= fixedFrameTime) {
-			
+
+			std::chrono::steady_clock::time_point startPoint;
+
+
+			if (doTimingCalculations)startPoint = std::chrono::high_resolution_clock::now();
 			//step 0: destroy overlapping bodies from previous step - must be done before force calculation otherwise the current step will be inaccurate
 			deleteDestroyedBodies();
+			if (doTimingCalculations)DestroyBodies_TimeTaken.Add(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - startPoint).count());
 
 
-			
 
 			bodiesInSimulation = BodyHandler_ref->myGravBodies.Num();
-			
+
 
 			//step 0.5 recalculate partitioning
-			//TreeHandler_ref->RecalculatePartitioning(newTrees);
+			if (useTreeCodes) {
+				//step 0.5 recalculate partitioning
+				if (doTimingCalculations)startPoint = std::chrono::high_resolution_clock::now();
+				BodyHandler_ref->treeHandler->RecalculatePartitioning(newTrees);
+				if (doTimingCalculations)RecalculateTree_TimeTaken.Add(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - startPoint).count());
+
+			}
 
 
-			//if (PlanetOutOfBounds && newTrees) {
-			//	TreeHandler_ref->RecalculatePartitioning();
-			//	GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Orange, "planet went out of max boundary");
-			//}
-			//else if(newTrees) {
-			//	GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Orange, "inner recalcs");
-			//
-			//}
+
 
 			//step 1: Gravitational calculations using fixed time updates
 
@@ -216,6 +192,8 @@ void ASimulationManager::Tick(float DeltaTime)
 			double updatedDT = fixedFrameTime * timeMultiplier * 0.027f; //0.027 makes the time as 10 days/s		
 			int iterations = int(elapsedFrameTime / fixedFrameTime);
 			simulationElapsedTime += updatedDT * iterations;
+
+
 			for (int j = 0; j < iterations; j++) {
 
 				//check whether to move bodies on this it too
@@ -224,14 +202,10 @@ void ASimulationManager::Tick(float DeltaTime)
 					last = true;
 				}
 
-				
-				if (!useTreeCodes) {
-					BodyHandler_ref->calculateAllVelocityChanges(updatedDT);
-					
-				}
-				else {
-					BodyHandler_ref->calculateWithTree(updatedDT,doFrameCalc, newTrees);
-					
+				if (doTimingCalculations)startPoint = std::chrono::high_resolution_clock::now();
+				if (useTreeCodes) {
+					BodyHandler_ref->calculateWithTree(updatedDT);
+
 
 					//move testing ghost sim
 					if (ghostSim_ref) {
@@ -239,11 +213,18 @@ void ASimulationManager::Tick(float DeltaTime)
 						ghostSim_ref->moveBodies(last, updatedDT);
 					}
 				}
+				else {
+					BodyHandler_ref->calculateAllVelocityChanges(updatedDT);
+
+				}
+				if (doTimingCalculations)ForceCalculation_TimeTaken.Add(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - startPoint).count());
+
+				if (doTimingCalculations)startPoint = std::chrono::high_resolution_clock::now();
 				//step 2: move bodies 
 				BodyHandler_ref->moveBodies(last, updatedDT);
+				if (doTimingCalculations)moveBodies_TimeTaken.Add(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - startPoint).count());
 
 
-				
 
 			}
 
@@ -251,7 +232,8 @@ void ASimulationManager::Tick(float DeltaTime)
 			elapsedFrameTime -= int(elapsedFrameTime / fixedFrameTime) * fixedFrameTime;
 
 		}
-	}else if (spawningBodies) {
+	}
+	else if (spawningBodies) {
 		graduallySpawnBodies(SpawnsPerFrame);
 	}
 
@@ -268,8 +250,69 @@ void ASimulationManager::Tick(float DeltaTime)
 
 		BodyHandler_ref->treeHandler->DisplaySectors(BodyHandler_ref->treeHandler->treeNodeRoot);
 	}
-}
 
+	if (doTimingCalculations) {
+		std::string destrStr = "Destroy Bodies Time Taken: ";
+		std::string RecalcStr = "Recalculate Tree Time Taken: ";
+		std::string ForceCStr = "Force Calculations Time Taken: ";
+		std::string MoveBStr = "Move Bodies Time Taken: ";
+
+		int framesToRecord = 10;
+		//cleanup
+		if (DestroyBodies_TimeTaken.Num() > framesToRecord) {
+			DestroyBodies_TimeTaken.RemoveAt(framesToRecord);
+		}
+		if (ForceCalculation_TimeTaken.Num() > framesToRecord) {
+			ForceCalculation_TimeTaken.RemoveAt(framesToRecord);
+		}
+		if (moveBodies_TimeTaken.Num() > framesToRecord) {
+			moveBodies_TimeTaken.RemoveAt(framesToRecord);
+		}
+		if (useTreeCodes) {
+			if (RecalculateTree_TimeTaken.Num() > framesToRecord) {
+				RecalculateTree_TimeTaken.RemoveAt(framesToRecord);
+			}
+			if (RecalculateTree_TimeTaken.Num() == framesToRecord) {
+				float sum_ = 0.0f;
+				for (int i = 0; i < framesToRecord; i++) {
+					sum_ += RecalculateTree_TimeTaken[i];
+				}
+				GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Green, RecalcStr.append(std::to_string(sum_)).c_str());
+
+			}
+		}
+
+		if (DestroyBodies_TimeTaken.Num() == framesToRecord) {
+			float sum_ = 0.0f;
+			for(int i = 0; i < framesToRecord; i++) {
+				sum_ += DestroyBodies_TimeTaken[i];
+			}
+			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Green, destrStr.append(std::to_string(sum_)).c_str());
+
+		}
+
+		if (ForceCalculation_TimeTaken.Num() == framesToRecord) {
+			float sum_ = 0.0f;
+			for (int i = 0; i < framesToRecord; i++) {
+				sum_ += ForceCalculation_TimeTaken[i];
+			}
+			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Green, ForceCStr.append(std::to_string(sum_)).c_str());
+
+		}
+
+		if (moveBodies_TimeTaken.Num() == framesToRecord) {
+			float sum_ = 0.0f;
+			for (int i = 0; i < framesToRecord; i++) {
+				sum_ += moveBodies_TimeTaken[i];
+			}
+			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Green, MoveBStr.append(std::to_string(sum_)).c_str());
+
+		}
+		
+	}
+
+	
+}
 
 
 void ASimulationManager::pauseSimulation() {
@@ -385,7 +428,7 @@ void ASimulationManager::spawnPlanetAt(FVector position_, FVector velocity_, dou
 
 	
 	//create Nbody handler
-	newBody->GravComp = BodyHandler_ref->addGravCompAt(position_, velocity_, mass_, newBody);
+	newBody->GravComp = handlerToAddInto->addGravCompAt(position_, velocity_, mass_, newBody);
 
 	newBody->SetActorLabel(name_);
 
@@ -402,7 +445,7 @@ void ASimulationManager::spawnPlanetAt(FVector position_, FVector velocity_, dou
 		newBody->myMat->SetVectorParameterValue(TEXT("Colour"), colour_);
 		newBody->GravComp->myCol = colour_;
 	}
-	handlerToAddInto->myGravBodies.Add(newBody->GravComp);
+	//handlerToAddInto->myGravBodies.Add(newBody->GravComp);
 
 
 

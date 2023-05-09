@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "NBody_Handler.h"
-
+#include "TestPlanet.h"
 #include "MainMenu_Manager.generated.h"
 
 UCLASS()
@@ -18,7 +18,7 @@ public:
 	AMainMenuNBODYmanager();
 	void deleteDestroyedBodies();
 	UFUNCTION(BlueprintCallable, Category = "PlanetSpawn")
-		ATestPlanet* spawnPlanetAt(FVector position_, FVector velocity_, double mass_, FVector4 colour_, FString name_, float radius_, UNBodyHandler* handlerToAddInto);
+		ATestPlanet* spawnPlanetAt(FVector position_, FVector velocity_, double mass_, FVector4 colour_, FString name_, float radius_);
 	UFUNCTION(BlueprintCallable, Category = "PlanetSpawn")
 		ATestPlanet* spawnEdgePlanet();
 	UFUNCTION(BlueprintCallable, Category = "CursorSpawn")

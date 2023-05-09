@@ -171,11 +171,11 @@ void UNBodyHandler::calculateAllVelocityChanges(double dt) {
 
 
 //tree code calculations of gravitational dynamics
-void UNBodyHandler::calculateWithTree(double dt, bool calculateError, bool newTrees) {
+void UNBodyHandler::calculateWithTree(double dt) {
 
 	////time taken code
 	//auto startDI = std::chrono::high_resolution_clock::now();
-	treeHandler->RecalculatePartitioning(newTrees);
+	//treeHandler->RecalculatePartitioning(newTrees);
 	//auto stopDI = std::chrono::high_resolution_clock::now();
 	//float msTakenCALCTC = std::chrono::duration_cast<std::chrono::microseconds>(stopDI - startDI).count();
 	//
@@ -191,9 +191,9 @@ void UNBodyHandler::calculateWithTree(double dt, bool calculateError, bool newTr
 	treeHandler->gravCalcs = 0;
 
 	FVector TreeSumOfForces = FVector(0.0f, 0.0f, 0.0f);
-	FVector RealSumOfForces = FVector(0.0f, 0.0f, 0.0f);
+	//FVector RealSumOfForces = FVector(0.0f, 0.0f, 0.0f);
 
-	VelCalcAverageError = 0.0f;
+	//VelCalcAverageError = 0.0f;
 
 
 	//declarations
@@ -210,34 +210,7 @@ void UNBodyHandler::calculateWithTree(double dt, bool calculateError, bool newTr
 		TreeSumOfForces = treeHandler->getApproxForce(myGravBodies[i], treeHandler->treeNodeRoot);
 		myGravBodies[i]->velocity += myGravBodies[i]->myLocalTimeEditor * dt * TreeSumOfForces;
 
-		if (calculateError) {
-			//calulate combined forces acting on body I
-			for (int j = 0; j < myGravBodies.Num(); j++)
-			{
-				if (i != j) //ignore the body's own force on itself
-				{
-
-
-					direction = myGravBodies[j]->position - myGravBodies[i]->position;
-					distance = direction.Length();
-					distanceCubed = distance * distance * distance;
-					iteratedBodyForce = direction * bigG * myGravBodies[j]->mass;
-					iteratedBodyForce /= distanceCubed;
-
-					//add this to the sum of forces acting on body I
-					RealSumOfForces += iteratedBodyForce;
-				}
-			}
-			
-			VelCalcAverageError += (RealSumOfForces - TreeSumOfForces).Length();
-		}
-
 	}
-	if (calculateError) {
-		VelCalcAverageError /= myGravBodies.Num();
-
-	}
-
 
 }
 
