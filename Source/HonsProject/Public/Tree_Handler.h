@@ -49,11 +49,11 @@ public:
 	TreeNode * treeNodeRoot;
 
 	//visualise oct trees
-	UPROPERTY(Category = "VisualisationRelevant", EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(Category = "PublicTC", EditAnywhere, BlueprintReadWrite)
 		bool showTreeBoxes = false;
 
 	//total gravitational calculations done
-	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(Category = "PublicTC", EditAnywhere, BlueprintReadWrite)
 		int gravCalcs = 0;
 
 	double bigG = 39.4784f; //when using SolarMass, AU and Years

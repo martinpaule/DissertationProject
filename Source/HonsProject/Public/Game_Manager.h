@@ -38,11 +38,12 @@ public:
 	// ----- Game defaults
 	int OverallSpawnerIndex = 0;
 	AActor* playerRef;
-	UPROPERTY(Category = "AsteroidFieldSettings", EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(Category = "GravitySettings", EditAnywhere, BlueprintReadWrite)
 	bool useTreeCodes = true;
-	UPROPERTY(Category = "Testing", EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(Category = "GravitySettings", EditAnywhere, BlueprintReadWrite)
 	bool newTrees = false;
-	float timeMultiplier = 0.7f;
+	UPROPERTY(Category = "GravitySettings", EditAnywhere, BlueprintReadWrite)
+	float timeMultiplier = 0.15f;
 
 protected:
 	// Called when the game starts or when spawned

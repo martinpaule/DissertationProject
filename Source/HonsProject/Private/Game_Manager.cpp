@@ -56,7 +56,6 @@ void AGameManager::BeginPlay()
 	BodyHandler_ref->RegisterComponent();
 
 	//setup Nbody handler
-	BodyHandler_ref->useTreeCodes_ = useTreeCodes;
 	BodyHandler_ref->drawDebugs = drawDebugs;
 
 
@@ -141,7 +140,7 @@ void AGameManager::Tick(float DeltaTime)
 
 	//step 1: Gravitational calculations using fixed time updates
 	//dt influenced by simulation time scale 
-	double updatedDT = DeltaTime * timeMultiplier;	
+	double updatedDT = DeltaTime * timeMultiplier * 0.1f;	
 
 	BodyHandler_ref->calculateWithTree(updatedDT);
 

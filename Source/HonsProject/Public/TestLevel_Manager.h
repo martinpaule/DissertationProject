@@ -22,46 +22,43 @@ public:
 	ASimulationManager();
 	
 	// ----- Functionality components
-	UPROPERTY(Category = "UI_references", EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(Category = "HandlerComponents", BlueprintReadWrite)
 		UNBodyHandler* BodyHandler_ref;
-	UPROPERTY(Category = "UI_references", EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(Category = "HandlerComponents", BlueprintReadWrite)
 		UNBodyHandler* ghostSim_ref;
-	UPROPERTY(Category = "UI_references", EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(Category = "HandlerComponents", BlueprintReadWrite)
 		UAccuracyModule* accuracyTester_ref;
 
 	// ----- simulation dependant variables
-	UPROPERTY(Category = "SimulationType", EditAnywhere, BlueprintReadWrite)
-		bool useTreeCodes = false; //<- can move into nbody handler since 
-	UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite, EditAnywhere)
-		float fixedFrameTime = 0.1f;
+	UPROPERTY(Category = "SimulationSettings", BlueprintReadWrite, EditAnywhere)
+		float fixedFrameTime = 0.02f;
+	UPROPERTY(Category = "SimulationSettings", BlueprintReadWrite)
+		bool useTreeCodes = false;
 	float elapsedFrameTime = 0.0f;
-	UPROPERTY(Category = "Testing", BlueprintReadWrite, EditAnywhere)
+	UPROPERTY(Category = "forUI", BlueprintReadWrite)
 		bool Paused = false;
 	UPROPERTY(Category = "forUI", BlueprintReadWrite)
 		float simulationElapsedTime = 0.0f;
-	UPROPERTY(Category = "forUI", BlueprintReadWrite, EditAnywhere)
+	UPROPERTY(Category = "forUI", BlueprintReadWrite)
 		int bodiesInSimulation = 0;
-	UPROPERTY(Category = "forUI", BlueprintReadWrite, EditAnywhere)
+	UPROPERTY(Category = "forUI", BlueprintReadWrite)
 		float timeMultiplier = 1.0f;
 	double bigG = 39.4784f; //when using SolarMass, AU and Years
+	
 
 
 	// ----- spawning relevant variables
-	UPROPERTY(Category = "SimulationType", EditAnywhere, BlueprintReadWrite)
-		bool shouldSpawnSolarSystem = false;
-	UPROPERTY(Category = "SimulationType", EditAnywhere, BlueprintReadWrite)
-		bool ShouldSpawnTestPlanets = false;
-	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite)
 		int bodiesToSpawn = 100;
-	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(Category = "SimulationSettings", EditAnywhere, BlueprintReadWrite)
 		int SpawnsPerFrame = 100;
-	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite)
 		FVector InitialSpawnCentre = FVector(0, 0, -10);
-	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite)
 		float SpawnLocationBounds = 10;
-	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite)
 		float SpawnInitialMaxSpeed = 10;
-	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite)
 		float SpawnInitialMaxMass = 2;
 	int gradualSpawnerIndex = 0;
 	bool spawningBodies = false;
@@ -72,20 +69,17 @@ public:
 	UPROPERTY(Category = "Testing", BlueprintReadWrite, EditAnywhere)
 		float resetTime = 1.0f;
 
-	UPROPERTY(Category = "Testing", BlueprintReadWrite, EditAnywhere)
+	UPROPERTY(Category = "Testing", BlueprintReadWrite)
 		bool showGhosPlanetErrors = false;
 
-	UPROPERTY(Category = "Testing", BlueprintReadWrite, EditAnywhere)
+	UPROPERTY(Category = "Testing", BlueprintReadWrite)
 		float averagePosError = 0.0f;
-	UPROPERTY(Category = "Testing", BlueprintReadWrite, EditAnywhere)
+	UPROPERTY(Category = "Testing", BlueprintReadWrite)
 		bool calcAveragePosError = false;
-	UPROPERTY(Category = "Testing", BlueprintReadWrite, EditAnywhere)
-		bool doFrameCalc = false;
 
 	bool debugging = true;
-
 	//EXPERIMENTAL
-	UPROPERTY(Category = "Testing", BlueprintReadWrite, EditAnywhere)
+	UPROPERTY(Category = "Testing", EditAnywhere)
 		bool newTrees = false;
 
 

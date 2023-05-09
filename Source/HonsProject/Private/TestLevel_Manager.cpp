@@ -98,10 +98,9 @@ void ASimulationManager::createSimComponents() {
 	BodyHandler_ref->RegisterComponent();
 
 	//setup Nbody handler
-	BodyHandler_ref->useTreeCodes_ = useTreeCodes;
-
 	BodyHandler_ref->constructTreeHandler();
-
+	BodyHandler_ref->drawDebugs = debugging;
+	BodyHandler_ref->treeHandler->drawDebugs = debugging;
 	//create accuracy tester
 	accuracyTester_ref = Cast<UAccuracyModule>(this->AddComponentByClass(UAccuracyModule::StaticClass(), false, tr, true));
 	accuracyTester_ref->RegisterComponent();

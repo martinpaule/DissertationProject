@@ -19,36 +19,36 @@ public:
 
 	// ----- necessary gravitational calc logic
 	bool clampVelocity = true;
-	UPROPERTY(Category = "UI_references", EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(Category = "UI_references", BlueprintReadWrite)
 		UNBodyHandler* BodyHandler_ref;
-	UPROPERTY(Category = "UI_references", EditAnywhere, BlueprintReadWrite)
-		float maxMMPlanetSpeed = 50.0f;
-	UPROPERTY(Category = "UI_references", EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(Category = "UI_references", BlueprintReadWrite)
+		float maxMMPlanetSpeed = 80.0f;
+	UPROPERTY(Category = "UI_references", BlueprintReadWrite)
 		UTreeHandler* TreeHandler_ref;
 
 	// ----- spawning relevant variables
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-		float SpawnInitialMaxSpeed = 10;
+		float SpawnInitialMaxSpeed = 70.0f;
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-		float SpawnInitialMaxMass = 2;
+		float SpawnInitialMaxMass = 6.0f;
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-		float despawnRadiusRW = 1500;
+		float despawnRadiusRW = 5000.0f;
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 		FVector simCentre = FVector(4000, 0, 0);
 
 	// ----- Simulation relevant variables
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-		int planetsToSimulate = 20;
+		int planetsToSimulate = 40;
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-		float timeMultiplier = 1.0f;
+		float timeMultiplier = 0.3f;
 	double bigG = 39.4784f; //when using SolarMass, AU and Years
 	int overallPlanets = 0;
 
 	// ----- Cursor relevant variables
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-		float CursorPlanetMass = 20.0f;
+		float CursorPlanetMass = 10.0f;
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
-		float CursorMaxMass = 500.0f;
+		float CursorMaxMass = 150.0f;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

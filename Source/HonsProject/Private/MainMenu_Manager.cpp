@@ -25,7 +25,6 @@ void AMainMenuNBODYmanager::BeginPlay()
 	BodyHandler_ref->RegisterComponent();
 
 	//setup Nbody handler & create tree code handler
-	BodyHandler_ref->useTreeCodes_ = useTreeCodes;
 	BodyHandler_ref->constructTreeHandler();
 
 	
@@ -152,10 +151,10 @@ void AMainMenuNBODYmanager::Tick(float DeltaTime)
 	//dt influenced by simulation time scale 
 	double updatedDT = DeltaTime * timeMultiplier * 0.027f; //0.027 makes the time as 10 days/s		
 
-	if (useTreeCodes) {
-		BodyHandler_ref->calculateWithTree(updatedDT);
 
-	}
+	BodyHandler_ref->calculateWithTree(updatedDT);
+
+	
 
 	float lerpVal = BodyHandler_ref->myGravBodies[0]->mass / CursorMaxMass;
 

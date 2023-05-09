@@ -27,8 +27,6 @@ public:
 	// ----- tree code handler reference
 	UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite)
 		UTreeHandler* treeHandler;
-	UPROPERTY(Category = "SimulationRelevant", BlueprintReadWrite)
-		bool useTreeCodes_ = false;
 
 	// ----- misc variables
 	UPROPERTY(Category = "forUI", BlueprintReadWrite)
