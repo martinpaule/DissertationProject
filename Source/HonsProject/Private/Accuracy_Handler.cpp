@@ -36,7 +36,7 @@ void UAccuracyModule::recordPositions() {
 
 	//note every single body into the TXT file
 	for (int i = 0; i < bodyHandlerBodies->Num(); i++) {
-		std::string name_ = std::string(TCHAR_TO_UTF8(*(*bodyHandlerBodies)[i]->GetOwner()->GetActorLabel()));
+		std::string name_ = std::string(TCHAR_TO_UTF8(*(*bodyHandlerBodies)[i]->MyName));
 		notePlanet(name_, (*bodyHandlerBodies)[i]->position, (*bodyHandlerBodies)[i]->velocity, (*bodyHandlerBodies)[i]->mass);
 	}
 

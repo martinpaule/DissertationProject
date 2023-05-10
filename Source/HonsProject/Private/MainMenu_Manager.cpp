@@ -93,7 +93,7 @@ ATestPlanet * AMainMenuNBODYmanager::spawnPlanetAt(FVector position_, FVector ve
 	//assign body's variables
 	ATestPlanet* newBody = GetWorld()->SpawnActor<ATestPlanet>(position_ * 1000.0f, myRot, SpawnInfo);
 	newBody->GravComp = BodyHandler_ref->addGravCompAt(position_, velocity_, mass_, newBody);
-	newBody->SetActorLabel(name_);
+	newBody->GravComp->MyName = name_;
 
 
 	if (radius_ == 0.0f) {

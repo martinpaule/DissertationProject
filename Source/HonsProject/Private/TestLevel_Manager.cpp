@@ -70,7 +70,7 @@ void ASimulationManager::addGhostSim() {
 	{
 		
 		//create ghost's planet name
-		FString name_ = BodyHandler_ref->myGravBodies[i]->GetOwner()->GetActorLabel();
+		FString name_ = BodyHandler_ref->myGravBodies[i]->MyName;
 		name_.Append("_ghost");
 
 		//add this planet to the ghost sim handler
@@ -358,7 +358,7 @@ void ASimulationManager::spawnPlanetAt(FVector position_, FVector velocity_, dou
 	//create Nbody handler
 	newBody->GravComp = handlerToAddInto->addGravCompAt(position_, velocity_, mass_, newBody);
 
-	newBody->SetActorLabel(name_);
+	newBody->GravComp->MyName = name_;
 
 
 	if (radius_ == 0.0f) {

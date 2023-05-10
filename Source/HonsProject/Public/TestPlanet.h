@@ -48,8 +48,7 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	//engine runtime functions - important to avoid pointer erros
-	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent);
+	//sets up collision function 
 	virtual void PostInitializeComponents();
 
 

@@ -72,29 +72,6 @@ void ATestPlanet::PostInitializeComponents()
 
 }
 
-
-//real-time in engine resize scale based on mass
-void ATestPlanet::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) {
-
-	// !! Scale 1 means diameter is 100 km  !!
-	//means scale = radius*2/100
-	Super::PostEditChangeProperty(PropertyChangedEvent);
-
-	//if (universalDensity) {
-	//	float scale_ = cbrt(GravComp->mass);
-	//	this->SetActorScale3D(FVector(scale_, scale_, scale_));
-	//}
-	//
-	//if (PropertyChangedEvent.Property->GetName() == "radius") {
-	//	float scale_ = GravComp->radius * 2.0f / 100.0f;
-	//	this->SetActorScale3D(FVector(scale_, scale_, scale_));
-	//	universalDensity = false;
-	//}
-
-}
-
-
-
 //perfectly inelastic
 // p = momentum. p = m*v.
 // p_ = resulting momentum, v_ = resulting velocity
@@ -118,8 +95,6 @@ void ATestPlanet::combineCollisionBody(UPrimitiveComponent* OverlappedComponent,
 	//error failsafe
 	if (!GravComp || !otherBody->GravComp) {
 		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Red, "Rare error - one gravcomp was missing!");
-		////add into above name like  + std::string(TCHAR_TO_UTF8(*this->GetActorLabel()))
-		//this->Destroy();
 		return;
 	}
 
@@ -134,7 +109,7 @@ void ATestPlanet::combineCollisionBody(UPrimitiveComponent* OverlappedComponent,
 	FVector finalVelocity = (massA * velocityA + massB * velocityB) / (massA + massB);
 
 	//add the smaller body's mass and speed to the larger one
-	if ((otherBody->GravComp->mass >= GravComp->mass && this->GetActorLabel() != "CursorPlanet") || otherBody->GetActorLabel() == "CursorPlanet") {
+	if ((otherBody->GravComp->mass >= GravComp->mass && GravComp->MyName != "CursorPlanet") || otherBody->GravComp->MyName == "CursorPlanet") {
 		otherBody->GravComp->velocity = finalVelocity;
 		otherBody->GravComp->mass += GravComp->mass;
 		float scale_ = otherBody->GetActorScale3D().X;
@@ -146,8 +121,8 @@ void ATestPlanet::combineCollisionBody(UPrimitiveComponent* OverlappedComponent,
 		if (false) {
 			FDateTime nowTime = FDateTime::Now();
 			std::string printStr = "(";
-			FString myName = this->GetActorLabel();
-			FString otherName = otherBody->GetActorLabel();
+			FString myName = GravComp->MyName;
+			FString otherName = otherBody->GravComp->MyName;
 			std::string names = std::string(TCHAR_TO_UTF8(*myName));
 			names += " and ";
 			names += std::string(TCHAR_TO_UTF8(*otherName));

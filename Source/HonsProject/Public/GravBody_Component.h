@@ -34,6 +34,9 @@ public:
 	TreeNode* leaf_ref = NULL;
 	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
 		float myLocalTimeEditor = 1.0f;
+
+	UPROPERTY(Category = "SimulationRelevant", EditAnywhere, BlueprintReadWrite)
+	FString MyName = "GravBody";
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;

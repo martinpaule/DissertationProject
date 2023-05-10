@@ -43,7 +43,7 @@ void AGameManager::BeginPlay()
 	//init game variables
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), APawn::StaticClass(),FoundActors);
 	for (int i = 0; i < FoundActors.Num(); i++) {
-		if (FoundActors[i]->GetActorLabel().Contains("PlayerPawn"))
+		if (FoundActors[i])
 		{
 			if (drawDebugs)GEngine->AddOnScreenDebugMessage(-1, 0.4f, FColor::Green, "FOUND PAWN");
 			playerRef = FoundActors[i];

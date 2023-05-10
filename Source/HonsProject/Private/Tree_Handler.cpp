@@ -165,7 +165,7 @@ void UTreeHandler::newTreeRecalculate() {
 		//INVESTIGATE IF THISFIXED IT AND SEE IF IT WORKS BETTER
 
 		if (!CompIT->leaf_ref) {
-			if (drawDebugs)GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "NULL IN LEAFREF from body - BF RECALC" + CompIT->GetOwner()->GetActorLabel());
+			if (drawDebugs)GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "NULL IN LEAFREF from body - BF RECALC" + CompIT->MyName);
 			//find the lowest existing sector of the tree, assign it there and update its partitioning
 			TreeNode* ref_tn = getLowestSectorOfPos(CompIT->position);
 			if (ref_tn) {
@@ -173,13 +173,7 @@ void UTreeHandler::newTreeRecalculate() {
 				partitionTree(ref_tn);
 			}
 		}
-		//if (!CompIT->GetOwner()) {
-		//	if (drawDebugs)GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "NULL IN body OWNER" + CompIT->GetOwner()->GetActorLabel());
-		//	CompIT->DestroyComponent();
-		//	bodyHandlerBodies->RemoveAt(i);
-		//	i--;
-		//}
-		//else
+
 		if (CompIT->leaf_ref) {
 			if (CompIT->leaf_ref->isInExtent(CompIT->position)) {		//if the planet is still in its last recorded leaf position
 				CompIT->leaf_ref->Node_CentreOMass = CompIT->position;
@@ -200,20 +194,20 @@ void UTreeHandler::newTreeRecalculate() {
 					ref_tn->bodies.Add(CompIT);
 					partitionTree(ref_tn);
 
-					if (drawDebugs)GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Orange, CompIT->GetOwner()->GetActorLabel() + " movedWell");
+					if (drawDebugs)GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Orange, CompIT->MyName + " movedWell");
 
 				}
 				else {//planet went out of bounds of the max bounds
 
 					//use old trees for getting the boundaries
 					//RecalculatePartitioning(false);
-					if (drawDebugs)GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "Out Of Global Bounds - Recalc Of Bounds Using OldTrees " + CompIT->GetOwner()->GetActorLabel());
+					if (drawDebugs)GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "Out Of Global Bounds - Recalc Of Bounds Using OldTrees " + CompIT->MyName);
 					//return;
 				}
 			}
 		}
 		else {
-			if (drawDebugs)GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "FOR SOME REASON THERE WAS NO LEAF REF " + CompIT->GetOwner()->GetActorLabel());
+			if (drawDebugs)GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "FOR SOME REASON THERE WAS NO LEAF REF " + CompIT->MyName);
 
 		}
 
