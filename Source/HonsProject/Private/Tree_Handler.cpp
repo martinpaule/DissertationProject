@@ -3,6 +3,11 @@
 #include "Tree_Handler.h"
 #include <string>
 
+DECLARE_CYCLE_STAT(TEXT("Tree Codes Repartitioning"), STAT_TCpartitioning, STATGROUP_NBodyHandler);
+DECLARE_CYCLE_STAT(TEXT("Tree Codes DisplaySector"), STAT_TCDisplaySector, STATGROUP_NBodyHandler);
+DECLARE_CYCLE_STAT(TEXT("Tree Codes Approximate Force Function Call"), STAT_TCApproxForce, STATGROUP_NBodyHandler);
+
+
 // Sets default values
 UTreeHandler::UTreeHandler()
 {
@@ -82,6 +87,10 @@ void UTreeHandler::updateMyCombMassAndAvgPos(TreeNode* rootNode) {
 
 //original tree recalculating
 void UTreeHandler::originalTreeRecalculate() {
+
+	SCOPE_CYCLE_COUNTER(STAT_TCpartitioning);
+
+
 	//reset root
 	delete treeNodeRoot;
 
@@ -232,6 +241,7 @@ void UTreeHandler::updateAvgPosCombMassOfAllSectorsContaining(UGravBodyComponent
 void UTreeHandler::RecalculatePartitioning(bool newTrees) {
 	
 
+
 	if (newTrees) {
 		newTreeRecalculate();
 	}
@@ -243,6 +253,9 @@ void UTreeHandler::RecalculatePartitioning(bool newTrees) {
 
 //debug partitioning
 void UTreeHandler::DisplaySectors(TreeNode* rootNode) {
+
+	SCOPE_CYCLE_COUNTER(STAT_TCDisplaySector);
+
 
 	if (rootNode->isLeaf) {
 		if (rootNode->bodies.Num() == 1) {
@@ -335,6 +348,9 @@ void UTreeHandler::partitionTree(TreeNode* rootNode)
 //recursive function calculating force on a body
 FVector UTreeHandler::getApproxForce(UGravBodyComponent* body, TreeNode * rootNode)
 {
+
+	SCOPE_CYCLE_COUNTER(STAT_TCApproxForce);
+
 
 	if (rootNode->bodies.Num() == 1 && body != rootNode->bodies[0]) {
 

@@ -7,6 +7,11 @@
 #include "GravBody_Component.h"
 #include "Tree_Handler.generated.h"
 
+
+//For UE4 Profiler ~ 
+DECLARE_STATS_GROUP(TEXT("TC Custom Profiling"), STATGROUP_NBodyHandler, STATCAT_Advanced);
+
+
 //struct TreeNode;
 struct TreeNode {
 public:

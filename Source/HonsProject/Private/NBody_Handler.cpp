@@ -9,6 +9,11 @@
 #include <fstream>
 #include "DrawDebugHelpers.h"
 
+
+DECLARE_CYCLE_STAT(TEXT("Direct Integration (Grav Calc)"), STAT_MovingWithDI, STATGROUP_NBodyHandler);
+DECLARE_CYCLE_STAT(TEXT("Tree Codes (Grav Calc)"), STAT_MovingWithTree, STATGROUP_NBodyHandler);
+
+
 // Sets default values
 UNBodyHandler::UNBodyHandler()
 {
@@ -27,9 +32,7 @@ void UNBodyHandler::BeginPlay()
 	Super::BeginPlay();
 
 
-	
-	
-	
+
 
 	
 }
@@ -72,6 +75,9 @@ UGravBodyComponent * UNBodyHandler::addGravCompAt(FVector position, FVector velo
 
 //direct integration of gravitational dynamics using Newtonian formulae
 void UNBodyHandler::calculateAllVelocityChanges(double dt) {
+
+	SCOPE_CYCLE_COUNTER(STAT_MovingWithDI);
+
 
 	gravCalculations = 0;
 
@@ -130,6 +136,8 @@ void UNBodyHandler::calculateWithTree(double dt) {
 	//
 	//GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Orange, printStr.c_str());
 
+
+	SCOPE_CYCLE_COUNTER(STAT_MovingWithTree);
 
 
 	treeHandler->gravCalcs = 0;

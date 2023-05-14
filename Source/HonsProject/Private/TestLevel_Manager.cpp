@@ -5,6 +5,8 @@
 #include <Kismet/KismetMathLibrary.h>
 
 
+
+
 // Sets default values
 ASimulationManager::ASimulationManager()
 {
@@ -167,14 +169,11 @@ void ASimulationManager::Tick(float DeltaTime)
 
 			bodiesInSimulation = BodyHandler_ref->myGravBodies.Num();
 
-
 			//step 0.5 recalculate partitioning
 			if (useTreeCodes) {
-				//step 0.5 recalculate partitioning
 				BodyHandler_ref->treeHandler->RecalculatePartitioning(newTrees);
 
 			}
-
 
 
 
@@ -195,6 +194,7 @@ void ASimulationManager::Tick(float DeltaTime)
 				}
 
 				if (useTreeCodes) {
+
 					BodyHandler_ref->calculateWithTree(updatedDT);
 
 

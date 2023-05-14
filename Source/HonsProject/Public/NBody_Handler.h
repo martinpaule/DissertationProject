@@ -10,7 +10,6 @@
 #include "GravBody_Component.h"
 #include "NBody_Handler.generated.h"
 
-
 UCLASS()
 class HONSPROJECT_API UNBodyHandler : public UActorComponent
 {
